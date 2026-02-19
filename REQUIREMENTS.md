@@ -75,8 +75,52 @@
 | Requirement | Test File | Status |
 |-------------|-----------|--------|
 | FR-AUTH-001 | `backend/internal/auth/middleware_test.go` | ✅ |
-| FR-AUTH-002 | `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| ... | ... | ... |
+| FR-AUTH-002 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-AUTH-003 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-AUTH-004 | `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-TENANT-001 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-TENANT-002 | - | ❌ |
+| FR-TENANT-003 | - | ❌ |
+| FR-TENANT-004 | `backend/internal/auth/middleware_test.go` | ✅ |
+| FR-NAV-001 | - | ❌ |
+| FR-NAV-002 | - | ❌ |
+| FR-NAV-003 | - | ❌ |
+| FR-NAV-004 | - | ❌ |
+| FR-THEME-001 | - | ❌ |
+| FR-THEME-002 | - | ❌ |
+| FR-THEME-003 | - | ❌ |
+| FR-I18N-001 | - | ❌ |
+| FR-I18N-002 | - | ❌ |
+| FR-I18N-003 | - | ❌ |
+| NFR-PERF-001 | - | ❌ |
+| NFR-PERF-002 | - | ❌ |
+| NFR-PERF-003 | - | ❌ |
+| NFR-AVAIL-001 | - | ❌ |
+| NFR-AVAIL-002 | - | ❌ |
+| NFR-AVAIL-003 | - | ❌ |
+| NFR-SEC-001 | - | ❌ |
+| NFR-SEC-002 | - | ❌ |
+| NFR-SEC-003 | - | ❌ |
+| NFR-SEC-004 | - | ❌ |
+| NFR-SEC-005 | - | ❌ |
+| NFR-A11Y-001 | - | ❌ |
+| NFR-A11Y-002 | - | ❌ |
+| NFR-A11Y-003 | - | ❌ |
+| NFR-A11Y-004 | - | ❌ |
+| NFR-TEST-001 | - | ❌ |
+| NFR-TEST-002 | - | ❌ |
+| NFR-TEST-003 | - | ❌ |
+| NFR-TEST-004 | - | ❌ |
+| NFR-MON-001 | - | ❌ |
+| NFR-MON-002 | - | ❌ |
+| NFR-MON-003 | - | ❌ |
+| NFR-MON-004 | - | ❌ |
+
+**Status Legend:**
+- ✅ Tested - Test coverage exists
+- ⚠️ Partial - Some test coverage, needs expansion  
+- ❌ Not tested - No test coverage yet
+- 🚧 In progress - Tests being written
 
 ---
 *Last updated: 2026-02-19*
