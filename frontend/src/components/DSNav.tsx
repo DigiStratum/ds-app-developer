@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useTenantTheme } from '../hooks/useTenantTheme';
 import { PreferencesModal } from './PreferencesModal';
 
 // DS Ecosystem apps for app-switcher [FR-NAV-002]
@@ -22,11 +23,13 @@ interface DSNavProps {
 export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps) {
   const { t } = useTranslation();
   const { user, currentTenant, isAuthenticated, login, logout, switchTenant } = useAuth();
+  const { logoUrl, isLoading: themeLoading } = useTenantTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [showAppSwitcher, setShowAppSwitcher] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
 
   // Refs for click-outside handling
   const appSwitcherRef = useRef<HTMLDivElement>(null);
@@ -65,14 +68,24 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            {/* Logo [FR-NAV-001] - leftmost element */}
+            {/* Logo [FR-NAV-001] - leftmost element, supports tenant branding */}
             <div className="flex items-center">
               <a href="/" className="flex items-center">
-                <img 
-                  src="/lk_logo.svg" 
-                  alt="LeapKick" 
-                  className="h-10"
-                />
+                {/* Subtle placeholder while theme loads */}
+                <div 
+                  className={`h-10 transition-opacity duration-200 ${
+                    themeLoading && !logoLoaded ? 'opacity-0' : 'opacity-100'
+                  }`}
+                  style={{ minWidth: '40px' }}
+                >
+                  <img 
+                    src={logoUrl || '/lk_logo.svg'} 
+                    alt="LeapKick" 
+                    className="h-10"
+                    onLoad={() => setLogoLoaded(true)}
+                    onError={() => setLogoLoaded(true)}
+                  />
+                </div>
               </a>
             </div>
 

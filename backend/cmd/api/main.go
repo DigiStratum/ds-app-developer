@@ -15,6 +15,7 @@ import (
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/health"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/theme"
 )
 
 var httpAdapter *httpadapter.HandlerAdapterV2
@@ -49,6 +50,7 @@ func init() {
 	// These routes allow both guest and authenticated access
 	sessionMux := http.NewServeMux()
 	sessionMux.HandleFunc("GET /api/session", api.GetSessionHandler)
+	sessionMux.HandleFunc("GET /api/theme", theme.Handler) // Theme endpoint [FR-THEME-004]
 
 	// Auth-required API routes
 	// These require a logged-in user (not just a guest session)
@@ -60,6 +62,7 @@ func init() {
 	// Session middleware creates/loads sessions
 	// Auth middleware enriches context with user data if authenticated
 	mux.Handle("/api/session", session.Middleware(auth.Middleware(sessionMux)))
+	mux.Handle("/api/theme", session.Middleware(auth.Middleware(sessionMux)))
 
 	// Wrap auth-required routes with session + auth + require-auth middleware
 	mux.Handle("/api/", session.Middleware(auth.Middleware(session.RequireAuth(authedMux))))
