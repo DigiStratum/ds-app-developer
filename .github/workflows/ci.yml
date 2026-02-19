@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
@@ -7,162 +7,296 @@ on:
     branches: [main]
 
 env:
-  AWS_REGION: us-west-2
   GO_VERSION: '1.21'
   NODE_VERSION: '20'
 
+permissions:
+  contents: read
+  security-events: write  # For CodeQL
+
 jobs:
-  # Lint and test backend
-  backend:
+  # ============================================================
+  # Backend Lint & Test
+  # ============================================================
+  backend-lint:
+    name: Backend Lint
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      
-      - name: Install dependencies
-        run: go mod download
-      
-      - name: Run linter
-        uses: golangci/golangci-lint-action@v3
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
         with:
           working-directory: backend
-      
-      - name: Run tests
-        run: go test -v -coverprofile=coverage.out ./...
-      
+          version: latest
+
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with coverage
+        run: go test -v -race -coverprofile=coverage.out ./...
+
       - name: Check coverage threshold (NFR-TEST-001: >80%)
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
+          echo "Total coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "Coverage $COVERAGE% is below 80% threshold"
+            echo "::error::Coverage ${COVERAGE}% is below 80% threshold (NFR-TEST-001)"
             exit 1
           fi
+          echo "::notice::Coverage ${COVERAGE}% meets 80% threshold"
 
-  # Lint and test frontend
-  frontend:
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
+
+  # ============================================================
+  # Frontend Lint & Test
+  # ============================================================
+  frontend-lint:
+    name: Frontend Lint
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Node
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Install dependencies
         run: npm ci
-      
-      - name: Run linter
-        run: npm run lint
-      
-      - name: Run tests
-        run: npm run test:coverage
-      
-      - name: Build
-        run: npm run build
 
-  # Build backend binary
-  build-backend:
-    needs: backend
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        run: npm run type-check || npx tsc --noEmit
+
+  frontend-test:
+    name: Frontend Test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage || npm test -- --coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+
+  # ============================================================
+  # Security Scan
+  # ============================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Go vulnerability check
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      
-      - name: Build Lambda binary
+
+      - name: Run govulncheck
         working-directory: backend
         run: |
-          GOOS=linux GOARCH=arm64 go build -o dist/bootstrap ./cmd/api
-      
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      # Node dependency audit
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: NPM Audit (Frontend)
+        working-directory: frontend
+        run: npm audit --audit-level=high || true
+
+      - name: NPM Audit (CDK)
+        working-directory: cdk
+        run: npm audit --audit-level=high || true
+
+      # CodeQL Analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go, javascript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go,javascript"
+
+  # ============================================================
+  # Infrastructure Validation
+  # ============================================================
+  cdk-synth:
+    name: CDK Synth
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: cdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CDK
+        run: npm run build
+
+      - name: CDK Synth (dry run)
+        run: npx cdk synth --quiet
+        env:
+          CDK_DEFAULT_ACCOUNT: '000000000000'
+          CDK_DEFAULT_REGION: 'us-west-2'
+
+  # ============================================================
+  # Build Artifacts (only on main)
+  # ============================================================
+  build-backend:
+    name: Build Backend
+    needs: [backend-lint, backend-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Lambda binary (ARM64)
+        working-directory: backend
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/bootstrap ./cmd/lambda
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend-binary
           path: backend/dist/bootstrap
+          retention-days: 1
 
-  # Deploy (canary strategy)
-  deploy:
-    needs: [backend, frontend, build-backend]
+  build-frontend:
+    name: Build Frontend
+    needs: [frontend-lint, frontend-test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment: production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Download backend binary
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-binary
-          path: backend/dist
-      
-      - name: Set up Node
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
-      - name: Install CDK
-        run: npm install -g aws-cdk
-      
-      - name: Install CDK dependencies
-        working-directory: cdk
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
         run: npm ci
-      
-      - name: Build frontend
         working-directory: frontend
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ''
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 1
+
+  # ============================================================
+  # CI Summary Gate
+  # ============================================================
+  ci-pass:
+    name: CI Pass
+    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
         run: |
-          npm ci
-          npm run build
-      
-      - name: Deploy CDK stack
-        working-directory: cdk
-        run: cdk deploy --require-approval never
-      
-      - name: Deploy frontend to S3
-        run: |
-          BUCKET=$(aws cloudformation describe-stacks --stack-name DSAppSkeletonStack --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text)
-          aws s3 sync frontend/dist s3://$BUCKET --delete
-      
-      - name: Invalidate CloudFront
-        run: |
-          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?@=='skeleton.digistratum.com']].Id" --output text)
-          aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
-      
-      # Health check (canary verification)
-      - name: Health check
-        run: |
-          sleep 30  # Wait for deployment to propagate
-          for i in {1..5}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://skeleton.digistratum.com/health)
-            if [ "$STATUS" = "200" ]; then
-              echo "Health check passed"
-              exit 0
-            fi
-            echo "Health check attempt $i failed (status: $STATUS), retrying..."
-            sleep 10
-          done
-          echo "Health check failed after 5 attempts"
-          exit 1
+          if [[ "${{ needs.backend-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.backend-test.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
+             [[ "${{ needs.security-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.cdk-synth.result }}" != "success" ]]; then
+            echo "::error::One or more CI jobs failed"
+            exit 1
+          fi
+          echo "::notice::All CI checks passed ✓"
