@@ -106,18 +106,13 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
               )}
             </div>
 
-            <img 
-              src="/brand-logo.svg" 
-              alt="DigiStratum" 
-              className="h-8 w-8 ml-2"
-              onError={(e) => {
-                // Fallback to favicon if brand-logo doesn't exist
-                (e.target as HTMLImageElement).src = '/favicon.svg';
-              }}
-            />
-            <span className="ml-3 text-xl font-semibold text-gray-900 dark:text-white hidden sm:block">
-              {appName}
-            </span>
+            <a href="/" className="flex items-center ml-2">
+              <img 
+                src="/lk_logo.png" 
+                alt="LeapKick" 
+                className="h-10"
+              />
+            </a>
           </div>
 
           {/* Mobile menu button [FR-NAV-004] */}
