@@ -65,8 +65,38 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            {/* Logo, App Switcher, and App Name [FR-NAV-001, FR-NAV-002] */}
+            {/* Logo [FR-NAV-001] - leftmost element */}
             <div className="flex items-center">
+              <a href="/" className="flex items-center">
+                <img 
+                  src="/lk_logo.svg" 
+                  alt="LeapKick" 
+                  className="h-10"
+                />
+              </a>
+            </div>
+
+            {/* Mobile menu button [FR-NAV-004] */}
+            <div className="flex items-center sm:hidden">
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                aria-label={t('nav.menu', 'Menu')}
+              >
+                {showMobileMenu ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Desktop: Right side - App Switcher, Preferences, Auth [FR-NAV-002, FR-NAV-004] */}
+            <div className="hidden sm:flex items-center space-x-2">
               {/* App Switcher [FR-NAV-002] */}
               <div className="relative" ref={appSwitcherRef}>
                 <button
@@ -80,7 +110,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 </button>
 
                 {showAppSwitcher && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                     <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {t('nav.dsApps', 'DigiStratum Apps')}
@@ -112,36 +142,6 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 )}
               </div>
 
-              <a href="/" className="flex items-center ml-2">
-                <img 
-                  src="/lk_logo.svg" 
-                  alt="LeapKick" 
-                  className="h-10"
-                />
-              </a>
-            </div>
-
-            {/* Mobile menu button [FR-NAV-004] */}
-            <div className="flex items-center sm:hidden">
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                aria-label={t('nav.menu', 'Menu')}
-              >
-                {showMobileMenu ? (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </button>
-            </div>
-
-            {/* Desktop: Right side - Auth controls [FR-NAV-004] */}
-            <div className="hidden sm:flex items-center space-x-2">
               {/* Preferences button - opens modal (#277) */}
               <button
                 onClick={() => setShowPreferencesModal(true)}
@@ -282,6 +282,33 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                   </button>
                 </div>
               )}
+
+              {/* App Switcher - mobile [FR-NAV-002] */}
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-3">
+                <p className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  {t('nav.dsApps', 'DigiStratum Apps')}
+                </p>
+                {DS_APPS.map((app) => (
+                  <a
+                    key={app.id}
+                    href={app.url}
+                    className={`flex items-center px-4 py-2 text-sm rounded-md transition-colors ${
+                      currentAppId === app.id 
+                        ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <span className="text-lg mr-3">{app.icon}</span>
+                    <span className="font-medium">{app.name}</span>
+                    {currentAppId === app.id && (
+                      <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
+                        {t('nav.current', 'Current')}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
 
               {/* Preferences link - opens modal */}
               <button
