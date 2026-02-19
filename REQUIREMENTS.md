@@ -43,7 +43,9 @@
 ### NFR-AVAIL: Availability
 - **NFR-AVAIL-001:** 99.9% uptime target
 - **NFR-AVAIL-002:** Graceful degradation on dependency failures
-- **NFR-AVAIL-003:** Health check endpoint at /health
+- **NFR-AVAIL-003:** Health check endpoint at /health (shallow and deep modes)
+  - Shallow: Unauthenticated, fast probe for load balancers
+  - Deep: Authenticated, checks all dependencies with latency metrics
 
 ### NFR-SEC: Security
 - **NFR-SEC-001:** OWASP Top 10 compliance
@@ -97,7 +99,7 @@
 | NFR-PERF-003 | - | ❌ |
 | NFR-AVAIL-001 | - | ❌ |
 | NFR-AVAIL-002 | - | ❌ |
-| NFR-AVAIL-003 | - | ❌ |
+| NFR-AVAIL-003 | `backend/internal/health/health_test.go` | ✅ |
 | NFR-SEC-001 | - | ❌ |
 | NFR-SEC-002 | - | ❌ |
 | NFR-SEC-003 | - | ❌ |

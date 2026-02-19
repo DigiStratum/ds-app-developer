@@ -12,6 +12,7 @@ import (
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/api"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/health"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
 )
@@ -32,8 +33,11 @@ func init() {
 	// Build the HTTP handler
 	mux := http.NewServeMux()
 
-	// Health check (no session required) [NFR-AVAIL-003]
-	mux.HandleFunc("GET /health", api.HealthHandler)
+	// Health check - shallow is unauthenticated, deep requires auth [NFR-AVAIL-003]
+	// For deep health checks, we need session/auth context for superadmin check
+	healthMux := http.NewServeMux()
+	healthMux.HandleFunc("GET /health", health.Handler)
+	mux.Handle("/health", session.Middleware(auth.Middleware(healthMux)))
 
 	// Auth routes (no session middleware - they manage sessions directly)
 	mux.HandleFunc("GET /auth/login", auth.LoginHandler)
