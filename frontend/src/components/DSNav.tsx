@@ -114,7 +114,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
 
               <a href="/" className="flex items-center ml-2">
                 <img 
-                  src="/lk_logo.png" 
+                  src="/lk_logo.svg" 
                   alt="LeapKick" 
                   className="h-10"
                 />
