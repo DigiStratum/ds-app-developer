@@ -1,71 +1,84 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-
-const COOKIE_CONSENT_KEY = 'ds-cookie-consent';
+import { useConsent } from '../hooks/useConsent';
 
 /**
- * Minimal GDPR cookie consent banner [FR-GDPR-001]
+ * GDPR cookie consent banner with Accept All / Only Necessary options [FR-GDPR-001]
  * 
- * - Shows on first visit, remembers acceptance in localStorage
- * - Brief text informing about session authentication cookies
- * - Single accept button + privacy policy link
- * - Accessible (keyboard, screen reader)
+ * - Shows on first visit, remembers choice in localStorage
+ * - Two options: "Accept All" (analytics, personalization) or "Only Necessary" (auth only)
+ * - Stores consent level as 'all' or 'essential' in localStorage
+ * - Accessible (keyboard navigation, ARIA labels, screen reader friendly)
  * - Mobile friendly bottom bar
+ * - Components can check consent via useConsent() hook
  */
 export function CookieConsent() {
   const { t } = useTranslation();
-  const [isVisible, setIsVisible] = useState(false);
+  const { hasConsented, setConsent } = useConsent();
 
-  useEffect(() => {
-    // Check if user has already accepted cookies
-    const hasConsented = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!hasConsented) {
-      setIsVisible(true);
-    }
-  }, []);
-
-  const handleAccept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
-    setIsVisible(false);
+  const handleAcceptAll = () => {
+    setConsent('all');
   };
 
-  if (!isVisible) {
+  const handleOnlyNecessary = () => {
+    setConsent('essential');
+  };
+
+  if (hasConsented) {
     return null;
   }
 
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-description"
       className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"
     >
-      <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex-1 text-center sm:text-left">
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4">
+          {/* Header and description */}
+          <div className="text-center sm:text-left">
+            <h2
+              id="cookie-consent-title"
+              className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center sm:justify-start gap-2"
+            >
+              <span aria-hidden="true">🍪</span>
+              {t('cookies.title', 'We use cookies to improve your experience')}
+            </h2>
             <p
               id="cookie-consent-description"
-              className="text-sm text-gray-600 dark:text-gray-300"
+              className="mt-2 text-sm text-gray-600 dark:text-gray-300"
             >
-              <span id="cookie-consent-title" className="sr-only">
-                {t('cookies.title', 'Cookie Notice')}
-              </span>
-              {t('cookies.message', 'We use cookies for session authentication.')}{' '}
-              <a
-                href="/privacy"
-                className="text-ds-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-1 rounded"
-              >
-                {t('cookies.learnMore', 'Learn more')}
-              </a>
+              {t('cookies.message', 'We use essential cookies for authentication, plus optional cookies for personalization, analytics, and relevant ads.')}
             </p>
           </div>
-          <button
-            onClick={handleAccept}
-            className="btn btn-primary text-sm whitespace-nowrap"
-            aria-label={t('cookies.acceptAriaLabel', 'Accept cookies and close banner')}
-          >
-            {t('cookies.accept', 'Accept')}
-          </button>
+
+          {/* Buttons and privacy link */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <a
+              href="/privacy"
+              className="text-sm text-ds-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2 rounded order-last sm:order-first"
+            >
+              {t('cookies.privacyPolicy', 'Learn more in our Privacy Policy')}
+            </a>
+            <div className="flex gap-3">
+              <button
+                onClick={handleOnlyNecessary}
+                className="btn btn-secondary text-sm whitespace-nowrap"
+                aria-label={t('cookies.onlyNecessaryAriaLabel', 'Accept only necessary cookies for authentication')}
+              >
+                {t('cookies.onlyNecessary', 'Only Necessary')}
+              </button>
+              <button
+                onClick={handleAcceptAll}
+                className="btn btn-primary text-sm whitespace-nowrap"
+                aria-label={t('cookies.acceptAllAriaLabel', 'Accept all cookies including analytics and personalization')}
+              >
+                {t('cookies.acceptAll', 'Accept All')}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

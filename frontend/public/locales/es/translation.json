@@ -49,10 +49,12 @@
     "copyright": "© 2016 - {{year}} DigiStratum LLC"
   },
   "cookies": {
-    "title": "Aviso de Cookies",
-    "message": "Usamos cookies para la autenticación de sesión.",
-    "learnMore": "Más información",
-    "accept": "Aceptar",
-    "acceptAriaLabel": "Aceptar cookies y cerrar el banner"
+    "title": "Usamos cookies para mejorar tu experiencia",
+    "message": "Usamos cookies esenciales para la autenticación, además de cookies opcionales para personalización, análisis y anuncios relevantes.",
+    "privacyPolicy": "Más información en nuestra Política de Privacidad",
+    "acceptAll": "Aceptar Todas",
+    "onlyNecessary": "Solo Necesarias",
+    "acceptAllAriaLabel": "Aceptar todas las cookies incluyendo análisis y personalización",
+    "onlyNecessaryAriaLabel": "Aceptar solo las cookies necesarias para autenticación"
   }
 }
