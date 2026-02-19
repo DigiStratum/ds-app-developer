@@ -1,7 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
-import { Layout } from './components/Layout';
+import { Layout, ErrorBoundaryWithKey } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { useTranslation } from 'react-i18next';
@@ -44,20 +44,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  const location = useLocation();
+  
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Layout appName="DS App Skeleton">
-              <DashboardPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <ErrorBoundaryWithKey resetKey={location.pathname}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Layout appName="DS App Skeleton">
+                <DashboardPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </ErrorBoundaryWithKey>
   );
 }
 

@@ -12,14 +12,19 @@ import (
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/api"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
 )
 
 var httpAdapter *httpadapter.HandlerAdapterV2
 
 func init() {
-	// Configure structured logging
+	// Configure structured JSON logging for CloudWatch [NFR-MON-001]
+	logLevel := slog.LevelInfo
+	if os.Getenv("LOG_LEVEL") == "debug" {
+		logLevel = slog.LevelDebug
+	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: logLevel,
 	}))
 	slog.SetDefault(logger)
 
@@ -41,7 +46,16 @@ func init() {
 	mux.HandleFunc("GET /auth/callback", auth.CallbackHandler)
 	mux.HandleFunc("GET /auth/logout", auth.LogoutHandler)
 
-	httpAdapter = httpadapter.NewV2(mux)
+	// Apply middleware stack (order matters - outermost first):
+	// 1. Recovery - catch panics at the outermost layer
+	// 2. Correlation ID - assign ID for tracing
+	// 3. Logging - log request completion with timing
+	var handler http.Handler = mux
+	handler = middleware.LoggingMiddleware(handler)
+	handler = middleware.CorrelationIDMiddleware(handler)
+	handler = middleware.RecoveryMiddleware(handler)
+
+	httpAdapter = httpadapter.NewV2(handler)
 }
 
 func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {

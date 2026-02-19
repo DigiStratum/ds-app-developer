@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
 )
 
 // Standard error response format [NFR-SEC-004]
@@ -28,12 +28,14 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-// WriteError writes a standard error response
-func WriteError(w http.ResponseWriter, status int, code, message string) {
+// WriteError writes a standard error response with correlation ID
+func WriteError(w http.ResponseWriter, r *http.Request, status int, code, message string) {
+	correlationID := middleware.GetCorrelationID(r.Context())
 	WriteJSON(w, status, ErrorResponse{
 		Error: ErrorDetail{
-			Code:    code,
-			Message: message,
+			Code:      code,
+			Message:   message,
+			RequestID: correlationID,
 		},
 	})
 }
@@ -51,11 +53,12 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 func GetCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := auth.GetUser(r.Context())
 	if user == nil {
-		WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "No authenticated user")
+		WriteError(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "No authenticated user")
 		return
 	}
 
-	slog.Info("user info requested", "user_id", user.ID)
+	logger := middleware.LoggerWithCorrelation(r.Context())
+	logger.Info("user info requested", "user_id", user.ID)
 	WriteJSON(w, http.StatusOK, user)
 }
 
