@@ -17,7 +17,11 @@
     "apps": "Apps",
     "profile": "Profile",
     "switchTenant": "Switch Organization",
-    "personal": "Personal"
+    "personal": "Personal",
+    "appSwitcher": "Switch app",
+    "dsApps": "DigiStratum Apps",
+    "current": "Current",
+    "menu": "Menu"
   },
   "auth": {
     "loginWith": "Login with DSAccount",

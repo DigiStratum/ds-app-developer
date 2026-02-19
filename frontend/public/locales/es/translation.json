@@ -17,7 +17,11 @@
     "apps": "Aplicaciones",
     "profile": "Perfil",
     "switchTenant": "Cambiar Organización",
-    "personal": "Personal"
+    "personal": "Personal",
+    "appSwitcher": "Cambiar aplicación",
+    "dsApps": "Aplicaciones DigiStratum",
+    "current": "Actual",
+    "menu": "Menú"
   },
   "auth": {
     "loginWith": "Iniciar sesión con DSAccount",
