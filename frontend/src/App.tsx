@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
-import { Layout, ErrorBoundaryWithKey } from './components';
+import { CookieConsent, Layout, ErrorBoundaryWithKey } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +83,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <AppRoutes />
+        <CookieConsent />
       </AuthProvider>
     </ThemeProvider>
   );

@@ -47,5 +47,12 @@
   },
   "footer": {
     "copyright": "© {{year}} DigiStratum LLC. All rights reserved."
+  },
+  "cookies": {
+    "title": "Cookie Notice",
+    "message": "We use cookies for session authentication.",
+    "learnMore": "Learn more",
+    "accept": "Accept",
+    "acceptAriaLabel": "Accept cookies and close banner"
   }
 }
