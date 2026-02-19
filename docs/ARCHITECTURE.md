@@ -16,6 +16,7 @@
 
 > **Related Documentation:**
 > - [AUTH.md](./AUTH.md) - Detailed DSAccount SSO integration, token handling, session management
+> - [DATABASE.md](./DATABASE.md) - DynamoDB patterns, single-table design, GSI strategies
 > - [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) - AWS deployment patterns
 > - [TEST-TEMPLATES.md](./TEST-TEMPLATES.md) - Test writing conventions
 

@@ -33,6 +33,7 @@ go run ./cmd/api  # backend on :8080
 - [REQUIREMENTS.md](./REQUIREMENTS.md) - Functional and non-functional requirements
 - [AGENTS.md](./AGENTS.md) - Agentic development guidelines
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
+- [docs/DATABASE.md](./docs/DATABASE.md) - DynamoDB patterns and single-table design
 - [docs/API.md](./docs/API.md) - API documentation
 
 ## Shared Packages
