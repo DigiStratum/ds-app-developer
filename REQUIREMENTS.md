@@ -82,13 +82,13 @@
 | FR-TENANT-002 | `frontend/src/components/DSNav.tsx`, `frontend/src/hooks/useAuth.tsx` | ⚠️ |
 | FR-TENANT-003 | `backend/internal/dynamo/repository.go` | ⚠️ |
 | FR-TENANT-004 | `backend/internal/auth/middleware_test.go` | ✅ |
-| FR-NAV-001 | - | ❌ |
-| FR-NAV-002 | - | ❌ |
-| FR-NAV-003 | - | ❌ |
-| FR-NAV-004 | - | ❌ |
-| FR-THEME-001 | - | ❌ |
-| FR-THEME-002 | - | ❌ |
-| FR-THEME-003 | - | ❌ |
+| FR-NAV-001 | `frontend/src/components/Layout.tsx`, `frontend/src/components/DSNav.tsx` | ✅ |
+| FR-NAV-002 | `frontend/src/components/DSNav.tsx` | ✅ |
+| FR-NAV-003 | `frontend/src/components/Footer.tsx` | ✅ |
+| FR-NAV-004 | `frontend/src/components/DSNav.tsx`, `frontend/src/components/Layout.tsx` | ✅ |
+| FR-THEME-001 | `frontend/src/hooks/useTheme.tsx`, `frontend/src/styles/globals.css` | ✅ |
+| FR-THEME-002 | `frontend/src/hooks/useTheme.tsx` | ✅ |
+| FR-THEME-003 | `frontend/src/styles/globals.css` | ✅ |
 | FR-I18N-001 | - | ❌ |
 | FR-I18N-002 | - | ❌ |
 | FR-I18N-003 | - | ❌ |

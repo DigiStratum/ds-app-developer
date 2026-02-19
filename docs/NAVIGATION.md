@@ -300,4 +300,97 @@ Replace the logo image source:
 
 ---
 
+## Theme System (FR-THEME-003)
+
+The theme system uses CSS custom properties (variables) defined in `src/styles/globals.css`:
+
+### CSS Variables
+
+```css
+:root {
+  /* Brand colors */
+  --ds-primary: #2563eb;
+  --ds-secondary: #64748b;
+  --ds-success: #22c55e;
+  --ds-warning: #f59e0b;
+  --ds-danger: #ef4444;
+  
+  /* Light theme (default) */
+  --ds-bg-primary: #ffffff;
+  --ds-bg-secondary: #f9fafb;
+  --ds-text-primary: #111827;
+  --ds-text-secondary: #6b7280;
+  --ds-border: #e5e7eb;
+}
+
+.dark {
+  /* Dark theme overrides */
+  --ds-bg-primary: #1f2937;
+  --ds-bg-secondary: #111827;
+  --ds-text-primary: #f9fafb;
+  --ds-text-secondary: #9ca3af;
+  --ds-border: #374151;
+}
+```
+
+### Using CSS Variables
+
+```css
+/* In your CSS */
+.my-component {
+  background-color: var(--ds-bg-primary);
+  color: var(--ds-text-primary);
+  border-color: var(--ds-border);
+}
+```
+
+### Future Custom Themes
+
+The CSS variable architecture supports custom themes:
+
+1. Add new theme class (e.g., `.theme-custom`)
+2. Override CSS variables for that theme
+3. Add theme option to `ThemeProvider`
+
+```css
+/* Example: Custom brand theme */
+.theme-custom {
+  --ds-primary: #custom-brand-color;
+  --ds-bg-primary: #custom-bg;
+  /* ... other overrides */
+}
+```
+
+---
+
+## Branding
+
+### Logo Files
+
+- `public/brand-logo.svg` - Primary logo (used in header)
+- `public/favicon.svg` - Browser favicon
+
+### Logo Placement (FR-NAV-001)
+
+Logo appears in the upper-left of the header, after the app-switcher icon:
+
+```
+[App Switcher] [Logo] [App Name] ................ [Tenant] [Theme] [User]
+```
+
+The logo has a fallback to `favicon.svg` if `brand-logo.svg` is missing:
+
+```tsx
+<img 
+  src="/brand-logo.svg" 
+  alt="DigiStratum" 
+  className="h-8 w-8 ml-2"
+  onError={(e) => {
+    (e.target as HTMLImageElement).src = '/favicon.svg';
+  }}
+/>
+```
+
+---
+
 *Last updated: 2026-02-19*
