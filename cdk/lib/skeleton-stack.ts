@@ -9,19 +9,24 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { Monitoring } from './constructs';
 
 interface SkeletonStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
   dsAccountUrl: string;
+  environment?: string;
 }
 
 export class SkeletonStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SkeletonStackProps) {
     super(scope, id, props);
+
+    const environment = props.environment ?? 'dev';
+    const isProd = environment === 'prod';
+    const isStaging = environment === 'staging';
 
     // DynamoDB table (single-table design) [FR-TENANT-003]
     const table = new dynamodb.Table(this, 'Table', {
@@ -47,6 +52,7 @@ export class SkeletonStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/dist')),
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
+      architecture: lambda.Architecture.ARM_64,
       environment: {
         DYNAMODB_TABLE: table.tableName,
         DSACCOUNT_SSO_URL: props.dsAccountUrl,
@@ -87,16 +93,18 @@ export class SkeletonStack extends cdk.Stack {
       zoneName: 'digistratum.com',
     });
 
-    // ACM certificate
-    const certificate = new acm.Certificate(this, 'Certificate', {
+    // ACM certificate - MUST be in us-east-1 for CloudFront
+    // Using DnsValidatedCertificate for cross-region support
+    const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
       domainName: props.domainName,
-      validation: acm.CertificateValidation.fromDns(hostedZone),
+      hostedZone,
+      region: 'us-east-1', // CloudFront requires us-east-1
     });
 
     // CloudFront distribution
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(frontendBucket),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
       },
@@ -139,6 +147,17 @@ export class SkeletonStack extends cdk.Stack {
       zone: hostedZone,
       recordName: props.domainName,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
+    });
+
+    // Monitoring [NFR-MON-001, NFR-MON-002, NFR-MON-003]
+    const monitoring = new Monitoring(this, 'Monitoring', {
+      appName: 'ds-app-skeleton',
+      environment,
+      lambdaFunction: apiHandler,
+      apiId: httpApi.apiId,
+      region: this.region,
+      tableName: table.tableName,
+      enableAlarms: isProd || isStaging,
     });
 
     // Outputs

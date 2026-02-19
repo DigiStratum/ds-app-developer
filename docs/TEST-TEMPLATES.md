@@ -1,6 +1,11 @@
 # Test Templates - Requirements Traceability
 
-This document provides templates for writing tests that trace to requirements.
+This document provides templates for writing **unit tests** that trace to requirements.
+
+> **For integration testing patterns, see [INTEGRATION-TESTING.md](./INTEGRATION-TESTING.md)**
+> - API integration tests with test fixtures
+> - Database test isolation (DynamoDB Local)
+> - Test environment setup/teardown
 
 ## Go Test Template
 

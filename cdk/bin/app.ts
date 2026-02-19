@@ -13,6 +13,6 @@ const env = {
 new SkeletonStack(app, 'DSAppSkeletonStack', {
   env,
   domainName: 'skeleton.digistratum.com',
-  hostedZoneId: 'Z0223347L2MY5WGPNH7V', // digistratum.com zone
+  hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
   dsAccountUrl: 'https://account.digistratum.com',
 });
