@@ -1,19 +1,17 @@
-# DS App Skeleton
-
 # Dependencies
 node_modules/
+vendor/
+
+# Build outputs
 dist/
-*.log
+*.out
+coverage/
 
-# Backend
-backend/dist/
-*.exe
-
-# Frontend
-frontend/dist/
-
-# Infrastructure
-infra/cdk.out/
+# CDK
+cdk.out/
+*.d.ts
+*.js
+!cdk.json
 
 # IDE
 .idea/
@@ -30,6 +28,10 @@ Thumbs.db
 .env.local
 *.env
 
-# Test coverage
+# Logs
+*.log
+npm-debug.log*
+
+# Test
 coverage/
-*.out
+.nyc_output/

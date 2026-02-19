@@ -1,0 +1,168 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: us-west-2
+  GO_VERSION: '1.21'
+  NODE_VERSION: '20'
+
+jobs:
+  # Lint and test backend
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Install dependencies
+        run: go mod download
+      
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v3
+        with:
+          working-directory: backend
+      
+      - name: Run tests
+        run: go test -v -coverprofile=coverage.out ./...
+      
+      - name: Check coverage threshold (NFR-TEST-001: >80%)
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 80% threshold"
+            exit 1
+          fi
+
+  # Lint and test frontend
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm run test:coverage
+      
+      - name: Build
+        run: npm run build
+
+  # Build backend binary
+  build-backend:
+    needs: backend
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Build Lambda binary
+        working-directory: backend
+        run: |
+          GOOS=linux GOARCH=arm64 go build -o dist/bootstrap ./cmd/api
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/dist/bootstrap
+
+  # Deploy (canary strategy)
+  deploy:
+    needs: [backend, frontend, build-backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Download backend binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/dist
+      
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install CDK
+        run: npm install -g aws-cdk
+      
+      - name: Install CDK dependencies
+        working-directory: cdk
+        run: npm ci
+      
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      
+      - name: Deploy CDK stack
+        working-directory: cdk
+        run: cdk deploy --require-approval never
+      
+      - name: Deploy frontend to S3
+        run: |
+          BUCKET=$(aws cloudformation describe-stacks --stack-name DSAppSkeletonStack --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text)
+          aws s3 sync frontend/dist s3://$BUCKET --delete
+      
+      - name: Invalidate CloudFront
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?@=='skeleton.digistratum.com']].Id" --output text)
+          aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+      
+      # Health check (canary verification)
+      - name: Health check
+        run: |
+          sleep 30  # Wait for deployment to propagate
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://skeleton.digistratum.com/health)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Health check attempt $i failed (status: $STATUS), retrying..."
+            sleep 10
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1

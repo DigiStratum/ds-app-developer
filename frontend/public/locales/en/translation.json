@@ -1,0 +1,35 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "logout": "Logout",
+    "settings": "Settings"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "apps": "Apps",
+    "profile": "Profile",
+    "switchTenant": "Switch Organization",
+    "personal": "Personal"
+  },
+  "auth": {
+    "loginWith": "Login with DSAccount",
+    "loggingIn": "Logging in...",
+    "unauthorized": "Please log in to continue"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "footer": {
+    "copyright": "© {{year}} DigiStratum LLC. All rights reserved."
+  }
+}

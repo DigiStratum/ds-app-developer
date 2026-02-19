@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DS Design System Variables [FR-THEME-003] */
+:root {
+  --ds-primary: #2563eb;
+  --ds-secondary: #64748b;
+  --ds-success: #22c55e;
+  --ds-warning: #f59e0b;
+  --ds-danger: #ef4444;
+  
+  --ds-bg-primary: #ffffff;
+  --ds-bg-secondary: #f9fafb;
+  --ds-text-primary: #111827;
+  --ds-text-secondary: #6b7280;
+  --ds-border: #e5e7eb;
+}
+
+/* Dark theme [FR-THEME-001] */
+.dark {
+  --ds-bg-primary: #1f2937;
+  --ds-bg-secondary: #111827;
+  --ds-text-primary: #f9fafb;
+  --ds-text-secondary: #9ca3af;
+  --ds-border: #374151;
+}
+
+body {
+  background-color: var(--ds-bg-secondary);
+  color: var(--ds-text-primary);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Utility classes */
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-ds-primary text-white hover:bg-blue-700 focus:ring-ds-primary;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200;
+}
+
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4;
+}

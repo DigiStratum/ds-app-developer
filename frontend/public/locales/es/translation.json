@@ -1,0 +1,35 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración"
+  },
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "apps": "Aplicaciones",
+    "profile": "Perfil",
+    "switchTenant": "Cambiar Organización",
+    "personal": "Personal"
+  },
+  "auth": {
+    "loginWith": "Iniciar sesión con DSAccount",
+    "loggingIn": "Iniciando sesión...",
+    "unauthorized": "Por favor inicie sesión para continuar"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "footer": {
+    "copyright": "© {{year}} DigiStratum LLC. Todos los derechos reservados."
+  }
+}
