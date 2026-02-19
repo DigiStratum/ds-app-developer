@@ -4,9 +4,10 @@ import { Layout } from '../components/Layout';
 
 // Landing page - accessible without authentication (guest session pattern)
 // Shows different content for guest vs authenticated users
+// Note: Auth controls are ONLY in the nav bar (DSNav component)
 export function HomePage() {
   const { t } = useTranslation();
-  const { user, isAuthenticated, login } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <Layout appName="DS App Skeleton">
@@ -29,19 +30,11 @@ export function HomePage() {
             </a>
           </div>
         ) : (
-          /* Guest user - show call to action */
+          /* Guest user - show info about the app (auth controls in nav bar) */
           <div className="card max-w-md mx-auto">
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
+            <p className="text-gray-700 dark:text-gray-300">
               {t('landing.cta', 'Get started with your DigiStratum account')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button onClick={() => login()} className="btn btn-primary">
-                {t('auth.signUp', 'Sign Up')}
-              </button>
-              <button onClick={() => login()} className="btn btn-secondary">
-                {t('auth.signIn', 'Sign In')}
-              </button>
-            </div>
           </div>
         )}
 

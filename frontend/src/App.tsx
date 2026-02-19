@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { Layout, ErrorBoundaryWithKey } from './components';
@@ -8,8 +8,9 @@ import { useTranslation } from 'react-i18next';
 
 // Protected route wrapper [FR-AUTH-002]
 // Only used for routes that require authentication (not the landing page)
+// Auth controls are ONLY in the nav bar - unauthenticated users redirect to home
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoading, isAuthenticated, login } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -23,22 +24,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Redirect to home page - auth controls are only in the nav bar
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center card max-w-md">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            {t('auth.loginRequired', 'Login Required')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {t('auth.unauthorized', 'Please sign in to access this page.')}
-          </p>
-          <button onClick={() => login()} className="btn btn-primary">
-            {t('auth.signIn', 'Sign In')}
-          </button>
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
