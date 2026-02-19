@@ -46,7 +46,7 @@
     "fr": "Français"
   },
   "footer": {
-    "copyright": "© {{year}} DigiStratum LLC. All rights reserved."
+    "copyright": "© 2016 - {{year}} DigiStratum LLC"
   },
   "cookies": {
     "title": "Cookie Notice",
