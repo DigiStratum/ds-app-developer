@@ -16,9 +16,12 @@ interface DSNavProps {
 }
 
 // Standard navigation component [FR-NAV-001, FR-NAV-002, FR-NAV-004]
+// Supports both guest and authenticated sessions:
+// - Guest: Shows "Sign In / Sign Up" buttons
+// - Authenticated: Shows user dropdown with tenant switcher
 export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
   const { t } = useTranslation();
-  const { user, currentTenant, logout, switchTenant } = useAuth();
+  const { user, currentTenant, isAuthenticated, login, logout, switchTenant } = useAuth();
   const { setTheme, resolvedTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTenantMenu, setShowTenantMenu] = useState(false);
@@ -136,49 +139,8 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
             </button>
           </div>
 
-          {/* Desktop: Right side - Tenant switcher and User menu [FR-NAV-004] */}
+          {/* Desktop: Right side - Auth controls [FR-NAV-004] */}
           <div className="hidden sm:flex items-center space-x-4">
-            {/* Tenant Switcher [FR-TENANT-002] */}
-            {user && user.tenants.length > 0 && (
-              <div className="relative" ref={tenantMenuRef}>
-                <button
-                  onClick={() => setShowTenantMenu(!showTenantMenu)}
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  <span className="hidden lg:inline">{tenantName}</span>
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {showTenantMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => { switchTenant(null); setShowTenantMenu(false); }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${!currentTenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
-                      >
-                        {t('nav.personal')}
-                      </button>
-                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-                      {user.tenants.map((tenant) => (
-                        <button
-                          key={tenant}
-                          onClick={() => { switchTenant(tenant); setShowTenantMenu(false); }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${currentTenant === tenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
-                        >
-                          {tenant}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Theme Toggle [FR-THEME-001] */}
             <button
               onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
@@ -196,41 +158,103 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
               )}
             </button>
 
-            {/* User Menu */}
-            {user && (
-              <div className="relative" ref={userMenuRef}>
+            {/* Guest: Sign In / Sign Up buttons */}
+            {!isAuthenticated && (
+              <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                  onClick={() => login()}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                 >
-                  <div className="w-8 h-8 bg-ds-primary rounded-full flex items-center justify-center text-white font-medium">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  {t('auth.signIn', 'Sign In')}
                 </button>
+                <button
+                  onClick={() => login()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-ds-primary hover:bg-ds-primary-dark rounded-md"
+                >
+                  {t('auth.signUp', 'Sign Up')}
+                </button>
+              </div>
+            )}
 
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                    </div>
-                    <div className="py-1">
-                      <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        {t('common.settings')}
-                      </a>
-                      <button
-                        onClick={logout}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        {t('common.logout')}
-                      </button>
-                    </div>
+            {/* Authenticated: Tenant switcher and User menu */}
+            {isAuthenticated && user && (
+              <>
+                {/* Tenant Switcher [FR-TENANT-002] */}
+                {user.tenants.length > 0 && (
+                  <div className="relative" ref={tenantMenuRef}>
+                    <button
+                      onClick={() => setShowTenantMenu(!showTenantMenu)}
+                      className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span className="hidden lg:inline">{tenantName}</span>
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {showTenantMenu && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => { switchTenant(null); setShowTenantMenu(false); }}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${!currentTenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                          >
+                            {t('nav.personal')}
+                          </button>
+                          <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                          {user.tenants.map((tenant) => (
+                            <button
+                              key={tenant}
+                              onClick={() => { switchTenant(tenant); setShowTenantMenu(false); }}
+                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${currentTenant === tenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                            >
+                              {tenant}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+
+                {/* User Menu */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                  >
+                    <div className="w-8 h-8 bg-ds-primary rounded-full flex items-center justify-center text-white font-medium">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          {t('common.settings')}
+                        </a>
+                        <button
+                          onClick={logout}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          {t('common.logout')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -240,8 +264,26 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
       {showMobileMenu && (
         <div className="sm:hidden border-t border-gray-200 dark:border-gray-700">
           <div className="px-4 py-3 space-y-3">
-            {/* User info */}
-            {user && (
+            {/* Guest: Sign In / Sign Up */}
+            {!isAuthenticated && (
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => login()}
+                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-left"
+                >
+                  {t('auth.signIn', 'Sign In')}
+                </button>
+                <button
+                  onClick={() => login()}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-ds-primary hover:bg-ds-primary-dark rounded-md text-center"
+                >
+                  {t('auth.signUp', 'Sign Up')}
+                </button>
+              </div>
+            )}
+
+            {/* Authenticated: User info */}
+            {isAuthenticated && user && (
               <div className="flex items-center pb-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="w-10 h-10 bg-ds-primary rounded-full flex items-center justify-center text-white font-medium">
                   {user.name.charAt(0).toUpperCase()}
@@ -254,7 +296,7 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
             )}
 
             {/* Tenant Switcher */}
-            {user && user.tenants.length > 0 && (
+            {isAuthenticated && user && user.tenants.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                   {t('nav.switchTenant')}
@@ -299,8 +341,8 @@ export function DSNav({ appName = 'DS App', currentAppId }: DSNavProps) {
               )}
             </button>
 
-            {/* Settings & Logout */}
-            {user && (
+            {/* Settings & Logout (authenticated only) */}
+            {isAuthenticated && user && (
               <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-1">
                 <a href="/settings" className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md">
                   {t('common.settings')}

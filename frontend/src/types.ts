@@ -8,18 +8,30 @@ export interface User {
   theme?: 'light' | 'dark' | 'system';
 }
 
+// Session types (guest session pattern)
+export interface Session {
+  session_id: string;
+  is_authenticated: boolean;
+  is_guest: boolean;
+  tenant_id?: string;
+  user?: User;
+}
+
 // Tenant types [FR-TENANT-001]
 export interface Tenant {
   id: string;
   name: string;
 }
 
-// Auth context
+// Auth context - supports both guest and authenticated sessions
 export interface AuthContext {
+  session: Session | null;
   user: User | null;
   currentTenant: string | null;
   isLoading: boolean;
-  login: () => void;
+  isAuthenticated: boolean;
+  isGuest: boolean;
+  login: (redirectTo?: string) => void;
   logout: () => void;
   switchTenant: (tenantId: string | null) => void;
 }

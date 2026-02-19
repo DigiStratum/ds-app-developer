@@ -2,9 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { Layout } from '../components/Layout';
 
+// Landing page - accessible without authentication (guest session pattern)
+// Shows different content for guest vs authenticated users
 export function HomePage() {
   const { t } = useTranslation();
-  const { user, login } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
 
   return (
     <Layout appName="DS App Skeleton">
@@ -16,7 +18,8 @@ export function HomePage() {
           Canonical baseline template for DigiStratum applications
         </p>
 
-        {user ? (
+        {/* Authenticated user - show personalized welcome */}
+        {isAuthenticated && user ? (
           <div className="card max-w-md mx-auto">
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               Welcome back, <span className="font-semibold">{user.name}</span>!
@@ -26,11 +29,23 @@ export function HomePage() {
             </a>
           </div>
         ) : (
-          <button onClick={login} className="btn btn-primary">
-            {t('auth.loginWith')}
-          </button>
+          /* Guest user - show call to action */
+          <div className="card max-w-md mx-auto">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              {t('landing.cta', 'Get started with your DigiStratum account')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onClick={() => login()} className="btn btn-primary">
+                {t('auth.signUp', 'Sign Up')}
+              </button>
+              <button onClick={() => login()} className="btn btn-secondary">
+                {t('auth.signIn', 'Sign In')}
+              </button>
+            </div>
+          </div>
         )}
 
+        {/* Feature cards - visible to all users */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <div className="card">
             <h3 className="font-semibold text-lg mb-2">Multi-Tenant</h3>
@@ -49,6 +64,31 @@ export function HomePage() {
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               WCAG 2.1 AA compliant with keyboard navigation
             </p>
+          </div>
+        </div>
+
+        {/* Additional sections for landing page */}
+        <div className="mt-16 max-w-4xl mx-auto text-left">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            {t('landing.whyTitle', 'Why DS App Skeleton?')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
+                {t('landing.feature1Title', 'Production Ready')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('landing.feature1Desc', 'Built with best practices for security, performance, and scalability. Deploy with confidence.')}
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
+                {t('landing.feature2Title', 'Developer Experience')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('landing.feature2Desc', 'Clear patterns, comprehensive documentation, and a consistent structure across all DS apps.')}
+              </p>
+            </div>
           </div>
         </div>
       </div>

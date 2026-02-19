@@ -13,6 +13,7 @@ import (
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/api"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
 )
 
 var httpAdapter *httpadapter.HandlerAdapterV2
@@ -31,20 +32,32 @@ func init() {
 	// Build the HTTP handler
 	mux := http.NewServeMux()
 
-	// Health check (no auth required)
+	// Health check (no session required) [NFR-AVAIL-003]
 	mux.HandleFunc("GET /health", api.HealthHandler)
 
-	// API routes (auth required)
+	// Auth routes (no session middleware - they manage sessions directly)
+	mux.HandleFunc("GET /auth/login", auth.LoginHandler)
+	mux.HandleFunc("GET /auth/callback", auth.CallbackHandler)
+	mux.HandleFunc("GET /auth/logout", auth.LogoutHandler)
+
+	// Session-aware API routes (works for both guest and authenticated users)
+	// These routes allow both guest and authenticated access
+	sessionMux := http.NewServeMux()
+	sessionMux.HandleFunc("GET /api/session", api.GetSessionHandler)
+
+	// Auth-required API routes
+	// These require a logged-in user (not just a guest session)
 	authedMux := http.NewServeMux()
 	authedMux.HandleFunc("GET /api/me", api.GetCurrentUserHandler)
 	authedMux.HandleFunc("GET /api/tenant", api.GetCurrentTenantHandler)
 
-	// Wrap with auth middleware
-	mux.Handle("/api/", auth.Middleware(authedMux))
+	// Wrap session routes with session + auth middleware
+	// Session middleware creates/loads sessions
+	// Auth middleware enriches context with user data if authenticated
+	mux.Handle("/api/session", session.Middleware(auth.Middleware(sessionMux)))
 
-	// SSO callbacks (no auth middleware)
-	mux.HandleFunc("GET /auth/callback", auth.CallbackHandler)
-	mux.HandleFunc("GET /auth/logout", auth.LogoutHandler)
+	// Wrap auth-required routes with session + auth + require-auth middleware
+	mux.Handle("/api/", session.Middleware(auth.Middleware(session.RequireAuth(authedMux))))
 
 	// Apply middleware stack (order matters - outermost first):
 	// 1. Recovery - catch panics at the outermost layer

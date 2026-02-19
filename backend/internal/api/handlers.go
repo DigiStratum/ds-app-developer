@@ -7,6 +7,7 @@ import (
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
 )
 
 // Standard error response format [NFR-SEC-004]
@@ -19,6 +20,15 @@ type ErrorDetail struct {
 	Message   string            `json:"message"`
 	Details   map[string]string `json:"details,omitempty"`
 	RequestID string            `json:"request_id,omitempty"`
+}
+
+// SessionResponse represents the session state for the frontend
+type SessionResponse struct {
+	SessionID       string `json:"session_id"`
+	IsAuthenticated bool   `json:"is_authenticated"`
+	IsGuest         bool   `json:"is_guest"`
+	TenantID        string `json:"tenant_id,omitempty"`
+	User            *auth.User `json:"user,omitempty"`
 }
 
 // WriteJSON writes a JSON response with the given status code
@@ -49,7 +59,37 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetSessionHandler returns the current session state (works for both guest and authenticated)
+// This is the primary endpoint for the frontend to check session status.
+func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
+	sess := session.GetSession(r.Context())
+	user := auth.GetUser(r.Context())
+
+	if sess == nil {
+		// This shouldn't happen if session middleware is working correctly
+		WriteError(w, r, http.StatusInternalServerError, "NO_SESSION", "No session available")
+		return
+	}
+
+	response := SessionResponse{
+		SessionID:       sess.ID[:8] + "...", // Truncate for security
+		IsAuthenticated: sess.IsAuthenticated(),
+		IsGuest:         sess.IsGuest,
+		TenantID:        sess.TenantID,
+		User:            user,
+	}
+
+	logger := middleware.LoggerWithCorrelation(r.Context())
+	logger.Info("session info requested",
+		"authenticated", response.IsAuthenticated,
+		"tenant_id", response.TenantID,
+	)
+
+	WriteJSON(w, http.StatusOK, response)
+}
+
 // GetCurrentUserHandler returns the authenticated user [FR-AUTH-003]
+// Requires authentication (returns 401 for guest sessions)
 func GetCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := auth.GetUser(r.Context())
 	if user == nil {
@@ -65,9 +105,9 @@ func GetCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 // GetCurrentTenantHandler returns the current tenant context [FR-TENANT-001]
 func GetCurrentTenantHandler(w http.ResponseWriter, r *http.Request) {
 	tenantID := auth.GetTenantID(r.Context())
-	
+
 	WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"tenant_id": tenantID,
+		"tenant_id":   tenantID,
 		"is_personal": tenantID == "",
 	})
 }
