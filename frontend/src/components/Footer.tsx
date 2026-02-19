@@ -11,13 +11,13 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
           <p>{t('footer.copyright', { year })}</p>
           <div className="flex space-x-4 mt-2 sm:mt-0">
-            <a href="https://digistratum.com/privacy" className="hover:text-gray-700 dark:hover:text-gray-200">
+            <a href="https://www.digistratum.com/privacy" className="hover:text-gray-700 dark:hover:text-gray-200">
               Privacy
             </a>
-            <a href="https://digistratum.com/terms" className="hover:text-gray-700 dark:hover:text-gray-200">
+            <a href="https://www.digistratum.com/terms" className="hover:text-gray-700 dark:hover:text-gray-200">
               Terms
             </a>
-            <a href="https://digistratum.com/support" className="hover:text-gray-700 dark:hover:text-gray-200">
+            <a href="https://www.digistratum.com/support" className="hover:text-gray-700 dark:hover:text-gray-200">
               Support
             </a>
           </div>
