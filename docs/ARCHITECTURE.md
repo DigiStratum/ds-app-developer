@@ -14,6 +14,11 @@
 5. [Testing Patterns](#testing-patterns)
 6. [Refactoring Guidelines](#refactoring-guidelines)
 
+> **Related Documentation:**
+> - [AUTH.md](./AUTH.md) - Detailed DSAccount SSO integration, token handling, session management
+> - [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) - AWS deployment patterns
+> - [TEST-TEMPLATES.md](./TEST-TEMPLATES.md) - Test writing conventions
+
 ---
 
 ## Overview
