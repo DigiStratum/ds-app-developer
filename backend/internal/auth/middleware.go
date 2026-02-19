@@ -79,7 +79,7 @@ func RequireAuthMiddleware(next http.Handler) http.Handler {
 				ssoURL = "https://account.digistratum.com"
 			}
 			redirectURL := ssoURL + "/oauth/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
-				"&redirect_uri=" + os.Getenv("APP_URL") + "/auth/callback"
+				"&redirect_uri=" + os.Getenv("APP_URL") + "/api/auth/callback"
 			http.Redirect(w, r, redirectURL, http.StatusFound)
 			return
 		}

@@ -109,7 +109,7 @@ describe('FR-AUTH: Authentication & Authorization (Guest Session Pattern)', () =
 
       await user.click(screen.getByRole('button', { name: /sign in/i }));
       
-      expect(window.location.href).toContain('/auth/login');
+      expect(window.location.href).toContain('/api/auth/login');
     });
   });
 
@@ -188,7 +188,7 @@ describe('FR-AUTH: Authentication & Authorization (Guest Session Pattern)', () =
 
       await user.click(screen.getByRole('button', { name: /sign out/i }));
       
-      expect(window.location.href).toBe('/auth/logout');
+      expect(window.location.href).toBe('/api/auth/logout');
     });
   });
 });

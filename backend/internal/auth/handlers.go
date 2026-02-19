@@ -100,7 +100,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authURL := ssoURL + "/oauth/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
-		"&redirect_uri=" + os.Getenv("APP_URL") + "/auth/callback?redirect=" + redirectURL
+		"&redirect_uri=" + os.Getenv("APP_URL") + "/api/auth/callback?redirect=" + redirectURL
 
 	http.Redirect(w, r, authURL, http.StatusFound)
 }

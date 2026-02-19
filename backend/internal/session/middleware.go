@@ -55,7 +55,7 @@ func RequireAuth(next http.Handler) http.Handler {
 				http.Error(w, `{"error":{"code":"UNAUTHORIZED","message":"Authentication required"}}`, http.StatusUnauthorized)
 			} else {
 				// Redirect to login page with return URL
-				loginURL := "/auth/login?redirect=" + r.URL.Path
+				loginURL := "/api/auth/login?redirect=" + r.URL.Path
 				http.Redirect(w, r, loginURL, http.StatusFound)
 			}
 			return

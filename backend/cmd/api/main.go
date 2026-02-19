@@ -40,9 +40,10 @@ func init() {
 	mux.Handle("/health", session.Middleware(auth.Middleware(healthMux)))
 
 	// Auth routes (no session middleware - they manage sessions directly)
-	mux.HandleFunc("GET /auth/login", auth.LoginHandler)
-	mux.HandleFunc("GET /auth/callback", auth.CallbackHandler)
-	mux.HandleFunc("GET /auth/logout", auth.LogoutHandler)
+	// Note: Routes are under /api/auth/* so CloudFront routes them to API Gateway
+	mux.HandleFunc("GET /api/auth/login", auth.LoginHandler)
+	mux.HandleFunc("GET /api/auth/callback", auth.CallbackHandler)
+	mux.HandleFunc("GET /api/auth/logout", auth.LogoutHandler)
 
 	// Session-aware API routes (works for both guest and authenticated users)
 	// These routes allow both guest and authenticated access

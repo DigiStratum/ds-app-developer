@@ -57,13 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Redirect to login with optional return URL
   const login = useCallback((redirectTo?: string) => {
     const redirect = redirectTo || window.location.pathname;
-    window.location.href = '/auth/login?redirect=' + encodeURIComponent(redirect);
+    window.location.href = '/api/auth/login?redirect=' + encodeURIComponent(redirect);
   }, []);
 
   // Logout and redirect [FR-AUTH-004]
   const logout = useCallback(() => {
     localStorage.removeItem('currentTenant');
-    window.location.href = '/auth/logout';
+    window.location.href = '/api/auth/logout';
   }, []);
 
   // Switch tenant context [FR-TENANT-002, FR-TENANT-004]
