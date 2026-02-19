@@ -57,7 +57,9 @@ export function CookieConsent() {
           {/* Buttons and privacy link */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <a
-              href="/privacy"
+              href="https://www.digistratum.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm text-ds-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2 rounded order-last sm:order-first"
             >
               {t('cookies.privacyPolicy', 'Learn more in our Privacy Policy')}
