@@ -24,6 +24,8 @@
     "menu": "Menu"
   },
   "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
     "loginWith": "Login with DSAccount",
     "loggingIn": "Logging in...",
     "unauthorized": "Please log in to continue"
@@ -32,6 +34,16 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français"
   },
   "footer": {
     "copyright": "© {{year}} DigiStratum LLC. All rights reserved."
