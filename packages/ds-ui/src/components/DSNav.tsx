@@ -1,0 +1,338 @@
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { DSNavProps, DSApp, AuthContext, ThemeContext } from '../types';
+
+// Default DS Ecosystem apps for app-switcher [FR-NAV-002]
+const DEFAULT_DS_APPS: DSApp[] = [
+  { id: 'dsaccount', name: 'DSAccount', url: 'https://account.digistratum.com', icon: '👤' },
+  { id: 'dskanban', name: 'DSKanban', url: 'https://kanban.digistratum.com', icon: '📋' },
+  { id: 'dsdocs', name: 'DSDocs', url: 'https://docs.digistratum.com', icon: '📄' },
+];
+
+export interface DSNavFullProps extends DSNavProps {
+  /** Auth context with user, tenant switching, logout */
+  auth: AuthContext;
+  /** Theme context for light/dark toggle */
+  theme: ThemeContext;
+}
+
+/**
+ * Standard DigiStratum navigation component
+ * [FR-NAV-001, FR-NAV-002, FR-NAV-004]
+ * 
+ * Features:
+ * - App switcher for DS ecosystem navigation
+ * - Tenant switcher for multi-tenant apps
+ * - User menu with settings and logout
+ * - Theme toggle (light/dark)
+ * - Mobile responsive menu
+ */
+export function DSNav({ 
+  appName = 'DS App', 
+  currentAppId,
+  apps = DEFAULT_DS_APPS,
+  auth,
+  theme,
+}: DSNavFullProps) {
+  const { t } = useTranslation();
+  const { user, currentTenant, logout, switchTenant } = auth;
+  const { setTheme, resolvedTheme } = theme;
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showTenantMenu, setShowTenantMenu] = useState(false);
+  const [showAppSwitcher, setShowAppSwitcher] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Refs for click-outside handling
+  const appSwitcherRef = useRef<HTMLDivElement>(null);
+  const tenantMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (appSwitcherRef.current && !appSwitcherRef.current.contains(event.target as Node)) {
+        setShowAppSwitcher(false);
+      }
+      if (tenantMenuRef.current && !tenantMenuRef.current.contains(event.target as Node)) {
+        setShowTenantMenu(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const tenantName = currentTenant 
+    ? `Org: ${currentTenant}` 
+    : t('nav.personal', 'Personal');
+
+  return (
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo, App Switcher, and App Name [FR-NAV-001, FR-NAV-002] */}
+          <div className="flex items-center">
+            {/* App Switcher [FR-NAV-002] */}
+            <div className="relative" ref={appSwitcherRef}>
+              <button
+                onClick={() => setShowAppSwitcher(!showAppSwitcher)}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                aria-label={t('nav.appSwitcher', 'Switch app')}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+
+              {showAppSwitcher && (
+                <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('nav.dsApps', 'DigiStratum Apps')}
+                    </p>
+                  </div>
+                  <div className="py-1">
+                    {apps.map((app) => (
+                      <a
+                        key={app.id}
+                        href={app.url}
+                        className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          currentAppId === app.id 
+                            ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
+                            : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowAppSwitcher(false)}
+                      >
+                        <span className="text-lg mr-3">{app.icon}</span>
+                        <span className="font-medium">{app.name}</span>
+                        {currentAppId === app.id && (
+                          <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
+                            {t('nav.current', 'Current')}
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <img 
+              src="/brand-logo.svg" 
+              alt="DigiStratum" 
+              className="h-8 w-8 ml-2"
+              onError={(e) => {
+                // Fallback to favicon if brand-logo doesn't exist
+                (e.target as HTMLImageElement).src = '/favicon.svg';
+              }}
+            />
+            <span className="ml-3 text-xl font-semibold text-gray-900 dark:text-white hidden sm:block">
+              {appName}
+            </span>
+          </div>
+
+          {/* Mobile menu button [FR-NAV-004] */}
+          <div className="flex items-center sm:hidden">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label={t('nav.menu', 'Menu')}
+            >
+              {showMobileMenu ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Desktop: Right side - Tenant switcher and User menu [FR-NAV-004] */}
+          <div className="hidden sm:flex items-center space-x-4">
+            {/* Tenant Switcher [FR-TENANT-002] */}
+            {user && user.tenants.length > 0 && (
+              <div className="relative" ref={tenantMenuRef}>
+                <button
+                  onClick={() => setShowTenantMenu(!showTenantMenu)}
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span className="hidden lg:inline">{tenantName}</span>
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showTenantMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => { switchTenant(null); setShowTenantMenu(false); }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${!currentTenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                      >
+                        {t('nav.personal', 'Personal')}
+                      </button>
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                      {user.tenants.map((tenant) => (
+                        <button
+                          key={tenant}
+                          onClick={() => { switchTenant(tenant); setShowTenantMenu(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${currentTenant === tenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                        >
+                          {tenant}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Theme Toggle [FR-THEME-001] */}
+            <button
+              onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label={t('theme.' + (resolvedTheme === 'light' ? 'dark' : 'light'))}
+            >
+              {resolvedTheme === 'light' ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+            </button>
+
+            {/* User Menu */}
+            {user && (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        {t('common.settings', 'Settings')}
+                      </a>
+                      <button
+                        onClick={logout}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        {t('common.logout', 'Log out')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu [FR-NAV-004] */}
+      {showMobileMenu && (
+        <div className="sm:hidden border-t border-gray-200 dark:border-gray-700">
+          <div className="px-4 py-3 space-y-3">
+            {/* User info */}
+            {user && (
+              <div className="flex items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Tenant Switcher */}
+            {user && user.tenants.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  {t('nav.switchTenant', 'Switch Tenant')}
+                </p>
+                <button
+                  onClick={() => { switchTenant(null); setShowMobileMenu(false); }}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-md ${!currentTenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                >
+                  {t('nav.personal', 'Personal')}
+                </button>
+                {user.tenants.map((tenant) => (
+                  <button
+                    key={tenant}
+                    onClick={() => { switchTenant(tenant); setShowMobileMenu(false); }}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-md ${currentTenant === tenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                  >
+                    {tenant}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
+              className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md"
+            >
+              {resolvedTheme === 'light' ? (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                  {t('theme.dark', 'Dark mode')}
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  {t('theme.light', 'Light mode')}
+                </>
+              )}
+            </button>
+
+            {/* Settings & Logout */}
+            {user && (
+              <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                <a href="/settings" className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md">
+                  {t('common.settings', 'Settings')}
+                </a>
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md"
+                >
+                  {t('common.logout', 'Log out')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
