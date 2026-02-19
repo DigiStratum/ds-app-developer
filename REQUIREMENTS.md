@@ -79,8 +79,8 @@
 | FR-AUTH-003 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
 | FR-AUTH-004 | `frontend/src/__tests__/auth.test.tsx` | ✅ |
 | FR-TENANT-001 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| FR-TENANT-002 | - | ❌ |
-| FR-TENANT-003 | - | ❌ |
+| FR-TENANT-002 | `frontend/src/components/DSNav.tsx`, `frontend/src/hooks/useAuth.tsx` | ⚠️ |
+| FR-TENANT-003 | `backend/internal/dynamo/repository.go` | ⚠️ |
 | FR-TENANT-004 | `backend/internal/auth/middleware_test.go` | ✅ |
 | FR-NAV-001 | - | ❌ |
 | FR-NAV-002 | - | ❌ |

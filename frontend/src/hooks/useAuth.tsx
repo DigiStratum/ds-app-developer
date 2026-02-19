@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, AuthContext } from '../types';
 import { api } from '../api/client';
 
@@ -24,9 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const savedTenant = localStorage.getItem('currentTenant');
       if (savedTenant && userData.tenants.includes(savedTenant)) {
         setCurrentTenant(savedTenant);
+        // Sync to API client for X-Tenant-ID header [FR-TENANT-004]
+        api.setTenant(savedTenant);
       }
     } catch (error) {
       setUser(null);
+      api.setTenant(null);
     } finally {
       setIsLoading(false);
     }
@@ -43,15 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = '/auth/logout';
   };
 
-  // Switch tenant context [FR-TENANT-002]
-  const switchTenant = (tenantId: string | null) => {
+  // Switch tenant context [FR-TENANT-002, FR-TENANT-004]
+  const switchTenant = useCallback((tenantId: string | null) => {
     setCurrentTenant(tenantId);
+    // Sync tenant to API client for X-Tenant-ID header [FR-TENANT-004]
+    api.setTenant(tenantId);
     if (tenantId) {
       localStorage.setItem('currentTenant', tenantId);
     } else {
       localStorage.removeItem('currentTenant');
     }
-  };
+  }, []);
 
   return (
     <AuthContextInstance.Provider value={{ user, currentTenant, isLoading, login, logout, switchTenant }}>
