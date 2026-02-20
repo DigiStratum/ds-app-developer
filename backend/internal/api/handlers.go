@@ -3,11 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
 )
 
 // Standard error response format [NFR-SEC-004]
@@ -61,31 +61,57 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionHandler returns the current session state (works for both guest and authenticated)
 // This is the primary endpoint for the frontend to check session status.
+// Calls DSAccount to validate sessions (DSAccount owns session storage).
 func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
-	sess := session.GetSession(r.Context())
-	user := auth.GetUser(r.Context())
-
-	if sess == nil {
-		// This shouldn't happen if session middleware is working correctly
-		WriteError(w, r, http.StatusInternalServerError, "NO_SESSION", "No session available")
+	// Read ds_session cookie
+	cookie, err := r.Cookie("ds_session")
+	if err != nil || cookie.Value == "" {
+		// No session - return guest state
+		WriteJSON(w, http.StatusOK, SessionResponse{
+			IsAuthenticated: false,
+			IsGuest:         true,
+		})
 		return
 	}
 
-	response := SessionResponse{
-		SessionID:       sess.ID[:8] + "...", // Truncate for security
-		IsAuthenticated: sess.IsAuthenticated(),
-		IsGuest:         sess.IsGuest,
-		TenantID:        sess.TenantID,
-		User:            user,
+	// Call DSAccount to validate session and get user info
+	dsAccountURL := os.Getenv("DSACCOUNT_SSO_URL")
+	if dsAccountURL == "" {
+		dsAccountURL = "https://account.digistratum.com"
 	}
 
-	logger := middleware.LoggerWithCorrelation(r.Context())
-	logger.Info("session info requested",
-		"authenticated", response.IsAuthenticated,
-		"tenant_id", response.TenantID,
-	)
+	req, _ := http.NewRequest("GET", dsAccountURL+"/api/me", nil)
+	req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
-	WriteJSON(w, http.StatusOK, response)
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		// Session invalid or DSAccount unreachable - return guest state
+		WriteJSON(w, http.StatusOK, SessionResponse{
+			IsAuthenticated: false,
+			IsGuest:         true,
+		})
+		return
+	}
+	defer resp.Body.Close()
+
+	// Parse user from DSAccount response
+	var user auth.User
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		WriteJSON(w, http.StatusOK, SessionResponse{
+			IsAuthenticated: false,
+			IsGuest:         true,
+		})
+		return
+	}
+
+	// Return authenticated session
+	WriteJSON(w, http.StatusOK, SessionResponse{
+		SessionID:       cookie.Value[:8] + "...",
+		IsAuthenticated: true,
+		IsGuest:         false,
+		User:            &user,
+	})
 }
 
 // GetCurrentUserHandler returns the authenticated user [FR-AUTH-003]
