@@ -66,7 +66,7 @@ jobs:
       - name: Run tests with coverage
         run: go test -v -race -coverprofile=coverage.out ./...
 
-      - name: Check coverage threshold (NFR-TEST-001: >80%)
+      - name: Check coverage threshold (NFR-TEST-001 - 80 percent min)
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${COVERAGE}%"
