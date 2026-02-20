@@ -5,11 +5,7 @@ import { useTenantTheme } from '../hooks/useTenantTheme';
 import { PreferencesModal } from './PreferencesModal';
 
 // DS Ecosystem apps for app-switcher [FR-NAV-002]
-const DS_APPS = [
-  { id: 'dsaccount', name: 'DSAccount', url: 'https://account.digistratum.com', icon: '👤' },
-  { id: 'dskanban', name: 'DSKanban', url: 'https://kanban.digistratum.com', icon: '📋' },
-  { id: 'dsdocs', name: 'DSDocs', url: 'https://docs.digistratum.com', icon: '📄' },
-];
+// Apps loaded dynamically from DSAccount - see useAuth hook
 
 interface DSNavProps {
   appName?: string;
@@ -22,7 +18,7 @@ interface DSNavProps {
 // - Authenticated: Shows user dropdown with tenant switcher
 export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps) {
   const { t } = useTranslation();
-  const { user, currentTenant, isAuthenticated, login, logout, switchTenant } = useAuth();
+  const { user, currentTenant, isAuthenticated, login, logout, switchTenant, availableApps } = useAuth();
   const { logoUrl, isLoading: themeLoading } = useTenantTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTenantMenu, setShowTenantMenu] = useState(false);
@@ -133,7 +129,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                       </p>
                     </div>
                     <div className="py-1">
-                      {DS_APPS.map((app) => (
+                      {availableApps.map((app) => (
                         <a
                           key={app.id}
                           href={app.url}
@@ -326,7 +322,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 <p className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {t('nav.dsApps', 'DigiStratum Apps')}
                 </p>
-                {DS_APPS.map((app) => (
+                {availableApps.map((app) => (
                   <a
                     key={app.id}
                     href={app.url}

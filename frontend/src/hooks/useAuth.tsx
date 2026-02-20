@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, Session, AuthContext } from '../types';
+import { User, Session, AuthContext, AppInfo } from '../types';
 import { api } from '../api/client';
 
 const AuthContextInstance = createContext<AuthContext | null>(null);
+
+const DSACCOUNT_URL = 'https://account.digistratum.com';
 
 // Auth provider supporting guest session pattern [FR-AUTH-001, FR-AUTH-003]
 // - Creates/loads session on mount (guest or authenticated)
@@ -12,12 +14,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [currentTenant, setCurrentTenant] = useState<string | null>(null);
+  const [availableApps, setAvailableApps] = useState<AppInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Load session on mount
     loadSession();
+    // Load available apps (doesn't require auth)
+    loadAvailableApps();
   }, []);
+
+  const loadAvailableApps = async () => {
+    try {
+      const response = await fetch(`${DSACCOUNT_URL}/api/apps/available`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableApps(data.apps || []);
+      }
+    } catch (error) {
+      console.error('Failed to load available apps:', error);
+      // Keep empty array on error - app switcher will be empty
+    }
+  };
 
   const loadSession = async () => {
     try {
@@ -81,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     currentTenant,
+    availableApps,
     isLoading,
     isAuthenticated: session?.is_authenticated ?? false,
     isGuest: session?.is_guest ?? true,

@@ -9,6 +9,15 @@ export interface User {
   theme?: 'light' | 'dark' | 'system';
 }
 
+// App info for app switcher (from DSAccount)
+export interface AppInfo {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  description?: string;
+}
+
 // Session types (guest session pattern)
 export interface Session {
   session_id: string;
@@ -29,6 +38,7 @@ export interface AuthContext {
   session: Session | null;
   user: User | null;
   currentTenant: string | null;
+  availableApps: AppInfo[];
   isLoading: boolean;
   isAuthenticated: boolean;
   isGuest: boolean;
