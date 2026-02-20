@@ -22,8 +22,9 @@ type contextKey string
 
 const (
 	sessionContextKey contextKey = "session"
-	cookieName                   = "ds_session"
 )
+
+const cookieName = "ds_session"
 
 // Session represents a user session (anonymous or authenticated)
 type Session struct {

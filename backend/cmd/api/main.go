@@ -101,6 +101,6 @@ func main() {
 	} else {
 		// Local development
 		slog.Info("Starting local server", "port", 8080)
-		http.ListenAndServe(":8080", nil)
+		_ = http.ListenAndServe(":8080", nil)
 	}
 }

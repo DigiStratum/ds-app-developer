@@ -31,7 +31,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				
 				// Use standard error format [NFR-SEC-004]
-				fmt.Fprintf(w, `{"error":{"code":"INTERNAL_ERROR","message":"An unexpected error occurred","request_id":"%s"}}`, correlationID)
+				_, _ = fmt.Fprintf(w, `{"error":{"code":"INTERNAL_ERROR","message":"An unexpected error occurred","request_id":"%s"}}`, correlationID)
 			}
 		}()
 

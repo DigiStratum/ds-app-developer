@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
 )
@@ -107,40 +106,12 @@ func GetTenantID(ctx context.Context) string {
 	return tenant
 }
 
-func extractToken(r *http.Request) string {
-	// Check Authorization header first
-	auth := r.Header.Get("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		return strings.TrimPrefix(auth, "Bearer ")
-	}
-
-	// Check cookie
-	cookie, err := r.Cookie("ds_session")
-	if err == nil {
-		return cookie.Value
-	}
-
-	return ""
-}
-
 // loadUser loads user data from DSAccount or cache
 func loadUser(userID string) (*User, error) {
 	// TODO: Implement actual DSAccount user lookup
 	// For skeleton, return mock user
 	return &User{
 		ID:      userID,
-		Email:   "demo@digistratum.com",
-		Name:    "Demo User",
-		Tenants: []TenantInfo{{ID: "tenant-1", Name: "Demo Tenant", Role: "member"}},
-	}, nil
-}
-
-// validateToken validates a session token (legacy - kept for compatibility)
-func validateToken(token string) (*User, error) {
-	// TODO: Implement actual DSAccount token validation
-	// For skeleton, return mock user
-	return &User{
-		ID:      "user-123",
 		Email:   "demo@digistratum.com",
 		Name:    "Demo User",
 		Tenants: []TenantInfo{{ID: "tenant-1", Name: "Demo Tenant", Role: "member"}},

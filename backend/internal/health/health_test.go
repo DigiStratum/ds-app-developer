@@ -38,7 +38,7 @@ func TestDeepCheck(t *testing.T) {
 	// Setup test server to act as a dependency
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"status": "up"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "up"})
 	}))
 	defer testServer.Close()
 	

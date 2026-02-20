@@ -36,7 +36,7 @@ type SessionResponse struct {
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 // WriteError writes a standard error response with correlation ID
@@ -96,7 +96,7 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Parse user from DSAccount response
 	var user auth.User

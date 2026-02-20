@@ -59,7 +59,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "private, max-age=300") // Cache for 5 min
-	json.NewEncoder(w).Encode(config)
+	_ = json.NewEncoder(w).Encode(config)
 }
 
 // getThemeForTenant retrieves the theme configuration for a tenant.

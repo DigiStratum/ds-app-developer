@@ -202,7 +202,7 @@ func CheckDependency(ctx context.Context, dep DependencyConfig) DependencyResult
 		}
 		return result
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	
 	// Check status code
 	switch {
@@ -353,5 +353,5 @@ func DeepCheck(ctx context.Context) *HealthResponse {
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }

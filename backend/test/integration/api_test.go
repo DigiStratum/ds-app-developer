@@ -18,7 +18,7 @@ func TestHealthEndpoint_ReturnsHealthy(t *testing.T) {
 
 	// Act
 	resp := server.Get("/health")
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Assert
 	AssertStatus(t, resp, http.StatusOK)
@@ -90,7 +90,7 @@ func TestFixtureBuilder_BuildsComplexScenarios(t *testing.T) {
 //
 //     req := server.NewAuthenticatedRequest("GET", "/api/me")
 //     resp := server.Do(req)
-//     defer resp.Body.Close()
+//     defer func() { _ = resp.Body.Close() }()
 //
 //     AssertStatus(t, resp, http.StatusOK)
 //     // ... verify user data
@@ -102,7 +102,7 @@ func TestFixtureBuilder_BuildsComplexScenarios(t *testing.T) {
 //
 //     req := server.NewRequest("GET", "/api/me")
 //     resp := server.Do(req)
-//     defer resp.Body.Close()
+//     defer func() { _ = resp.Body.Close() }()
 //
 //     // Should redirect to SSO or return 401
 //     if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusUnauthorized {
@@ -122,7 +122,7 @@ func TestFixtureBuilder_BuildsComplexScenarios(t *testing.T) {
 //     req := server.NewAuthenticatedRequest("GET", "/api/users")
 //     req.Header.Set("X-Tenant-ID", "tenant-a")
 //     resp := server.Do(req)
-//     defer resp.Body.Close()
+//     defer func() { _ = resp.Body.Close() }()
 //
 //     // Should only see tenant-a's data
 //     // ... verify response
