@@ -85,6 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Switch tenant context [FR-TENANT-002, FR-TENANT-004]
+  // Updates local state and localStorage for persistence within browser
+  // Tenant is sent via X-Tenant-ID header on subsequent API calls
   const switchTenant = useCallback((tenantId: string | null) => {
     setCurrentTenant(tenantId);
     api.setTenant(tenantId);

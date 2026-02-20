@@ -62,7 +62,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionHandler returns the current session state (works for both guest and authenticated)
 // This is the primary endpoint for the frontend to check session status.
-// Calls DSAccount to validate sessions (DSAccount owns session storage).
+// Calls DSAccount to validate sessions and get user info (including tenants).
 func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 	// Read ds_session cookie (contains JWT from SSO flow)
 	cookie, err := r.Cookie("ds_session")
@@ -76,8 +76,8 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call DSAccount to validate JWT and get user info
-	// Use /api/sso/userinfo which validates JWT tokens (vs /api/auth/me which validates session tokens)
+	// Call DSAccount to validate JWT and get user info (including tenants)
+	// Use /api/sso/userinfo which validates JWT tokens and returns tenants
 	dsAccountURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if dsAccountURL == "" {
 		dsAccountURL = "https://account.digistratum.com"
@@ -98,7 +98,7 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Parse user from DSAccount response
+	// Parse user from DSAccount response (now includes tenants)
 	var user auth.User
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		WriteJSON(w, http.StatusOK, SessionResponse{
@@ -108,7 +108,7 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return authenticated session
+	// Return authenticated session with user (including tenants from DSAccount)
 	WriteJSON(w, http.StatusOK, SessionResponse{
 		SessionID:       cookie.Value[:8] + "...",
 		IsAuthenticated: true,
