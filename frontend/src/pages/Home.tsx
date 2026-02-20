@@ -19,15 +19,23 @@ export function HomePage() {
           Canonical baseline template for DigiStratum applications
         </p>
 
-        {/* Authenticated user - show personalized welcome */}
+        {/* Authenticated user - show skeleton placeholder for app features */}
         {isAuthenticated && user ? (
-          <div className="card max-w-md mx-auto">
+          <div className="card max-w-2xl mx-auto">
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Welcome back, <span className="font-semibold">{user.name}</span>!
+              Welcome back{user.name ? `, ${user.name}` : ''}!
             </p>
-            <a href="/dashboard" className="btn btn-primary">
-              Go to Dashboard
-            </a>
+            
+            {/* SKELETON: Authenticated user content placeholder */}
+            <div className="mt-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center text-gray-500 dark:text-gray-400">
+              <p className="font-mono text-sm mb-2">{'<!-- Your authenticated app content here -->'}</p>
+              <p className="text-sm">
+                This is where your app's main authenticated features go.
+              </p>
+              <p className="text-xs mt-2">
+                Examples: Dashboard widgets, recent activity, quick actions
+              </p>
+            </div>
           </div>
         ) : (
           /* Guest user - show info about the app (auth controls in nav bar) */

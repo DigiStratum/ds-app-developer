@@ -4,6 +4,7 @@ import { ThemeProvider } from './hooks/useTheme';
 import { CookieConsent, Layout, ErrorBoundaryWithKey } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
+import { SettingsPage } from './pages/Settings';
 import { useTranslation } from 'react-i18next';
 
 // Protected route wrapper [FR-AUTH-002]
@@ -62,6 +63,16 @@ function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           
           {/* Protected routes - require authentication */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Layout appName="DS App Skeleton">
+                  <SettingsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

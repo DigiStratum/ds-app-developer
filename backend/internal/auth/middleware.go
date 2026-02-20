@@ -19,10 +19,10 @@ const (
 
 // User represents an authenticated user [FR-AUTH-003]
 type User struct {
-	ID       string   `json:"id"`
-	Email    string   `json:"email"`
-	Name     string   `json:"name"`
-	Tenants  []string `json:"tenants"`
+	ID      string   `json:"id"`
+	Email   string   `json:"email"`
+	Name    string   `json:"display_name"` // DSAccount uses display_name
+	Tenants []string `json:"tenants"`
 }
 
 // Middleware validates authentication and extracts user/tenant context [FR-AUTH-001]
