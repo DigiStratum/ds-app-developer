@@ -1,16 +1,26 @@
 package auth
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
-
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"time"
 )
 
+// tokenResponse represents DSAccount's /api/sso/token response
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
 // CallbackHandler handles SSO callback [FR-AUTH-001]
-// This upgrades the anonymous session to an authenticated one,
-// preserving any state from before authentication.
+// This exchanges the authorization code with DSAccount for a session token,
+// then sets the ds_session cookie to use across *.digistratum.com
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
@@ -18,76 +28,109 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Exchange code for token with DSAccount and get user info
-	// For skeleton, use mock user data
-	userID := "user-123" // Would come from DSAccount token exchange
-	slog.Info("SSO callback received", "code_length", len(code), "user_id", userID)
+	slog.Info("SSO callback received", "code_length", len(code))
 
-	store := session.GetStore()
-
-	// Try to upgrade existing session (preserves pre-auth state)
-	sessionID := session.GetSessionIDFromRequest(r)
-	existingSession := store.Get(sessionID)
-
-	var sess *session.Session
-	if existingSession != nil {
-		// Upgrade the existing session - this preserves the session ID
-		// so any pre-auth state (cart items, preferences, etc.) is maintained
-		sess = store.Upgrade(sessionID, userID)
-		slog.Info("upgraded anonymous session to authenticated",
-			"session_id", sess.ID[:8]+"...",
-			"user_id", userID,
-		)
-	} else {
-		// No existing session - create a new authenticated one
-		sess = store.Create("")
-		store.Upgrade(sess.ID, userID)
-		slog.Info("created new authenticated session",
-			"session_id", sess.ID[:8]+"...",
-			"user_id", userID,
-		)
+	// Exchange code for token with DSAccount
+	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
+	if ssoURL == "" {
+		ssoURL = "https://account.digistratum.com"
 	}
 
-	// Set session cookie
-	session.SetSessionCookie(w, r, sess)
+	appID := os.Getenv("DSACCOUNT_APP_ID")
+	appSecret := os.Getenv("DSACCOUNT_APP_SECRET")
+
+	tokenReq := map[string]string{
+		"code":       code,
+		"app_id":     appID,
+		"app_secret": appSecret,
+	}
+	tokenBody, _ := json.Marshal(tokenReq)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Post(ssoURL+"/api/sso/token", "application/json", bytes.NewReader(tokenBody))
+	if err != nil {
+		slog.Error("failed to exchange code for token", "error", err)
+		http.Error(w, "Failed to authenticate", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		slog.Error("token exchange failed", "status", resp.StatusCode, "body", string(body))
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	var tokenResp tokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		slog.Error("failed to decode token response", "error", err)
+		http.Error(w, "Failed to process authentication", http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("token exchange successful", "token_type", tokenResp.TokenType, "expires_in", tokenResp.ExpiresIn)
+
+	// Set the DSAccount session cookie (shared across *.digistratum.com)
+	// This is the ONLY session cookie we need - DSAccount owns sessions
+	cookie := &http.Cookie{
+		Name:     "ds_session",
+		Value:    tokenResp.AccessToken,
+		Path:     "/",
+		Domain:   ".digistratum.com",
+		MaxAge:   tokenResp.ExpiresIn,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, cookie)
 
 	// Get redirect URL from state param (how OAuth returns our original redirect)
-	// or fall back to query param for backwards compatibility
 	redirectURL := r.URL.Query().Get("state")
 	if redirectURL == "" {
-		redirectURL = r.URL.Query().Get("redirect")
+		redirectURL = "/"
 	}
-	if redirectURL == "" {
-		redirectURL = os.Getenv("APP_URL")
-		if redirectURL == "" {
-			redirectURL = "/"
-		}
+
+	// Validate redirect URL to prevent open redirect
+	// Only allow relative paths or same-origin
+	if len(redirectURL) > 0 && redirectURL[0] != '/' {
+		redirectURL = "/"
 	}
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 // LogoutHandler handles logout [FR-AUTH-004]
-// This clears the session entirely (doesn't downgrade to guest).
+// Clears the session cookie and redirects to DSAccount logout
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	store := session.GetStore()
-
-	// Delete the session
-	sessionID := session.GetSessionIDFromRequest(r)
-	if sessionID != "" {
-		store.Delete(sessionID)
-		slog.Info("session deleted on logout", "session_id", sessionID[:8]+"...")
+	// Clear the ds_session cookie
+	cookie := &http.Cookie{
+		Name:     "ds_session",
+		Value:    "",
+		Path:     "/",
+		Domain:   ".digistratum.com",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	}
+	http.SetCookie(w, cookie)
 
-	// Clear session cookie
-	session.ClearSessionCookie(w, r)
+	slog.Info("session cookie cleared on logout")
 
-	// Redirect to DSAccount logout
+	// Redirect to DSAccount logout (with return URL)
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
 	}
-	http.Redirect(w, r, ssoURL+"/api/sso/logout", http.StatusFound)
+	
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "https://skeleton.digistratum.com"
+	}
+	
+	// Include redirect_uri so DSAccount can redirect back after logout
+	http.Redirect(w, r, fmt.Sprintf("%s/api/sso/logout?redirect_uri=%s", ssoURL, appURL), http.StatusFound)
 }
 
 // LoginHandler initiates the SSO login flow
