@@ -153,6 +153,47 @@ function handler(event) {
       Object.assign(additionalBehaviors, props.additionalBehaviors);
     }
 
+    // Response headers policy for security [NFR-SEC-001]
+    const securityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
+      this,
+      'SecurityHeadersPolicy',
+      {
+        responseHeadersPolicyName: `${props.appName}-security-headers-${props.environment}`,
+        comment: `Security headers for ${props.appName} ${props.environment}`,
+        securityHeadersBehavior: {
+          contentSecurityPolicy: {
+            // CSP: Allow self, inline scripts (for SPA frameworks), and eval in dev only
+            contentSecurityPolicy: isProd
+              ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.digistratum.com; frame-ancestors 'none';"
+              : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.digistratum.com http://localhost:*; frame-ancestors 'none';",
+            override: true,
+          },
+          contentTypeOptions: {
+            // X-Content-Type-Options: nosniff
+            override: true,
+          },
+          frameOptions: {
+            // X-Frame-Options: DENY
+            frameOption: cloudfront.HeadersFrameOption.DENY,
+            override: true,
+          },
+          referrerPolicy: {
+            // Referrer-Policy: strict-origin-when-cross-origin
+            referrerPolicy:
+              cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+            override: true,
+          },
+          strictTransportSecurity: {
+            // Strict-Transport-Security (HSTS)
+            accessControlMaxAge: cdk.Duration.days(365),
+            includeSubdomains: true,
+            preload: true,
+            override: true,
+          },
+        },
+      }
+    );
+
     // CloudFront distribution
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: `${props.appName} ${props.environment}`,
@@ -160,6 +201,7 @@ function handler(event) {
         origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        responseHeadersPolicy: securityHeadersPolicy,
         functionAssociations: [
           {
             function: this.spaRewriteFunction,

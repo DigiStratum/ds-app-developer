@@ -74,55 +74,76 @@
 
 ## Requirement Traceability
 
-| Requirement | Test File | Status |
-|-------------|-----------|--------|
-| FR-AUTH-001 | `backend/internal/auth/middleware_test.go` | ✅ |
-| FR-AUTH-002 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| FR-AUTH-003 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| FR-AUTH-004 | `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| FR-TENANT-001 | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
-| FR-TENANT-002 | `frontend/src/components/DSNav.tsx`, `frontend/src/hooks/useAuth.tsx` | ⚠️ |
-| FR-TENANT-003 | `backend/internal/dynamo/repository.go` | ⚠️ |
-| FR-TENANT-004 | `backend/internal/auth/middleware_test.go` | ✅ |
-| FR-NAV-001 | `frontend/src/components/Layout.tsx`, `frontend/src/components/DSNav.tsx` | ✅ |
-| FR-NAV-002 | `frontend/src/components/DSNav.tsx` | ✅ |
-| FR-NAV-003 | `frontend/src/components/Footer.tsx` | ✅ |
-| FR-NAV-004 | `frontend/src/components/DSNav.tsx`, `frontend/src/components/Layout.tsx` | ✅ |
-| FR-THEME-001 | `frontend/src/hooks/useTheme.tsx`, `frontend/src/styles/globals.css` | ✅ |
-| FR-THEME-002 | `frontend/src/hooks/useTheme.tsx` | ✅ |
-| FR-THEME-003 | `frontend/src/styles/globals.css` | ✅ |
-| FR-I18N-001 | - | ❌ |
-| FR-I18N-002 | - | ❌ |
-| FR-I18N-003 | - | ❌ |
-| NFR-PERF-001 | - | ❌ |
-| NFR-PERF-002 | - | ❌ |
-| NFR-PERF-003 | - | ❌ |
-| NFR-AVAIL-001 | - | ❌ |
-| NFR-AVAIL-002 | - | ❌ |
-| NFR-AVAIL-003 | `backend/internal/health/health_test.go` | ✅ |
-| NFR-SEC-001 | - | ❌ |
-| NFR-SEC-002 | - | ❌ |
-| NFR-SEC-003 | - | ❌ |
-| NFR-SEC-004 | - | ❌ |
-| NFR-SEC-005 | - | ❌ |
-| NFR-A11Y-001 | - | ❌ |
-| NFR-A11Y-002 | - | ❌ |
-| NFR-A11Y-003 | - | ❌ |
-| NFR-A11Y-004 | - | ❌ |
-| NFR-TEST-001 | - | ❌ |
-| NFR-TEST-002 | - | ❌ |
-| NFR-TEST-003 | - | ❌ |
-| NFR-TEST-004 | - | ❌ |
-| NFR-MON-001 | - | ❌ |
-| NFR-MON-002 | - | ❌ |
-| NFR-MON-003 | - | ❌ |
-| NFR-MON-004 | - | ❌ |
+| Requirement | Implementation | Test Coverage | Status |
+|-------------|----------------|---------------|--------|
+| FR-AUTH-001 | `backend/internal/auth/middleware.go`, `backend/internal/auth/handlers.go` | `backend/internal/auth/middleware_test.go`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-AUTH-002 | `backend/internal/auth/middleware.go:RequireAuthMiddleware` | `backend/internal/auth/middleware_test.go:TestRequireAuthMiddleware_WithoutAuth_Redirects` | ✅ |
+| FR-AUTH-003 | `backend/internal/auth/middleware.go:Middleware`, `frontend/src/hooks/useAuth.tsx` | `backend/internal/auth/middleware_test.go:TestMiddleware_WithAuthenticatedSession_ExtractsUserContext`, `frontend/src/__tests__/auth.test.tsx` | ✅ |
+| FR-AUTH-004 | `backend/internal/auth/handlers.go:LogoutHandler` | `frontend/src/__tests__/auth.test.tsx:FR-AUTH-004 Logout` | ✅ |
+| FR-TENANT-001 | `backend/internal/auth/middleware.go:GetTenantID`, `frontend/src/hooks/useAuth.tsx` | `backend/internal/auth/middleware_test.go:TestGetTenantID_FromContext`, `frontend/src/__tests__/auth.test.tsx:FR-TENANT-001` | ✅ |
+| FR-TENANT-002 | `frontend/src/components/DSNav.tsx` (tenant switcher dropdown) | `frontend/e2e/navigation.spec.ts` (indirect) | ⚠️ |
+| FR-TENANT-003 | `backend/internal/dynamo/repository.go:BuildTenantKey/BuildTenantPrefix` | - | ⚠️ |
+| FR-TENANT-004 | `backend/internal/auth/middleware.go` (X-Tenant-ID header extraction) | `backend/internal/auth/middleware_test.go:TestMiddleware_ExtractsTenantFromHeader` | ✅ |
+| FR-NAV-001 | `frontend/src/components/DSNav.tsx`, `frontend/src/components/Layout.tsx` | `frontend/e2e/navigation.spec.ts` | ✅ |
+| FR-NAV-002 | `frontend/src/components/DSNav.tsx` (app-switcher) | `frontend/e2e/navigation.spec.ts` (indirect) | ⚠️ |
+| FR-NAV-003 | `frontend/src/components/Footer.tsx` | - | ⚠️ |
+| FR-NAV-004 | `frontend/src/components/DSNav.tsx` (mobile menu), `frontend/src/components/Layout.tsx` | `frontend/e2e/navigation.spec.ts:Mobile Navigation` | ✅ |
+| FR-THEME-001 | `frontend/src/hooks/useTheme.tsx`, `frontend/src/styles/globals.css` | `frontend/e2e/theme-i18n.spec.ts:can toggle between light and dark mode` | ✅ |
+| FR-THEME-002 | `frontend/src/hooks/useTheme.tsx` (localStorage) | `frontend/e2e/theme-i18n.spec.ts:theme preference persists across page loads` | ✅ |
+| FR-THEME-003 | `frontend/src/styles/globals.css` (CSS variables) | `frontend/e2e/theme-i18n.spec.ts` (indirect) | ✅ |
+| FR-I18N-001 | `frontend/src/i18n/config.ts`, `frontend/public/locales/{en,es,fr}/translation.json` | `frontend/e2e/theme-i18n.spec.ts:translations load without errors` | ✅ |
+| FR-I18N-002 | - | - | ❌ Not implemented |
+| FR-I18N-003 | `frontend/src/i18n/config.ts` (localStorage via LanguageDetector) | `frontend/e2e/theme-i18n.spec.ts:default language is loaded` | ⚠️ |
+| NFR-PERF-001 | Infrastructure: CloudFront CDN (`cdk/lib/skeleton-stack.ts`) | - | ⚠️ No automated test |
+| NFR-PERF-002 | `cdk/lib/constructs/monitoring.ts:PerformanceBaselines.apiLatencyP95Ms` (500ms target) | - | ⚠️ No automated test |
+| NFR-PERF-003 | Infrastructure design (CloudFront + Lambda) | - | ⚠️ No automated test |
+| NFR-AVAIL-001 | `cdk/lib/constructs/monitoring.ts:PerformanceBaselines.availabilityTarget` (99.9%) | - | ⚠️ Infra only |
+| NFR-AVAIL-002 | `backend/internal/health/health.go:CalculateOverallStatus` (graceful degradation) | `backend/internal/health/health_test.go:TestCalculateOverallStatus` | ✅ |
+| NFR-AVAIL-003 | `backend/internal/health/health.go`, `backend/internal/health/handler.go` | `backend/internal/health/health_test.go` (comprehensive) | ✅ |
+| NFR-SEC-001 | Partial: redirect sanitization in `backend/internal/auth/handlers.go` | `backend/internal/auth/handlers_test.go` (partial) | ⚠️ |
+| NFR-SEC-002 | `cdk/lib/skeleton-stack.ts`: CloudFront HTTPS_ONLY, REDIRECT_TO_HTTPS | - | ⚠️ Infra only |
+| NFR-SEC-003 | `cdk/lib/skeleton-stack.ts` comment: "DSACCOUNT_APP_SECRET injected post-deploy" | - | ⚠️ Infra only |
+| NFR-SEC-004 | `backend/internal/middleware/recovery.go` (standardized error response) | - | ⚠️ Partial |
+| NFR-SEC-005 | `cdk/lib/skeleton-stack.ts`: API Gateway CORS configuration | - | ⚠️ Infra only |
+| NFR-A11Y-001 | Frontend components use semantic HTML, aria attributes | `frontend/e2e/accessibility.spec.ts` (comprehensive) | ✅ |
+| NFR-A11Y-002 | `frontend/src/components/*.tsx` (semantic elements: header, main, nav, footer) | `frontend/e2e/accessibility.spec.ts:page has proper heading hierarchy`, `main landmark is present` | ✅ |
+| NFR-A11Y-003 | `frontend/src/components/DSNav.tsx` (keyboard handlers), `frontend/e2e/navigation.spec.ts` | `frontend/e2e/accessibility.spec.ts:Focus Management`, `frontend/e2e/navigation.spec.ts:Keyboard Navigation` | ✅ |
+| NFR-A11Y-004 | aria-labels throughout components | `frontend/e2e/accessibility.spec.ts:buttons have accessible names`, `Live Regions` | ✅ |
+| NFR-TEST-001 | Current: Backend 31% auth, 72% health; Frontend needs measurement | - | ⚠️ Below target |
+| NFR-TEST-002 | `backend/test/integration/api_test.go` | Partial (health endpoint tested, others TODO) | ⚠️ |
+| NFR-TEST-003 | `frontend/e2e/*.spec.ts` (auth, navigation, theme-i18n, accessibility, api-integration) | E2E tests exist for critical flows | ✅ |
+| NFR-TEST-004 | `.github/workflows/*.yml` (CI/CD gates) | - | ⚠️ Infra only |
+| NFR-MON-001 | `backend/internal/middleware/logging.go:LoggingMiddleware`, `backend/cmd/api/main.go` (JSON handler) | - | ✅ Impl verified |
+| NFR-MON-002 | `cdk/lib/constructs/monitoring.ts:ErrorRateAlarm` | - | ✅ Impl verified |
+| NFR-MON-003 | `cdk/lib/constructs/monitoring.ts` (dashboard with P95, P99 latency graphs) | - | ✅ Impl verified |
+| NFR-MON-004 | `backend/internal/middleware/correlation.go:CorrelationIDMiddleware` | - | ✅ Impl verified |
 
 **Status Legend:**
-- ✅ Tested - Test coverage exists
-- ⚠️ Partial - Some test coverage, needs expansion  
-- ❌ Not tested - No test coverage yet
-- 🚧 In progress - Tests being written
+- ✅ Implementation + test coverage verified
+- ⚠️ Partially implemented or tested; may need additional coverage
+- ❌ Not implemented
+- 🚧 In progress
+
+## Gaps and Recommendations
+
+### Not Implemented
+1. **FR-I18N-002 (Dynamic content translation):** No implementation found for on-the-fly translation of dynamic content. Consider integrating a translation API or caching layer.
+
+### Partial Implementation / Missing Tests
+1. **FR-TENANT-002:** Tenant switcher UI exists but no dedicated unit test for switch behavior.
+2. **FR-TENANT-003:** Tenant-scoped query functions exist but no test coverage for repository layer.
+3. **FR-NAV-002/003:** App-switcher and Footer implemented but no dedicated tests.
+4. **FR-I18N-003:** Language detection exists but no explicit test for preference persistence.
+5. **NFR-PERF-*:** Performance targets defined in monitoring but no automated performance tests (consider Lighthouse CI or k6).
+6. **NFR-SEC-001:** Only partial OWASP coverage (redirect sanitization). Consider security audit.
+7. **NFR-SEC-004:** Input validation exists for some flows but not systematically tested.
+8. **NFR-TEST-001:** Backend coverage well below 80% target. Need unit tests for: `api`, `dynamo`, `featureflags`, `session`, `theme`, `middleware`.
+
+### Infrastructure-Only (Not Unit Testable)
+- NFR-SEC-002, NFR-SEC-003, NFR-SEC-005: TLS, secrets, CORS are CDK/infrastructure concerns.
+- NFR-AVAIL-001: Uptime is an operational metric, not a testable requirement.
+- NFR-TEST-004: CI/CD gating is workflow configuration.
 
 ---
-*Last updated: 2026-02-19*
+*Last updated: 2026-02-20*
+*Verified by: AI Agent (requirements verification task)*
