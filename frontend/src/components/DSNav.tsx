@@ -241,10 +241,14 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
 
                     {showUserMenu && (
                       <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                        <a 
+                          href="https://account.digistratum.com" 
+                          className="block px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || user.email}</p>
                           {userName && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
-                        </div>
+                          <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Manage account →</p>
+                        </a>
                         <div className="py-1">
                           <a href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,16 +290,21 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 </button>
               ) : user && (
                 <div className="pb-3 border-b border-gray-200 dark:border-gray-700">
-                  {/* User identifier */}
-                  <div className="flex items-center px-4 py-2">
+                  {/* User identifier - links to DSAccount */}
+                  <a 
+                    href="https://account.digistratum.com" 
+                    className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
                       {(userName || user.email || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || user.email}</p>
                       {userName && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
+                      <p className="text-xs text-blue-500 dark:text-blue-400">Manage account →</p>
                     </div>
-                  </div>
+                  </a>
                   
                   {/* Settings link */}
                   <a
