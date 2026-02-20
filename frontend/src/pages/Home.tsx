@@ -7,7 +7,11 @@ import { Layout } from '../components/Layout';
 // Note: Auth controls are ONLY in the nav bar (DSNav component)
 export function HomePage() {
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, currentTenant } = useAuth();
+
+  // Get current tenant info from user's tenants list
+  const currentTenantInfo = user?.tenants?.find(t => t.id === currentTenant);
+  const isPersonalContext = !currentTenant || currentTenant === 'personal';
 
   return (
     <Layout appName="DS App Skeleton">
@@ -22,8 +26,21 @@ export function HomePage() {
         {/* Authenticated user - show skeleton placeholder for app features */}
         {isAuthenticated && user ? (
           <div className="card max-w-2xl mx-auto">
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-2">
               Welcome back{(user.display_name || user.name) ? `, ${user.display_name || user.name}` : ''}!
+            </p>
+            
+            {/* Tenant context indicator */}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              {isPersonalContext ? (
+                <>You are viewing your <span className="font-medium text-blue-600 dark:text-blue-400">Personal</span> account</>
+              ) : currentTenantInfo ? (
+                <>You are viewing the <span className="font-medium text-blue-600 dark:text-blue-400">{currentTenantInfo.name}</span> organization
+                  <span className="text-xs ml-1">({currentTenantInfo.role})</span>
+                </>
+              ) : (
+                <>You are viewing your <span className="font-medium text-blue-600 dark:text-blue-400">Personal</span> account</>
+              )}
             </p>
             
             {/* SKELETON: Authenticated user content placeholder */}
