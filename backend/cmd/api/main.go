@@ -71,7 +71,8 @@ func init() {
 	// Session middleware creates/loads sessions
 	// Auth middleware enriches context with user data if authenticated
 	// Feature flags middleware adds evaluation context
-	mux.Handle("/api/session", session.Middleware(auth.Middleware(featureflags.Middleware(sessionMux))))
+	// NOTE: /api/session bypasses local middleware - it calls DSAccount directly
+	mux.HandleFunc("GET /api/session", api.GetSessionHandler)
 	mux.Handle("/api/theme", session.Middleware(auth.Middleware(featureflags.Middleware(sessionMux))))
 	mux.Handle("/api/flags/evaluate", session.Middleware(auth.Middleware(featureflags.Middleware(sessionMux))))
 
