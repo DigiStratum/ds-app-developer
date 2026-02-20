@@ -140,15 +140,16 @@ func extractToken(r *http.Request, cookieName string) string {
 }
 
 func buildLoginRedirectURL(cfg Config, r *http.Request) string {
-	// Build the current URL for redirect_uri
+	// Build the current URL to preserve in state for post-auth redirect
 	scheme := "https"
 	if r.TLS == nil {
 		scheme = "http"
 	}
 	currentURL := scheme + "://" + r.Host + r.RequestURI
 
+	// SECURITY: Only app_id is passed. redirect_uri comes from DSAccount app registration
+	// to prevent open redirect vulnerabilities.
 	return cfg.SSOBaseURL + "/oauth/authorize?app_id=" + cfg.AppID +
-		"&redirect_uri=" + cfg.AppURL + "/auth/callback" +
 		"&state=" + currentURL
 }
 

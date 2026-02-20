@@ -85,6 +85,7 @@ func (h *Handlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // LoginHandler redirects to DSAccount SSO login.
 // This can be used for explicit login buttons.
+// SECURITY: redirect_uri is NOT passed in URL - DSAccount uses the registered value
 func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the intended destination from query param or referrer
 	redirectAfterLogin := r.URL.Query().Get("redirect")
@@ -95,8 +96,9 @@ func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		redirectAfterLogin = h.cfg.AppURL
 	}
 
+	// SECURITY: Only app_id is passed. redirect_uri comes from DSAccount app registration
+	// to prevent open redirect vulnerabilities.
 	loginURL := h.cfg.SSOBaseURL + "/oauth/authorize?app_id=" + h.cfg.AppID +
-		"&redirect_uri=" + h.cfg.AppURL + "/auth/callback" +
 		"&state=" + redirectAfterLogin
 
 	http.Redirect(w, r, loginURL, http.StatusFound)

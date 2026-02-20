@@ -136,18 +136,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // LoginHandler initiates the SSO login flow [FR-AUTH-001]
 // Redirects to DSAccount's authorize endpoint with:
-// - app_id: identifies this app
-// - redirect_uri: where DSAccount redirects after auth (must be registered)
+// - app_id: identifies this app (DSAccount uses registered redirect_uri)
 // - state: preserves the user's intended destination through the auth flow
+// SECURITY: redirect_uri is NOT passed in URL - DSAccount uses the registered value
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
-	}
-
-	appURL := os.Getenv("APP_URL")
-	if appURL == "" {
-		appURL = "https://skeleton.digistratum.com"
 	}
 
 	// Preserve the user's intended destination through the auth flow (passed as state)
@@ -157,11 +152,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build the OAuth authorize URL with properly encoded parameters
-	// - redirect_uri: the callback endpoint on this app (must be registered in DSAccount)
-	// - state: user's original path to return to after auth completes
+	// SECURITY: Only app_id is passed. redirect_uri comes from DSAccount app registration
+	// to prevent open redirect vulnerabilities.
 	params := url.Values{}
 	params.Set("app_id", os.Getenv("DSACCOUNT_APP_ID"))
-	params.Set("redirect_uri", appURL+"/api/auth/callback")
 	params.Set("state", redirectPath)
 
 	authURL := ssoURL + "/api/sso/authorize?" + params.Encode()
