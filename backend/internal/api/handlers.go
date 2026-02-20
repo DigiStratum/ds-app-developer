@@ -80,7 +80,7 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		dsAccountURL = "https://account.digistratum.com"
 	}
 
-	req, _ := http.NewRequest("GET", dsAccountURL+"/api/me", nil)
+	req, _ := http.NewRequest("GET", dsAccountURL+"/api/auth/me", nil)
 	req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
 	client := &http.Client{Timeout: 5 * time.Second}
