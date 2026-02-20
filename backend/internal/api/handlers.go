@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -63,10 +64,11 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 // This is the primary endpoint for the frontend to check session status.
 // Calls DSAccount to validate sessions (DSAccount owns session storage).
 func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
-	// Read ds_session cookie
+	// Read ds_session cookie (contains JWT from SSO flow)
 	cookie, err := r.Cookie("ds_session")
 	if err != nil || cookie.Value == "" {
 		// No session - return guest state
+		slog.Debug("no ds_session cookie found")
 		WriteJSON(w, http.StatusOK, SessionResponse{
 			IsAuthenticated: false,
 			IsGuest:         true,
@@ -74,13 +76,14 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call DSAccount to validate session and get user info
+	// Call DSAccount to validate JWT and get user info
+	// Use /api/sso/userinfo which validates JWT tokens (vs /api/auth/me which validates session tokens)
 	dsAccountURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if dsAccountURL == "" {
 		dsAccountURL = "https://account.digistratum.com"
 	}
 
-	req, _ := http.NewRequest("GET", dsAccountURL+"/api/auth/me", nil)
+	req, _ := http.NewRequest("GET", dsAccountURL+"/api/sso/userinfo", nil)
 	req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
 	client := &http.Client{Timeout: 5 * time.Second}
