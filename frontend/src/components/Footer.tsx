@@ -6,7 +6,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700" style={{ borderRadius: 'var(--ds-container-radius) var(--ds-container-radius) 0 0' }}>
       <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
           <p>{t('footer.copyright', { year })}</p>

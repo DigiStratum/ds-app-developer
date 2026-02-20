@@ -65,7 +65,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" style={{ borderRadius: '0 0 var(--ds-container-radius) var(--ds-container-radius)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             {/* Logo [FR-NAV-001] - leftmost element, supports tenant branding */}

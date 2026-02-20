@@ -1,3 +1,4 @@
+export { AdSlot } from './AdSlot';
 export { CookieConsent } from './CookieConsent';
 export { DSNav } from './DSNav';
 export { FeatureFlag, withFeatureFlag } from './FeatureFlag';

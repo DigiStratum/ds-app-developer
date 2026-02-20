@@ -72,6 +72,10 @@
   --ds-radius-lg: 0.75rem;
   --ds-radius-full: 9999px;
   
+  /* Container Layout - Rounded containers with ad slot margins */
+  --ds-container-radius: 12px;
+  --ds-bg-margin: #e5e7eb;
+  
   /* Transitions */
   --ds-transition-fast: 150ms;
   --ds-transition: 200ms;
@@ -86,6 +90,9 @@
   --ds-bg-tertiary: #0f172a;
   --ds-bg-elevated: #374151;
   --ds-bg-overlay: rgba(0, 0, 0, 0.7);
+  
+  /* Container Layout - Dark mode margin color */
+  --ds-bg-margin: #374151;
   
   /* Text Colors - Light on dark */
   --ds-text-primary: #f9fafb;
