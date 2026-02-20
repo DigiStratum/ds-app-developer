@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -133,25 +134,38 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s/api/sso/logout?redirect_uri=%s", ssoURL, appURL), http.StatusFound)
 }
 
-// LoginHandler initiates the SSO login flow
-// SECURITY NOTE: redirect_uri is NOT included in the URL.
-// DSAccount looks up the redirect_uri from app registration only.
-// This prevents open redirect attacks.
+// LoginHandler initiates the SSO login flow [FR-AUTH-001]
+// Redirects to DSAccount's authorize endpoint with:
+// - app_id: identifies this app
+// - redirect_uri: where DSAccount redirects after auth (must be registered)
+// - state: preserves the user's intended destination through the auth flow
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
 	}
 
-	// Preserve the redirect URL through the auth flow (passed as state)
-	redirectURL := r.URL.Query().Get("redirect")
-	if redirectURL == "" {
-		redirectURL = "/"
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "https://skeleton.digistratum.com"
 	}
 
-	// SECURITY: Only app_id and state are passed. redirect_uri comes from DSAccount app registration.
-	authURL := ssoURL + "/api/sso/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
-		"&state=" + redirectURL
+	// Preserve the user's intended destination through the auth flow (passed as state)
+	redirectPath := r.URL.Query().Get("redirect")
+	if redirectPath == "" {
+		redirectPath = "/"
+	}
 
+	// Build the OAuth authorize URL with properly encoded parameters
+	// - redirect_uri: the callback endpoint on this app (must be registered in DSAccount)
+	// - state: user's original path to return to after auth completes
+	params := url.Values{}
+	params.Set("app_id", os.Getenv("DSACCOUNT_APP_ID"))
+	params.Set("redirect_uri", appURL+"/api/auth/callback")
+	params.Set("state", redirectPath)
+
+	authURL := ssoURL + "/api/sso/authorize?" + params.Encode()
+
+	slog.Info("initiating SSO login", "auth_url", authURL)
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
