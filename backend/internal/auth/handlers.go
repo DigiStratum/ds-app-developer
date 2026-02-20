@@ -51,8 +51,12 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Set session cookie
 	session.SetSessionCookie(w, r, sess)
 
-	// Get redirect URL from query param or default to home
-	redirectURL := r.URL.Query().Get("redirect")
+	// Get redirect URL from state param (how OAuth returns our original redirect)
+	// or fall back to query param for backwards compatibility
+	redirectURL := r.URL.Query().Get("state")
+	if redirectURL == "" {
+		redirectURL = r.URL.Query().Get("redirect")
+	}
 	if redirectURL == "" {
 		redirectURL = os.Getenv("APP_URL")
 		if redirectURL == "" {
@@ -83,24 +87,28 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
 	}
-	http.Redirect(w, r, ssoURL+"/logout", http.StatusFound)
+	http.Redirect(w, r, ssoURL+"/api/sso/logout", http.StatusFound)
 }
 
 // LoginHandler initiates the SSO login flow
+// SECURITY NOTE: redirect_uri is NOT included in the URL.
+// DSAccount looks up the redirect_uri from app registration only.
+// This prevents open redirect attacks.
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
 	}
 
-	// Preserve the redirect URL through the auth flow
+	// Preserve the redirect URL through the auth flow (passed as state)
 	redirectURL := r.URL.Query().Get("redirect")
 	if redirectURL == "" {
 		redirectURL = "/"
 	}
 
-	authURL := ssoURL + "/oauth/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
-		"&redirect_uri=" + os.Getenv("APP_URL") + "/api/auth/callback?redirect=" + redirectURL
+	// SECURITY: Only app_id and state are passed. redirect_uri comes from DSAccount app registration.
+	authURL := ssoURL + "/api/sso/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
+		"&state=" + redirectURL
 
 	http.Redirect(w, r, authURL, http.StatusFound)
 }

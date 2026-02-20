@@ -2,15 +2,21 @@ import { User, AuthConfig } from './types';
 
 /**
  * Build the SSO login URL
+ * 
+ * SECURITY NOTE: redirect_uri is NOT included in the URL.
+ * DSAccount looks up the redirect_uri from app registration only.
+ * This prevents open redirect attacks.
+ * 
+ * For localhost development, DSAccount auto-selects localhost URI
+ * if the Origin/Referer header indicates localhost.
  */
 export function buildLoginURL(config: AuthConfig, redirectTo?: string): string {
   const ssoBaseURL = config.ssoBaseURL || 'https://account.digistratum.com';
-  const appURL = config.appURL || (typeof window !== 'undefined' ? window.location.origin : '');
   const redirect = redirectTo || '/';
 
+  // SECURITY: Only app_id and state are passed. redirect_uri comes from app registration.
   return (
-    `${ssoBaseURL}/oauth/authorize?app_id=${config.appId}` +
-    `&redirect_uri=${encodeURIComponent(appURL + '/auth/callback')}` +
+    `${ssoBaseURL}/api/sso/authorize?app_id=${config.appId}` +
     `&state=${encodeURIComponent(redirect)}`
   );
 }
@@ -22,7 +28,7 @@ export function buildLogoutURL(config: AuthConfig): string {
   const ssoBaseURL = config.ssoBaseURL || 'https://account.digistratum.com';
   const appURL = config.appURL || (typeof window !== 'undefined' ? window.location.origin : '');
 
-  return `${ssoBaseURL}/logout?redirect_uri=${encodeURIComponent(appURL)}`;
+  return `${ssoBaseURL}/api/sso/logout?redirect_uri=${encodeURIComponent(appURL)}`;
 }
 
 /**

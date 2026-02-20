@@ -70,19 +70,22 @@ export function AuthProvider({ children, config, apiClient }: AuthProviderProps)
   }, [checkAuth]);
 
   // Redirect to DSAccount SSO login
+  // NOTE: redirect_uri is no longer passed in query string for security.
+  // DSAccount looks up the redirect_uri from app registration.
+  // For localhost development, DSAccount auto-selects localhost URI if Origin/Referer matches.
   const login = useCallback(
     (redirectTo?: string) => {
       const redirect = redirectTo || (typeof window !== 'undefined' ? window.location.pathname : '/');
+      // SECURITY: Only app_id and state are passed. redirect_uri comes from app registration.
       const loginURL =
-        `${ssoBaseURL}/oauth/authorize?app_id=${config.appId}` +
-        `&redirect_uri=${encodeURIComponent(appURL + '/auth/callback')}` +
+        `${ssoBaseURL}/api/sso/authorize?app_id=${config.appId}` +
         `&state=${encodeURIComponent(redirect)}`;
       
       if (typeof window !== 'undefined') {
         window.location.href = loginURL;
       }
     },
-    [ssoBaseURL, config.appId, appURL]
+    [ssoBaseURL, config.appId]
   );
 
   // Logout and redirect to DSAccount logout
