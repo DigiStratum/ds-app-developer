@@ -16,5 +16,6 @@ new SkeletonStack(app, 'DSAppSkeletonStack', {
   hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
   dsAccountUrl: 'https://account.digistratum.com',
   dsAccountAppId: 'skeleton',
-  dsAccountAppSecretArn: 'arn:aws:secretsmanager:us-west-2:171949636152:secret:ds-app-skeleton/dsaccount-app-secret-LxwIA9',
+  // Note: DSACCOUNT_APP_SECRET is injected post-deploy by GitHub Actions
+  // Secret ARN: arn:aws:secretsmanager:us-west-2:171949636152:secret:ds-app-skeleton/dsaccount-app-secret-LxwIA9
 });

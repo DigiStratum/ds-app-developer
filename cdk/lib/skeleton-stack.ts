@@ -9,7 +9,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { Monitoring } from './constructs';
@@ -19,7 +18,6 @@ interface SkeletonStackProps extends cdk.StackProps {
   hostedZoneId: string;
   dsAccountUrl: string;
   dsAccountAppId: string;
-  dsAccountAppSecretArn: string;  // Secrets Manager ARN - secret value loaded at deploy time
   environment?: string;
 }
 
@@ -61,14 +59,10 @@ export class SkeletonStack extends cdk.Stack {
         DSACCOUNT_SSO_URL: props.dsAccountUrl,
         DSACCOUNT_APP_ID: props.dsAccountAppId,
         APP_URL: `https://${props.domainName}`,
+        // DSACCOUNT_APP_SECRET is injected post-deploy by GitHub Actions
+        // This keeps secrets out of CloudFormation templates
       },
     });
-
-    // Grant access to DSAccount app secret from Secrets Manager and pass value as env var
-    const appSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'DSAccountAppSecret', props.dsAccountAppSecretArn);
-    appSecret.grantRead(apiHandler);
-    // Use secretValue to resolve at deploy time (CDK will look up the secret)
-    apiHandler.addEnvironment('DSACCOUNT_APP_SECRET', appSecret.secretValue.unsafeUnwrap());
 
     table.grantReadWriteData(apiHandler);
 
