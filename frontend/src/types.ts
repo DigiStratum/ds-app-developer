@@ -2,7 +2,8 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  name?: string;          // Frontend field
+  display_name?: string;  // DSAccount returns this
   tenants: string[];
   preferredLanguage?: string;
   theme?: 'light' | 'dark' | 'system';

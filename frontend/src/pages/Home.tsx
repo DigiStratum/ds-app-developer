@@ -23,7 +23,7 @@ export function HomePage() {
         {isAuthenticated && user ? (
           <div className="card max-w-2xl mx-auto">
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Welcome back{user.name ? `, ${user.name}` : ''}!
+              Welcome back{(user.display_name || user.name) ? `, ${user.display_name || user.name}` : ''}!
             </p>
             
             {/* SKELETON: Authenticated user content placeholder */}
