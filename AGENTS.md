@@ -413,6 +413,144 @@ Closes #123
 
 ---
 
+## Test-Driven Development (TDD) Workflow
+
+**Every code change follows the TDD cycle: Requirements → Tests → Implementation.**
+
+This discipline ensures:
+- **Minimum viable implementation** — Build only what's needed, not speculative features
+- **Robust regression suite** — Tests prevent accidental breaks
+- **High coverage from the start** — Reduces risk of instability
+
+### The TDD Cycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. REQUIREMENTS                                                │
+│     Review and update documented requirements before coding     │
+├─────────────────────────────────────────────────────────────────┤
+│  2. RED                                                         │
+│     Write tests for the requirement                             │
+│     Run tests → they MUST FAIL (expected: nothing exists yet)   │
+├─────────────────────────────────────────────────────────────────┤
+│  3. GREEN                                                       │
+│     Write minimum code to make tests pass                       │
+│     Run tests → they MUST PASS                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  4. REFACTOR                                                    │
+│     Optimize implementation without changing tests              │
+│     Run tests → they MUST STILL PASS                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Step-by-Step TDD Process
+
+**1. Requirements Phase**
+```bash
+# Before any code:
+# - Read REQUIREMENTS.md
+# - Identify or create the requirement (FR-XXX-NNN)
+# - Update REQUIREMENTS.md if new requirement
+# - Commit: docs(requirements): add FR-AUTH-005 for password reset
+```
+
+**2. Red Phase (Write Failing Tests)**
+```go
+// backend/internal/auth/password_test.go
+
+// Tests FR-AUTH-005: Users can request password reset via email
+func TestPasswordReset_SendsEmail(t *testing.T) {
+    // Arrange
+    mockMailer := &mocks.Mailer{}
+    handler := NewPasswordHandler(mockMailer)
+    
+    // Act
+    req := httptest.NewRequest("POST", "/api/auth/reset", 
+        strings.NewReader(`{"email":"user@example.com"}`))
+    resp := httptest.NewRecorder()
+    handler.RequestReset(resp, req)
+    
+    // Assert
+    assert.Equal(t, 200, resp.Code)
+    assert.True(t, mockMailer.SendCalled)
+}
+```
+
+```bash
+# Run tests - MUST FAIL (function doesn't exist)
+go test ./internal/auth/... -run TestPasswordReset
+# Expected output: undefined: NewPasswordHandler
+```
+
+**3. Green Phase (Minimum Implementation)**
+```go
+// backend/internal/auth/password.go
+
+// Implements FR-AUTH-005: Users can request password reset via email
+func (h *PasswordHandler) RequestReset(w http.ResponseWriter, r *http.Request) {
+    var req struct {
+        Email string `json:"email"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        api.Error(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON")
+        return
+    }
+    
+    // Minimum implementation - just send the email
+    h.mailer.SendResetEmail(r.Context(), req.Email)
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+```bash
+# Run tests - MUST PASS
+go test ./internal/auth/... -run TestPasswordReset
+# Expected output: PASS
+```
+
+**4. Refactor Phase (Optimize Without Breaking Tests)**
+```go
+// Add validation, rate limiting, better error handling
+// But tests still pass without modification
+
+func (h *PasswordHandler) RequestReset(w http.ResponseWriter, r *http.Request) {
+    // ... refactored with validation, logging, etc.
+}
+```
+
+```bash
+# Run tests - MUST STILL PASS
+go test ./internal/auth/...
+# If tests fail, you broke something - revert and try again
+```
+
+### TDD Checklist for Every Change
+
+Before starting any code change:
+
+- [ ] **Requirement identified** — Which FR/NFR does this implement?
+- [ ] **REQUIREMENTS.md updated** — If new, add it first
+- [ ] **Test written FIRST** — Before any implementation code
+- [ ] **Test fails (Red)** — Confirmed the test catches missing functionality
+- [ ] **Implementation minimal** — Only enough to pass the test
+- [ ] **Test passes (Green)** — Confirmed implementation works
+- [ ] **Refactor clean** — Optimized without breaking tests
+- [ ] **Traceability updated** — REQUIREMENTS.md table updated with test file
+
+### Why TDD for Agentic Development?
+
+| Without TDD | With TDD |
+|-------------|----------|
+| Speculative code that may never be used | Only code that's required |
+| Regressions discovered later | Regressions caught immediately |
+| "It works on my machine" | Verified by automated tests |
+| Unknown test coverage | Coverage built incrementally |
+| Hard to verify completion | Tests define "done" |
+
+**For AI agents specifically:** TDD provides clear success criteria. Instead of guessing when a feature is "done," the tests define completion. Red → Green = Done.
+
+---
+
 ## Context Files for LLM Agents
 
 When working on this codebase, LLM agents should use these context patterns:
