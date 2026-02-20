@@ -154,6 +154,30 @@ jobs:
         env:
           CANARY_DEPLOYMENT: 'true'
 
+      - name: Inject secrets to Lambda
+        run: |
+          # Get secret from AWS Secrets Manager
+          APP_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id ds-app-skeleton/dsaccount-app-secret \
+            --query SecretString \
+            --output text)
+          
+          # Get current env vars (CDK sets these)
+          CURRENT_ENV=$(aws lambda get-function-configuration \
+            --function-name ds-app-skeleton-api \
+            --query 'Environment.Variables' \
+            --output json)
+          
+          # Merge with secret (jq adds/overwrites DSACCOUNT_APP_SECRET)
+          UPDATED_ENV=$(echo "$CURRENT_ENV" | jq --arg secret "$APP_SECRET" '. + {DSACCOUNT_APP_SECRET: $secret}')
+          
+          # Update Lambda with merged env vars
+          aws lambda update-function-configuration \
+            --function-name ds-app-skeleton-api \
+            --environment "Variables=$UPDATED_ENV"
+          
+          echo "::notice::Secrets injected to Lambda"
+
       - name: Publish new Lambda version
         id: deploy
         run: |
