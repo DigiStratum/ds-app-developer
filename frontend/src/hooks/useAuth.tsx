@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Restore tenant from localStorage or use session tenant
         const savedTenant = localStorage.getItem('currentTenant');
-        const tenantToUse = savedTenant && sessionData.user.tenants.includes(savedTenant)
+        const tenantToUse = savedTenant && sessionData.user.tenants.some(t => t.id === savedTenant)
           ? savedTenant
           : sessionData.tenant_id || null;
         

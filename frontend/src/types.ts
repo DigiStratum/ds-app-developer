@@ -1,10 +1,17 @@
+// Tenant info returned from DSAccount
+export interface TenantInfo {
+  id: string;
+  name: string;
+  role: string;
+}
+
 // User types [FR-AUTH-003]
 export interface User {
   id: string;
   email: string;
   name?: string;          // Frontend field
   display_name?: string;  // DSAccount returns this
-  tenants: string[];
+  tenants: TenantInfo[];
   preferredLanguage?: string;
   theme?: 'light' | 'dark' | 'system';
 }

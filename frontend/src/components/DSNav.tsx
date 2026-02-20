@@ -58,8 +58,10 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
     setShowPreferencesModal(true);
   };
 
-  const tenantName = currentTenant 
-    ? `Org: ${currentTenant}` 
+  // Find current tenant info from tenants array
+  const currentTenantInfo = user?.tenants?.find(t => t.id === currentTenant);
+  const tenantName = currentTenantInfo 
+    ? currentTenantInfo.name 
     : t('nav.personal');
 
   return (
@@ -208,11 +210,12 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                             {user.tenants.map((tenant) => (
                               <button
-                                key={tenant}
-                                onClick={() => { switchTenant(tenant); setShowTenantMenu(false); }}
-                                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${currentTenant === tenant ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
+                                key={tenant.id}
+                                onClick={() => { switchTenant(tenant.id); setShowTenantMenu(false); }}
+                                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${currentTenant === tenant.id ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'}`}
                               >
-                                {tenant}
+                                <span>{tenant.name}</span>
+                                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({tenant.role})</span>
                               </button>
                             ))}
                           </div>
