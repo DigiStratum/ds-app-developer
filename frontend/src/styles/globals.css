@@ -76,6 +76,9 @@
   --ds-container-radius: 12px;
   --ds-bg-margin: #e5e7eb;
   
+  /* Side margins - breathing room on desktop, full-width on mobile (#291) */
+  --ds-side-margin: 5px;
+  
   /* Transitions */
   --ds-transition-fast: 150ms;
   --ds-transition: 200ms;
@@ -165,4 +168,20 @@ body {
 
 .animate-scaleIn {
   animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* DS Container Side Margins (#291)
+ * Provides 5px breathing room on desktop, full-width on mobile (< sm breakpoint)
+ * Applied to header, main content, and footer containers
+ */
+.ds-container-margins {
+  margin-left: var(--ds-side-margin);
+  margin-right: var(--ds-side-margin);
+}
+
+@media (max-width: 639px) {
+  .ds-container-margins {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
