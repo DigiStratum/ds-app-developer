@@ -19,10 +19,17 @@ const (
 
 // User represents an authenticated user [FR-AUTH-003]
 type User struct {
-	ID      string   `json:"id"`
-	Email   string   `json:"email"`
-	Name    string   `json:"display_name"` // DSAccount uses display_name
-	Tenants []string `json:"tenants"`
+	ID      string       `json:"id"`
+	Email   string       `json:"email"`
+	Name    string       `json:"display_name"` // DSAccount uses display_name
+	Tenants []TenantInfo `json:"tenants"`
+}
+
+// TenantInfo represents a user's membership in a tenant/org
+type TenantInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
 }
 
 // Middleware validates authentication and extracts user/tenant context [FR-AUTH-001]
@@ -124,7 +131,7 @@ func loadUser(userID string) (*User, error) {
 		ID:      userID,
 		Email:   "demo@digistratum.com",
 		Name:    "Demo User",
-		Tenants: []string{"tenant-1", "tenant-2"},
+		Tenants: []TenantInfo{{ID: "tenant-1", Name: "Demo Tenant", Role: "member"}},
 	}, nil
 }
 
@@ -136,6 +143,6 @@ func validateToken(token string) (*User, error) {
 		ID:      "user-123",
 		Email:   "demo@digistratum.com",
 		Name:    "Demo User",
-		Tenants: []string{"tenant-1", "tenant-2"},
+		Tenants: []TenantInfo{{ID: "tenant-1", Name: "Demo Tenant", Role: "member"}},
 	}, nil
 }
