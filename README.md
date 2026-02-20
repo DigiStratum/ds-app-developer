@@ -8,16 +8,26 @@ Canonical baseline template for all DigiStratum ecosystem applications.
 # Clone and setup
 git clone https://github.com/DigiStratum/ds-app-skeleton.git my-app
 cd my-app
+
+# Run setup (installs deps, configures git hooks)
+./scripts/setup.sh
+
+# Or initialize as a new app
 ./scripts/init-app.sh my-app
+```
 
-# Install dependencies
-cd frontend && npm install
-cd ../backend && go mod download
-cd ../cdk && npm install
+## Development
 
-# Run locally
-npm run dev  # frontend on :3000
-go run ./cmd/api  # backend on :8080
+```bash
+# Frontend (localhost:3000)
+cd frontend && npm run dev
+
+# Backend (localhost:8080)
+cd backend && go run ./cmd/api
+
+# Run tests
+cd backend && go test ./...
+cd frontend && npm test
 ```
 
 ## Architecture

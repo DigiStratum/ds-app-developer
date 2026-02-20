@@ -165,6 +165,28 @@ Every file should be self-documenting. Key files:
 
 ## Coding Standards
 
+### Comment Conventions: FIXME vs TODO
+
+**Use FIXME for incomplete/broken code that must be fixed before shipping:**
+```go
+// FIXME: SSO callback not implemented - auth will fail
+func ssoCallback(w http.ResponseWriter, r *http.Request) {
+    http.Error(w, "not implemented", 501)
+}
+```
+
+**Use TODO for future enhancements that are okay to ship without:**
+```go
+// TODO: Add pagination support for large result sets
+func listItems(ctx context.Context) ([]Item, error) {
+    // Current implementation returns all items
+}
+```
+
+**Pre-commit hook blocks FIXME** — commits containing FIXME in source files will be rejected. This ensures incomplete implementations don't make it to production.
+
+Run `./scripts/setup.sh` after cloning to enable git hooks.
+
 ### Go Backend
 
 ```go

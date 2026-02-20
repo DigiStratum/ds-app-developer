@@ -1,0 +1,20 @@
+#!/bin/bash
+# Pre-commit hook: Block commits containing FIXME in source files
+# FIXME = broken/incomplete code that must be fixed before shipping
+# TODO = future enhancement, okay to commit
+
+# Only check source files, exclude hooks directory
+FIXME_FILES=$(git diff --cached --name-only | \
+  grep -E '\.(go|ts|tsx|js|jsx)$' | \
+  xargs grep -l 'FIXME' 2>/dev/null || true)
+
+if [ -n "$FIXME_FILES" ]; then
+  echo "❌ FIXME found in staged files:"
+  echo "$FIXME_FILES" | sed 's/^/  /'
+  echo ""
+  echo "FIXME marks incomplete/broken code that must be resolved before committing."
+  echo "If this is intentional future work, use TODO instead."
+  exit 1
+fi
+
+exit 0
