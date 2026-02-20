@@ -74,12 +74,12 @@ func RequireAuthMiddleware(next http.Handler) http.Handler {
 
 		if user == nil {
 			// Redirect to SSO login [FR-AUTH-002]
+			// SECURITY: Only app_id is passed. redirect_uri comes from DSAccount app registration.
 			ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 			if ssoURL == "" {
 				ssoURL = "https://account.digistratum.com"
 			}
-			redirectURL := ssoURL + "/oauth/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID") +
-				"&redirect_uri=" + os.Getenv("APP_URL") + "/api/auth/callback"
+			redirectURL := ssoURL + "/api/sso/authorize?app_id=" + os.Getenv("DSACCOUNT_APP_ID")
 			http.Redirect(w, r, redirectURL, http.StatusFound)
 			return
 		}
