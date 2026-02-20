@@ -15,4 +15,6 @@ new SkeletonStack(app, 'DSAppSkeletonStack', {
   domainName: 'skeleton.digistratum.com',
   hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
   dsAccountUrl: 'https://account.digistratum.com',
+  dsAccountAppId: 'skeleton',
+  dsAccountAppSecretArn: 'arn:aws:secretsmanager:us-west-2:171949636152:secret:ds-app-skeleton/dsaccount-app-secret-LxwIA9',
 });
