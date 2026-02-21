@@ -56,23 +56,18 @@ This skeleton imports from shared DigiStratum packages:
 
 ### Publishing Packages
 
-To release a new version of `ds-core` or `ds-ui`:
+Packages are automatically published to GitHub Package Registry on merge to `main`:
 
-1. Update the version in the package's `package.json`
-2. Commit and push the change
-3. Create and push a tag:
-   ```bash
-   # For ds-core
-   git tag ds-core@X.Y.Z
-   git push origin ds-core@X.Y.Z
+1. **Bump version** in the package's `package.json` as part of your PR (follow semver)
+2. **Merge to main** — CI detects changes and publishes new versions
+3. If the version already exists in the registry, publish is skipped (no failure)
 
-   # For ds-ui
-   git tag ds-ui@X.Y.Z
-   git push origin ds-ui@X.Y.Z
-   ```
-4. The GitHub Action will automatically build and publish to GitHub Package Registry
+**Versioning convention (semver):**
+- `1.0.0` → `1.0.1` — Patch: bug fixes, no API changes
+- `1.0.0` → `1.1.0` — Minor: new features, backward compatible
+- `1.0.0` → `2.0.0` — Major: breaking changes
 
-Alternatively, use the manual workflow dispatch from the Actions tab.
+**Manual publish:** Use workflow_dispatch from the Actions tab to force-publish a specific package.
 
 ### Installing from GitHub Package Registry
 
@@ -86,9 +81,16 @@ To consume these packages in other repos:
 
 2. Set `NPM_TOKEN` environment variable to a GitHub PAT with `read:packages` scope
 
-3. Install packages normally:
+3. Install with semver ranges:
    ```bash
-   npm install @digistratum/ds-core @digistratum/ds-ui
+   # Compatible versions (recommended)
+   npm install @digistratum/ds-core@^1.0.0 @digistratum/ds-ui@^1.0.0
+
+   # Patch-only updates
+   npm install @digistratum/ds-core@~1.0.0
+
+   # Exact version
+   npm install @digistratum/ds-core@1.0.0
    ```
 
 For GitHub Actions, use `GITHUB_TOKEN` which has automatic package read access for repos in the same org.
