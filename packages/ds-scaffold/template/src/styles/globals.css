@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DigiStratum Design System Variables */
+:root {
+  /* Primary colors */
+  --ds-primary: #2563eb;
+  --ds-primary-hover: #1d4ed8;
+  --ds-secondary: #64748b;
+  --ds-accent: #f59e0b;
+  
+  /* Layout */
+  --ds-container-radius: 8px;
+  --ds-bg-margin: #e5e7eb;
+  
+  /* GDPR Banner theming */
+  --gdpr-banner-bg: #ffffff;
+  --gdpr-border-color: #e5e7eb;
+  --gdpr-text-color: #333333;
+  --gdpr-link-color: #2563eb;
+  --gdpr-primary-color: #2563eb;
+  --gdpr-primary-hover: #1d4ed8;
+  --gdpr-button-hover: #f3f4f6;
+}
+
+.dark {
+  --ds-bg-margin: #1f2937;
+  --gdpr-banner-bg: #1f2937;
+  --gdpr-border-color: #374151;
+  --gdpr-text-color: #f3f4f6;
+  --gdpr-button-hover: #374151;
+}
+
+/* Base styles */
+body {
+  @apply antialiased bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+}
+
+/* Container margins (responsive) */
+.ds-container-margins {
+  @apply mx-1 sm:mx-[5px];
+}
+
+/* Card component */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow p-6;
+}
+
+/* Button variants */
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.btn-primary {
+  @apply bg-ds-primary text-white hover:bg-ds-primary-hover;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600;
+}
+
+.btn-outline {
+  @apply border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800;
+}
+
+/* Link styles */
+.link {
+  @apply text-ds-primary hover:underline;
+}
