@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '@digistratum/ds-core';
 
 // Extended language list for modal (scrollable)
 const SUPPORTED_LANGUAGES = [

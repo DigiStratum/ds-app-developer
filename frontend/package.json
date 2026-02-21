@@ -18,6 +18,7 @@
     "e2e:ci": "playwright test --reporter=list,junit"
   },
   "dependencies": {
+    "@digistratum/ds-core": "file:../packages/ds-core",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",

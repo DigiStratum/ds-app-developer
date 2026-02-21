@@ -1,10 +1,12 @@
 export { AdSlot } from './AdSlot';
 export { CookieConsent } from './CookieConsent';
 export { DSNav } from './DSNav';
-export { FeatureFlag, withFeatureFlag } from './FeatureFlag';
 export { Footer } from './Footer';
 export { Layout } from './Layout';
-export { ErrorBoundary, ErrorBoundaryWithKey } from './ErrorBoundary';
+
+// Re-exported from @digistratum/ds-core for backwards compatibility
+export { FeatureFlag, withFeatureFlag } from './FeatureFlag';
+export { ErrorBoundary } from '@digistratum/ds-core';
 
 // Standardized reusable components for DS apps
 export { DeveloperHeader } from './DeveloperHeader';

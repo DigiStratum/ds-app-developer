@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { ThemeProvider } from './hooks/useTheme';
-import { CookieConsent, Layout, ErrorBoundaryWithKey } from './components';
+import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
+import { CookieConsent, Layout } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { SettingsPage } from './pages/Settings';
@@ -56,7 +56,7 @@ function AppRoutes() {
   const location = useLocation();
   
   return (
-    <ErrorBoundaryWithKey resetKey={location.pathname}>
+    <ErrorBoundary resetKey={location.pathname}>
       <SessionLoader>
         <Routes>
           {/* Public routes - accessible with guest session */}
@@ -85,7 +85,7 @@ function AppRoutes() {
           />
         </Routes>
       </SessionLoader>
-    </ErrorBoundaryWithKey>
+    </ErrorBoundary>
   );
 }
 

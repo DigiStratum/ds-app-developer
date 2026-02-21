@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useConsent } from '../hooks/useConsent';
+import { useConsent } from '@digistratum/ds-core';
 
 /**
  * Link configuration for footer navigation

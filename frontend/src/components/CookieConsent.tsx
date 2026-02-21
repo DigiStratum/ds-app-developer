@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useConsent } from '../hooks/useConsent';
+import { useConsent } from '@digistratum/ds-core';
 
 /**
  * GDPR cookie consent banner with Accept All / Only Necessary options [FR-GDPR-001]
