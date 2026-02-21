@@ -6,6 +6,17 @@ export {
   TenantSwitcher,
   UserMenu,
   ThemeToggle,
+  // GDPR
+  GdprBanner,
+  GdprPreferencesModal,
+  GdprManageLink,
+  useGdprConsent,
+  readConsent,
+  writeConsent,
+  clearConsent,
+  GDPR_COOKIE_NAME,
+  GDPR_COOKIE_DOMAIN,
+  GDPR_COOKIE_EXPIRY_DAYS,
 } from './components';
 
 export type {
@@ -14,6 +25,15 @@ export type {
   TenantSwitcherProps,
   UserMenuProps,
   ThemeToggleProps,
+  // GDPR
+  GdprConsent,
+  GdprPreferences,
+  GdprConsentState,
+  GdprConsentActions,
+  UseGdprConsentReturn,
+  GdprBannerProps,
+  GdprPreferencesModalProps,
+  GdprManageLinkProps,
 } from './components';
 
 // Hooks
