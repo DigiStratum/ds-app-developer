@@ -1,6 +1,6 @@
 # End-to-End Testing Guide
 
-> Comprehensive E2E testing patterns for DS App Skeleton using Playwright.
+> Comprehensive E2E testing patterns for DS App Developer using Playwright.
 > E2E tests validate user journeys and integration between frontend and backend.
 
 ## Table of Contents
@@ -23,7 +23,7 @@
 
 ### Why Playwright?
 
-DS App Skeleton uses [Playwright](https://playwright.dev/) for E2E testing because:
+DS App Developer uses [Playwright](https://playwright.dev/) for E2E testing because:
 
 - **Cross-browser testing** - Test on Chromium, Firefox, WebKit
 - **Auto-wait** - Built-in waiting for elements, reducing flaky tests
@@ -148,7 +148,7 @@ frontend/
 
 ### The Challenge
 
-DS App Skeleton uses DSAccount SSO for authentication (see [AUTH.md](./AUTH.md)). In E2E tests, we can't:
+DS App Developer uses DSAccount SSO for authentication (see [AUTH.md](./AUTH.md)). In E2E tests, we can't:
 - Test against real DSAccount (external dependency)
 - Perform actual OAuth flows (slow, flaky)
 - Share credentials across tests

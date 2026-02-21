@@ -1,8 +1,8 @@
-# Security Standards - DS App Skeleton
+# Security Standards - DS App Developer
 
 > Comprehensive security standards for all DigiStratum applications.
 > Based on OWASP Top 10 (2021) compliance requirements.
-> Applications based on ds-app-skeleton inherit these patterns.
+> Applications based on ds-app-developer inherit these patterns.
 
 ---
 
@@ -824,7 +824,7 @@ All secrets are stored in AWS Secrets Manager. Never commit secrets to code.
 
 ```
 Secrets Manager
-├── ds-app-skeleton/prod/
+├── ds-app-developer/prod/
 │   ├── dsaccount-sso         # DSAccount SSO credentials
 │   │   ├── client_id
 │   │   ├── client_secret
@@ -832,9 +832,9 @@ Secrets Manager
 │   └── app-secrets           # Application-specific secrets
 │       ├── session_key
 │       └── ...
-├── ds-app-skeleton/staging/
+├── ds-app-developer/staging/
 │   └── ...
-└── ds-app-skeleton/dev/
+└── ds-app-developer/dev/
     └── ...
 ```
 
@@ -847,12 +847,12 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 // Reference existing secrets (created manually or by another stack)
 const ssoSecret = secretsmanager.Secret.fromSecretNameV2(
     this, 'SSOSecret',
-    `ds-app-skeleton/${props.environment}/dsaccount-sso`
+    `ds-app-developer/${props.environment}/dsaccount-sso`
 );
 
 // Create new secret with auto-generated value
 const sessionSecret = new secretsmanager.Secret(this, 'SessionSecret', {
-    secretName: `ds-app-skeleton/${props.environment}/session-key`,
+    secretName: `ds-app-developer/${props.environment}/session-key`,
     generateSecretString: {
         secretStringTemplate: JSON.stringify({}),
         generateStringKey: 'key',
@@ -937,7 +937,7 @@ func (c *SecretCache) GetSecret(ctx context.Context, secretName string) (map[str
 
 // Usage example
 func GetSSOCredentials(ctx context.Context, cache *SecretCache, env string) (*SSOCredentials, error) {
-    secretName := fmt.Sprintf("ds-app-skeleton/%s/dsaccount-sso", env)
+    secretName := fmt.Sprintf("ds-app-developer/%s/dsaccount-sso", env)
     secret, err := cache.GetSecret(ctx, secretName)
     if err != nil {
         return nil, err

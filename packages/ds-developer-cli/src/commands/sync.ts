@@ -193,7 +193,7 @@ export async function syncApp(
   if (applied > 0) {
     console.log(chalk.gray('\nReview the changes and commit when ready:'));
     console.log(chalk.gray('  git diff'));
-    console.log(chalk.gray('  git add -A && git commit -m "Sync scaffolding from ds-app-skeleton"'));
+    console.log(chalk.gray('  git add -A && git commit -m "Sync scaffolding from ds-app-developer"'));
   }
 }
 
@@ -217,7 +217,7 @@ async function findSafeUpdates(
     const files = await glob(pattern, {
       cwd: skeletonDir,
       nodir: true,
-      ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-skeleton-cli/**'],
+      ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-developer-cli/**'],
     });
     
     for (const file of files) {
@@ -268,7 +268,7 @@ async function findSkippedFiles(
   const allFiles = await glob('**/*', {
     cwd: skeletonDir,
     nodir: true,
-    ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-skeleton-cli/**'],
+    ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-developer-cli/**'],
   });
   
   for (const file of allFiles) {
@@ -316,7 +316,7 @@ function shouldNeverSync(file: string, config: SkeletonConfig): boolean {
  * Transform a file path from skeleton to app
  */
 function transformPath(file: string, config: SkeletonConfig): string {
-  return file.replace(/ds-app-skeleton/g, config.appName);
+  return file.replace(/ds-app-developer/g, config.appName);
 }
 
 /**
@@ -324,7 +324,7 @@ function transformPath(file: string, config: SkeletonConfig): string {
  */
 function transformContent(content: string, config: SkeletonConfig): string {
   return content
-    .replace(/ds-app-skeleton/g, config.appName)
+    .replace(/ds-app-developer/g, config.appName)
     .replace(/DSAppSkeleton/g, config.appNamePascal)
     .replace(/skeleton\.digistratum\.com/g, config.domain);
 }

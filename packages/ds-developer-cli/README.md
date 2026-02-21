@@ -107,7 +107,7 @@ When you create an app with `ds-skeleton create`, a `.ds-skeleton.json` file is 
 ```json
 {
   "skeletonVersion": "0.1.0",
-  "skeletonRepo": "https://github.com/DigiStratum/ds-app-skeleton.git",
+  "skeletonRepo": "https://github.com/DigiStratum/ds-app-developer.git",
   "appName": "my-new-app",
   "appNamePascal": "MyNewApp",
   "domain": "my-new-app.digistratum.com",
@@ -187,7 +187,7 @@ ds-skeleton sync
 
 # 4. Review and commit
 git diff
-git add -A && git commit -m "Sync scaffolding from ds-app-skeleton"
+git add -A && git commit -m "Sync scaffolding from ds-app-developer"
 ```
 
 ## Development

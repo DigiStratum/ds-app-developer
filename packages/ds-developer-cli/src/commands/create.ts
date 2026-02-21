@@ -38,14 +38,14 @@ const EXCLUDE_PATTERNS = [
  */
 const REPLACEMENTS = {
   name: {
-    'ds-app-skeleton': '', // Will be replaced with app name
+    'ds-app-developer': '', // Will be replaced with app name
     'DSAppSkeleton': '',   // Will be replaced with PascalCase name
   },
   domain: {
     'skeleton.digistratum.com': '', // Will be replaced with domain
   },
   module: {
-    'github.com/digistratum/ds-app-skeleton': '', // Go module path
+    'github.com/digistratum/ds-app-developer': '', // Go module path
   },
 };
 
@@ -113,7 +113,7 @@ export async function createApp(
   // Remove skeleton-specific files/directories
   spinner.start('Cleaning up skeleton-specific files...');
   const cleanupPatterns = [
-    'packages/ds-skeleton-cli', // Don't include the CLI in derived apps
+    'packages/ds-developer-cli', // Don't include the CLI in derived apps
   ];
   for (const pattern of cleanupPatterns) {
     const cleanupPath = path.join(targetDir, pattern);
@@ -126,10 +126,10 @@ export async function createApp(
   // Perform replacements
   spinner.start('Performing name replacements...');
   await performReplacements(targetDir, {
-    'ds-app-skeleton': kebabName,
+    'ds-app-developer': kebabName,
     'DSAppSkeleton': pascalName,
     'skeleton.digistratum.com': domain!,
-    'github.com/digistratum/ds-app-skeleton/backend': `github.com/digistratum/${kebabName}/backend`,
+    'github.com/digistratum/ds-app-developer/backend': `github.com/digistratum/${kebabName}/backend`,
   });
   spinner.succeed('Performed name replacements');
   
@@ -153,7 +153,7 @@ export async function createApp(
   const git = simpleGit(targetDir);
   await git.init();
   await git.add('.');
-  await git.commit('Initial commit from ds-app-skeleton');
+  await git.commit('Initial commit from ds-app-developer');
   spinner.succeed('Initialized new git repository');
   
   // Install dependencies (optional)
@@ -255,7 +255,7 @@ async function performReplacements(
   }
   
   // Also rename directories/files that contain the old name
-  // This handles cases like "ds-app-skeleton" in file paths
+  // This handles cases like "ds-app-developer" in file paths
   for (const [search, replace] of Object.entries(replacements)) {
     const matchingPaths = await glob(`**/*${search}*`, {
       cwd: dir,

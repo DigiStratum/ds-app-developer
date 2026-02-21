@@ -1,7 +1,7 @@
-# Logging & Error Handling - DS App Skeleton
+# Logging & Error Handling - DS App Developer
 
 > This document defines the logging and error handling patterns for DigiStratum applications.
-> All applications based on ds-app-skeleton must follow these conventions.
+> All applications based on ds-app-developer must follow these conventions.
 
 ---
 
@@ -97,7 +97,7 @@ log.Printf("User %s authenticated for tenant %s", userID, tenantID)
 The middleware package provides a helper that automatically includes the correlation ID:
 
 ```go
-import "github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
+import "github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
 
 func MyHandler(w http.ResponseWriter, r *http.Request) {
     // Get logger with correlation ID pre-attached

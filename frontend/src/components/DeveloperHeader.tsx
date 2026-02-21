@@ -15,15 +15,15 @@ export interface MenuItem {
 }
 
 /**
- * Props for the standardized SkeletonHeader component
+ * Props for the standardized DeveloperHeader component
  * 
  * @example
  * // Minimal usage (all defaults)
- * <SkeletonHeader appName="My App" />
+ * <DeveloperHeader appName="My App" />
  * 
  * @example
  * // Full customization
- * <SkeletonHeader
+ * <DeveloperHeader
  *   appName="DSKanban"
  *   appLogo="/kanban-logo.svg"
  *   currentAppId="dskanban"
@@ -36,7 +36,7 @@ export interface MenuItem {
  *   showUserMenu={true}
  * />
  */
-export interface SkeletonHeaderProps {
+export interface DeveloperHeaderProps {
   /** Display name for the app (shown in mobile menu) */
   appName: string;
   /** Custom logo URL - falls back to tenant logo or DS default */
@@ -72,7 +72,7 @@ export interface SkeletonHeaderProps {
  * 
  * All features are toggleable via props for maximum flexibility.
  */
-export function SkeletonHeader({
+export function DeveloperHeader({
   appName,
   appLogo,
   currentAppId,
@@ -83,7 +83,7 @@ export function SkeletonHeader({
   showPreferences = true,
   showTenantSwitcher = true,
   className = '',
-}: SkeletonHeaderProps) {
+}: DeveloperHeaderProps) {
   const { t } = useTranslation();
   const { user, currentTenant, isAuthenticated, login, logout, switchTenant, availableApps } = useAuth();
   const { logoUrl, isLoading: themeLoading } = useTenantTheme();

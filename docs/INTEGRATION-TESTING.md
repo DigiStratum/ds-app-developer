@@ -1,7 +1,7 @@
-# Integration Testing Patterns - DS App Skeleton
+# Integration Testing Patterns - DS App Developer
 
 > This document defines integration testing patterns for all DigiStratum applications.
-> Applications based on ds-app-skeleton inherit these patterns.
+> Applications based on ds-app-developer inherit these patterns.
 > See [TEST-TEMPLATES.md](./TEST-TEMPLATES.md) for unit test patterns.
 
 ---
@@ -241,7 +241,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/cmd/api"
+	"github.com/DigiStratum/ds-app-developer/backend/cmd/api"
 )
 
 // TestServer wraps httptest.Server with helper methods for integration tests

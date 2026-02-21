@@ -13,7 +13,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { Monitoring } from './constructs';
 
-interface SkeletonStackProps extends cdk.StackProps {
+interface DeveloperStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
   dsAccountUrl: string;
@@ -21,8 +21,8 @@ interface SkeletonStackProps extends cdk.StackProps {
   environment?: string;
 }
 
-export class SkeletonStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: SkeletonStackProps) {
+export class DeveloperStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: DeveloperStackProps) {
     super(scope, id, props);
 
     const environment = props.environment ?? 'dev';
@@ -31,7 +31,7 @@ export class SkeletonStack extends cdk.Stack {
 
     // DynamoDB table (single-table design) [FR-TENANT-003]
     const table = new dynamodb.Table(this, 'Table', {
-      tableName: 'ds-app-skeleton',
+      tableName: 'ds-app-developer',
       partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -47,7 +47,7 @@ export class SkeletonStack extends cdk.Stack {
 
     // Lambda function for API
     const apiHandler = new lambda.Function(this, 'ApiHandler', {
-      functionName: 'ds-app-skeleton-api',
+      functionName: 'ds-app-developer-api',
       runtime: lambda.Runtime.PROVIDED_AL2023,
       handler: 'bootstrap',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/dist')),
@@ -68,7 +68,7 @@ export class SkeletonStack extends cdk.Stack {
 
     // HTTP API Gateway
     const httpApi = new apigateway.HttpApi(this, 'HttpApi', {
-      apiName: 'ds-app-skeleton-api',
+      apiName: 'ds-app-developer-api',
       corsPreflight: {
         allowOrigins: [`https://${props.domainName}`],
         allowMethods: [apigateway.CorsHttpMethod.ANY],
@@ -85,7 +85,7 @@ export class SkeletonStack extends cdk.Stack {
 
     // S3 bucket for frontend
     const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
-      bucketName: `ds-app-skeleton-frontend-${this.account}`,
+      bucketName: `ds-app-developer-frontend-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -161,7 +161,7 @@ export class SkeletonStack extends cdk.Stack {
 
     // Monitoring [NFR-MON-001, NFR-MON-002, NFR-MON-003]
     const monitoring = new Monitoring(this, 'Monitoring', {
-      appName: 'ds-app-skeleton',
+      appName: 'ds-app-developer',
       environment,
       lambdaFunction: apiHandler,
       apiId: httpApi.apiId,

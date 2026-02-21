@@ -1,7 +1,7 @@
-# API Design Standards - DS App Skeleton
+# API Design Standards - DS App Developer
 
 > Canonical API conventions for all DigiStratum applications.
-> Applications based on ds-app-skeleton inherit these standards.
+> Applications based on ds-app-developer inherit these standards.
 > Deviations require documented justification.
 
 ---
@@ -466,7 +466,7 @@ func parseDate(s string) (time.Time, error) {
 
 ### Approach: Code-First with Comments
 
-For the DS App Skeleton, we use a **code-first** approach with structured comments that can be parsed into OpenAPI specs.
+For the DS App Developer, we use a **code-first** approach with structured comments that can be parsed into OpenAPI specs.
 
 ### Recommended Tools
 

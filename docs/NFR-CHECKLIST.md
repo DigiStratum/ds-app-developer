@@ -1,6 +1,6 @@
 # Non-Functional Requirements (NFR) Verification Checklist
 
-> Comprehensive verification of DS App Skeleton against DigiStratum NFR standards.
+> Comprehensive verification of DS App Developer against DigiStratum NFR standards.
 > Created: 2026-02-20
 > **Deep Verified: 2026-02-20** by Lucca (AI Agent)
 

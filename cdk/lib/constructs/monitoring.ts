@@ -76,7 +76,7 @@ export interface MonitoringProps {
 }
 
 /**
- * Performance baselines for the DS App Skeleton
+ * Performance baselines for the DS App Developer
  * These values are derived from requirements and testing
  */
 export const PerformanceBaselines = {

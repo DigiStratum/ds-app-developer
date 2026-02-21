@@ -31,7 +31,7 @@ const CONFIG_FILE = '.ds-skeleton.json';
  * Default configuration values
  */
 export const defaultConfig: Partial<SkeletonConfig> = {
-  skeletonRepo: 'https://github.com/DigiStratum/ds-app-skeleton.git',
+  skeletonRepo: 'https://github.com/DigiStratum/ds-app-developer.git',
   customizedFiles: [],
   skipPatterns: [
     'node_modules',

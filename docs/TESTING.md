@@ -1,6 +1,6 @@
-# Testing Guide - DS App Skeleton
+# Testing Guide - DS App Developer
 
-> Comprehensive testing patterns, conventions, and standards for the DS App Skeleton.
+> Comprehensive testing patterns, conventions, and standards for the DS App Developer.
 > Tests must trace to requirement IDs from REQUIREMENTS.md.
 
 ## Table of Contents

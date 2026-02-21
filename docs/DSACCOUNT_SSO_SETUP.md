@@ -1,8 +1,8 @@
-# DSAccount SSO Setup for ds-app-skeleton
+# DSAccount SSO Setup for ds-app-developer
 
 ## Overview
 
-ds-app-skeleton uses DSAccount for SSO authentication. This document covers the required configuration and known issues.
+ds-app-developer uses DSAccount for SSO authentication. This document covers the required configuration and known issues.
 
 ## Required Configuration
 
@@ -11,9 +11,9 @@ ds-app-skeleton uses DSAccount for SSO authentication. This document covers the 
 The app must be registered in DSAccount with:
 
 - **App ID:** `skeleton`
-- **Name:** `DS App Skeleton`
+- **Name:** `DS App Developer`
 - **Redirect URIs:** Must include:
-  - `https://skeleton.digistratum.com/api/auth/callback` (production)
+  - `https://developer.digistratum.com/api/auth/callback` (production)
   - `http://localhost:8080/api/auth/callback` (local dev, optional)
 
 ### 2. Environment Variables (Lambda)
@@ -42,7 +42,7 @@ curl -X PUT "https://account.digistratum.com/api/admin/apps/skeleton/redirect-ur
   -H "Content-Type: application/json" \
   -d '{
     "redirect_uris": [
-      "https://skeleton.digistratum.com/api/auth/callback",
+      "https://developer.digistratum.com/api/auth/callback",
       "http://localhost:8080/api/auth/callback"
     ]
   }'
@@ -50,10 +50,10 @@ curl -X PUT "https://account.digistratum.com/api/admin/apps/skeleton/redirect-ur
 
 ## SSO Flow
 
-1. User clicks "Sign In" on skeleton.digistratum.com
-2. Skeleton redirects to DSAccount: `/api/sso/authorize?app_id=skeleton&redirect_uri=https://skeleton.digistratum.com/api/auth/callback&state=/`
+1. User clicks "Sign In" on developer.digistratum.com
+2. Skeleton redirects to DSAccount: `/api/sso/authorize?app_id=skeleton&redirect_uri=https://developer.digistratum.com/api/auth/callback&state=/`
 3. DSAccount authenticates user (shows login if needed)
-4. DSAccount redirects back: `https://skeleton.digistratum.com/api/auth/callback?code=XXX&state=/`
+4. DSAccount redirects back: `https://developer.digistratum.com/api/auth/callback?code=XXX&state=/`
 5. Skeleton exchanges code for JWT via DSAccount's `/api/sso/token`
 6. Skeleton sets `ds_session` cookie (domain: `.digistratum.com`)
 7. User redirected to original path (from `state` param)
@@ -76,7 +76,7 @@ This allows future cross-subdomain SSO where authenticated users don't need to r
 
 **Required Change:** For true cross-subdomain SSO, DSAccount should set its session cookie with `Domain: .digistratum.com` so users stay logged in across:
 - account.digistratum.com
-- skeleton.digistratum.com
+- developer.digistratum.com
 - kanban.digistratum.com
 - etc.
 
@@ -84,7 +84,7 @@ This allows future cross-subdomain SSO where authenticated users don't need to r
 
 ### Redirect URI Registration
 
-The redirect_uri `https://skeleton.digistratum.com/api/auth/callback` MUST be registered in DSAccount's app configuration, or the authorize endpoint will reject requests with `INVALID_REDIRECT_URI`.
+The redirect_uri `https://developer.digistratum.com/api/auth/callback` MUST be registered in DSAccount's app configuration, or the authorize endpoint will reject requests with `INVALID_REDIRECT_URI`.
 
 ## Troubleshooting
 

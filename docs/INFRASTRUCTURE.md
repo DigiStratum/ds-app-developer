@@ -1,8 +1,8 @@
-# Infrastructure as Code Standards - DS App Skeleton
+# Infrastructure as Code Standards - DS App Developer
 
 > Canonical IaC patterns for all DigiStratum applications.
 > Uses AWS CDK (TypeScript) for infrastructure definition.
-> Applications based on ds-app-skeleton inherit these patterns.
+> Applications based on ds-app-developer inherit these patterns.
 
 ---
 
@@ -145,7 +145,7 @@ throttlingRateLimit: isProd ? 100 : 20,
 //          {app}-{env}.digistratum.com (non-prod)
 
 const domainName = isProd 
-  ? 'skeleton.digistratum.com'
+  ? 'developer.digistratum.com'
   : `skeleton-${environment}.digistratum.com`;
 ```
 
@@ -698,12 +698,12 @@ export class SkeletonStack extends cdk.Stack {
     super(scope, id, props);
 
     const dataTable = new DataTable(this, 'Data', {
-      appName: 'ds-app-skeleton',
+      appName: 'ds-app-developer',
       environment: props.environment,
     });
 
     const apiLambda = new ApiLambda(this, 'Api', {
-      appName: 'ds-app-skeleton',
+      appName: 'ds-app-developer',
       environment: props.environment,
       codePath: path.join(__dirname, '../../backend/dist'),
       corsAllowOrigins: [`https://${props.domainName}`],
@@ -715,7 +715,7 @@ export class SkeletonStack extends cdk.Stack {
     dataTable.grantReadWriteData(apiLambda.function);
 
     const spaHosting = new SpaHosting(this, 'Frontend', {
-      appName: 'ds-app-skeleton',
+      appName: 'ds-app-developer',
       environment: props.environment,
       domainName: props.domainName,
       certificate,
@@ -861,12 +861,12 @@ jobs:
 | Resource Type | Pattern | Example |
 |---------------|---------|---------|
 | Stack | `{App}-{Env}` | `DSAppSkeleton-prod` |
-| Lambda | `{app}-{purpose}-{env}` | `ds-app-skeleton-api-prod` |
-| API Gateway | `{app}-api-{env}` | `ds-app-skeleton-api-prod` |
-| DynamoDB Table | `{app}-{env}` | `ds-app-skeleton-prod` |
-| S3 Bucket | `{app}-{purpose}-{env}-{account}` | `ds-app-skeleton-frontend-prod-123456` |
-| CloudFront Function | `{app}-{purpose}-{env}` | `ds-app-skeleton-spa-rewrite-prod` |
-| Secret | `{app}/secrets` | `ds-app-skeleton/secrets` |
+| Lambda | `{app}-{purpose}-{env}` | `ds-app-developer-api-prod` |
+| API Gateway | `{app}-api-{env}` | `ds-app-developer-api-prod` |
+| DynamoDB Table | `{app}-{env}` | `ds-app-developer-prod` |
+| S3 Bucket | `{app}-{purpose}-{env}-{account}` | `ds-app-developer-frontend-prod-123456` |
+| CloudFront Function | `{app}-{purpose}-{env}` | `ds-app-developer-spa-rewrite-prod` |
+| Secret | `{app}/secrets` | `ds-app-developer/secrets` |
 
 ### Tag Conventions
 

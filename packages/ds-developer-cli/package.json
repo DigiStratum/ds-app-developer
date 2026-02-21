@@ -1,5 +1,5 @@
 {
-  "name": "@digistratum/ds-skeleton",
+  "name": "@digistratum/ds-developer",
   "version": "0.1.0",
   "description": "CLI tool for creating and syncing DS App Skeleton derived applications",
   "main": "dist/index.js",
@@ -34,8 +34,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/digistratum/ds-app-skeleton.git",
-    "directory": "packages/ds-skeleton-cli"
+    "url": "https://github.com/digistratum/ds-app-developer.git",
+    "directory": "packages/ds-developer-cli"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

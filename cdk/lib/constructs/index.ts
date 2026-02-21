@@ -1,5 +1,5 @@
 /**
- * DS App Skeleton - Reusable CDK Constructs
+ * DS App Developer - Reusable CDK Constructs
  * 
  * This module exports reusable L2/L3 constructs for common DigiStratum
  * infrastructure patterns.

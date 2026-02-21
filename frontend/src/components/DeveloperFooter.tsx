@@ -10,15 +10,15 @@ export interface FooterLink {
 }
 
 /**
- * Props for the standardized SkeletonFooter component
+ * Props for the standardized DeveloperFooter component
  * 
  * @example
  * // Minimal usage (all defaults)
- * <SkeletonFooter appName="My App" />
+ * <DeveloperFooter appName="My App" />
  * 
  * @example
  * // Full customization
- * <SkeletonFooter
+ * <DeveloperFooter
  *   appName="DSKanban"
  *   showGdprBanner={true}
  *   showCopyright={true}
@@ -29,7 +29,7 @@ export interface FooterLink {
  *   ]}
  * />
  */
-export interface SkeletonFooterProps {
+export interface DeveloperFooterProps {
   /** Display name for the app (used in copyright) */
   appName: string;
   /** Show GDPR consent banner if user hasn't consented (default: true) */
@@ -133,14 +133,14 @@ function GdprBanner() {
  * 
  * All features are toggleable via props for maximum flexibility.
  */
-export function SkeletonFooter({
+export function DeveloperFooter({
   appName,
   showGdprBanner = true,
   showCopyright = true,
   showDefaultLinks = true,
   extraLinks = [],
   className = '',
-}: SkeletonFooterProps) {
+}: DeveloperFooterProps) {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
 

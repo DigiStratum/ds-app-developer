@@ -22,7 +22,7 @@ export class AppStack extends cdk.Stack {
     const isProd = environment === 'prod';
     
     // TODO: Update these values for your app
-    const appName = 'ds-app-skeleton';
+    const appName = 'ds-app-developer';
     const appId = 'myapp'; // Your app's ID in DSAccount
 
     // ============================================================

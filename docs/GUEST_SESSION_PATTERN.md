@@ -1,6 +1,6 @@
 # Guest Session + Optional Auth Pattern
 
-This document describes the "guest-session-first" authentication pattern used in DS App Skeleton.
+This document describes the "guest-session-first" authentication pattern used in DS App Developer.
 
 ## Overview
 

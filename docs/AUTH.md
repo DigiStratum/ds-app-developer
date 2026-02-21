@@ -1,6 +1,6 @@
 # Authentication & SSO Integration
 
-> This document describes the DSAccount SSO integration pattern for DS App Skeleton.
+> This document describes the DSAccount SSO integration pattern for DS App Developer.
 > All DigiStratum applications follow this pattern for centralized authentication.
 
 ---
@@ -435,7 +435,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DSACCOUNT_SSO_URL` | DSAccount base URL | `https://account.digistratum.com` |
-| `DSACCOUNT_APP_ID` | App identifier for SSO | `ds-app-skeleton` |
+| `DSACCOUNT_APP_ID` | App identifier for SSO | `ds-app-developer` |
 | `APP_URL` | This app's base URL | `https://app.digistratum.com` |
 | `DYNAMODB_TABLE` | Table name override | `AppTable-prod` |
 

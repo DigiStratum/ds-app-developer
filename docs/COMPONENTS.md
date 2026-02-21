@@ -1,6 +1,6 @@
 # Skeleton Components
 
-This document describes the standardized, reusable components provided by the DS App Skeleton for building DigiStratum apps.
+This document describes the standardized, reusable components provided by the DS App Developer for building DigiStratum apps.
 
 ## Overview
 

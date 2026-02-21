@@ -7,7 +7,7 @@ Feature flags enable **deploy/release separation** — code can be deployed with
 ### Backend: Check if a Flag is Enabled
 
 ```go
-import "github.com/DigiStratum/ds-app-skeleton/backend/internal/featureflags"
+import "github.com/DigiStratum/ds-app-developer/backend/internal/featureflags"
 
 func MyHandler(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()

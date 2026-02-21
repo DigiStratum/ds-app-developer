@@ -1,4 +1,4 @@
-# Agentic Development Guidelines - DS App Skeleton
+# Agentic Development Guidelines - DS App Developer
 
 > Guidelines for AI agents (Claude, GPT, Copilot, etc.) working on this codebase.
 > This document makes the codebase AI-friendly with clear patterns, naming, and workflows.
@@ -84,7 +84,7 @@ After adding tests, update the traceability table in `REQUIREMENTS.md`:
 ## Project Structure
 
 ```
-ds-app-skeleton/
+ds-app-developer/
 ├── REQUIREMENTS.md      # What the app must do (source of truth)
 ├── AGENTS.md           # This file - how AI agents work on the code
 ├── README.md           # Setup and overview for humans

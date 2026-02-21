@@ -1,4 +1,4 @@
-# Requirements - DS App Skeleton
+# Requirements - DS App Developer
 
 > Requirements live with code. Update iteratively as the app evolves.
 > Tests trace to requirement IDs. Agents reference this document.

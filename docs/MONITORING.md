@@ -1,4 +1,4 @@
-# Monitoring & Alerting - DS App Skeleton
+# Monitoring & Alerting - DS App Developer
 
 > Comprehensive monitoring and alerting patterns for DigiStratum applications.
 > Implements NFR-MON requirements with CloudWatch dashboards, alarms, and integrations.
@@ -111,7 +111,7 @@ The dashboard is organized in logical rows:
 https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#dashboards:name={appName}-{environment}
 
 # Example
-https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name=ds-app-skeleton-prod
+https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name=ds-app-developer-prod
 ```
 
 The dashboard URL is output during CDK deployment.
@@ -237,8 +237,8 @@ CloudWatch alarms send JSON to SNS:
 
 ```json
 {
-  "AlarmName": "ds-app-skeleton-prod-high-error-rate",
-  "AlarmDescription": "Error rate exceeded 5% for ds-app-skeleton in prod",
+  "AlarmName": "ds-app-developer-prod-high-error-rate",
+  "AlarmDescription": "Error rate exceeded 5% for ds-app-developer in prod",
   "AWSAccountId": "123456789012",
   "NewStateValue": "ALARM",
   "NewStateReason": "Threshold Crossed: 2 datapoints exceeded threshold",
@@ -275,7 +275,7 @@ PagerDuty's native CloudWatch integration provides the best experience:
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 
 const pagerDutyUrl = ssm.StringParameter.valueForStringParameter(
-  this, '/ds-app-skeleton/pagerduty-integration-url'
+  this, '/ds-app-developer/pagerduty-integration-url'
 );
 
 monitoring.alertTopic.addSubscription(
@@ -360,7 +360,7 @@ aws secretsmanager create-secret \
 
 # Store integration URL in Parameter Store (not secret)
 aws ssm put-parameter \
-  --name /ds-app-skeleton/pagerduty-integration-url \
+  --name /ds-app-developer/pagerduty-integration-url \
   --value "https://events.pagerduty.com/integration/YOUR_INTEGRATION_KEY/enqueue" \
   --type String
 ```
@@ -376,7 +376,7 @@ import { Monitoring, PerformanceBaselines } from './constructs';
 
 // In your stack
 const monitoring = new Monitoring(this, 'Monitoring', {
-  appName: 'ds-app-skeleton',
+  appName: 'ds-app-developer',
   environment: 'prod',
   lambdaFunction: apiHandler,
   apiId: httpApi.apiId,
@@ -394,7 +394,7 @@ monitoring.alertTopic?.addSubscription(
 
 ```typescript
 const monitoring = new Monitoring(this, 'Monitoring', {
-  appName: 'ds-app-skeleton',
+  appName: 'ds-app-developer',
   environment: 'prod',
   lambdaFunction: apiHandler,
   apiId: httpApi.apiId,
@@ -460,7 +460,7 @@ import { Monitoring } from './constructs';
 
 // Add monitoring
 const monitoring = new Monitoring(this, 'Monitoring', {
-  appName: 'ds-app-skeleton',
+  appName: 'ds-app-developer',
   environment: props.environment,
   lambdaFunction: apiHandler,
   apiId: httpApi.apiId,
@@ -475,7 +475,7 @@ if (props.environment === 'prod') {
   monitoring.alertTopic?.addSubscription(
     new subscriptions.UrlSubscription(
       ssm.StringParameter.valueForStringParameter(
-        this, '/ds-app-skeleton/pagerduty-integration-url'
+        this, '/ds-app-developer/pagerduty-integration-url'
       ),
       { protocol: sns.SubscriptionProtocol.HTTPS }
     )
@@ -765,7 +765,7 @@ For external integrations, alarm ARNs follow this pattern:
 arn:aws:cloudwatch:{region}:{account}:alarm:{alarm-name}
 
 # Example
-arn:aws:cloudwatch:us-west-2:123456789012:alarm:ds-app-skeleton-prod-high-error-rate
+arn:aws:cloudwatch:us-west-2:123456789012:alarm:ds-app-developer-prod-high-error-rate
 ```
 
 ---

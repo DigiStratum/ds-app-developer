@@ -69,7 +69,7 @@ export async function diffApp(
   const skeletonFiles = new Set(await glob(pattern, {
     cwd: tempDir,
     nodir: true,
-    ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-skeleton-cli/**'],
+    ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-developer-cli/**'],
   }));
   
   const appFiles = new Set(await glob(pattern, {
@@ -162,7 +162,7 @@ function findSkeletonFile(
   // Try with skeleton name
   const skeletonFile = appFile.replace(
     new RegExp(config.appName, 'g'),
-    'ds-app-skeleton'
+    'ds-app-developer'
   );
   if (skeletonFiles.has(skeletonFile)) {
     return skeletonFile;
@@ -175,7 +175,7 @@ function findSkeletonFile(
  * Transform a file path from skeleton to app
  */
 function transformPath(file: string, config: SkeletonConfig): string {
-  return file.replace(/ds-app-skeleton/g, config.appName);
+  return file.replace(/ds-app-developer/g, config.appName);
 }
 
 /**
@@ -183,7 +183,7 @@ function transformPath(file: string, config: SkeletonConfig): string {
  */
 function transformContent(content: string, config: SkeletonConfig): string {
   return content
-    .replace(/ds-app-skeleton/g, config.appName)
+    .replace(/ds-app-developer/g, config.appName)
     .replace(/DSAppSkeleton/g, config.appNamePascal)
     .replace(/skeleton\.digistratum\.com/g, config.domain);
 }

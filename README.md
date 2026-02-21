@@ -1,4 +1,4 @@
-# DS App Skeleton
+# DS App Developer
 
 Canonical baseline template for all DigiStratum ecosystem applications.
 
@@ -6,7 +6,7 @@ Canonical baseline template for all DigiStratum ecosystem applications.
 
 ```bash
 # Clone and setup
-git clone https://github.com/DigiStratum/ds-app-skeleton.git my-app
+git clone https://github.com/DigiStratum/ds-app-developer.git my-app
 cd my-app
 
 # Run setup (installs deps, configures git hooks)

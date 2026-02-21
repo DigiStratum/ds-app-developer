@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-> Complete CI/CD pipeline with canary deployment strategy for DS App Skeleton.
+> Complete CI/CD pipeline with canary deployment strategy for DS App Developer.
 > Zero pre-prod environments — validated directly in production with automatic rollback.
 
 ---
@@ -196,7 +196,7 @@ AWS Lambda aliases support weighted traffic routing between versions:
 ```
 ┌───────────────────────────────────────────────────────────┐
 │                   Lambda Function                          │
-│                  (ds-app-skeleton-api)                     │
+│                  (ds-app-developer-api)                     │
 ├───────────────────────────────────────────────────────────┤
 │                                                           │
 │    Version $LATEST ────┐                                  │
@@ -242,7 +242,7 @@ S3 Bucket:
 
 ### Health Check Endpoint
 
-**URL**: `https://skeleton.digistratum.com/health`
+**URL**: `https://developer.digistratum.com/health`
 
 **Expected Response**:
 ```json
@@ -311,12 +311,12 @@ If needed, manually rollback via AWS CLI:
 ```bash
 # Find previous version
 aws lambda list-versions-by-function \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --query 'Versions[-2:].Version'
 
 # Rollback alias
 aws lambda update-alias \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --name live \
   --function-version <PREVIOUS_VERSION> \
   --routing-config 'AdditionalVersionWeights={}'
@@ -359,7 +359,7 @@ Required IAM trust policy:
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
         },
         "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:DigiStratum/ds-app-skeleton:*"
+          "token.actions.githubusercontent.com:sub": "repo:DigiStratum/ds-app-developer:*"
         }
       }
     }
@@ -436,12 +436,12 @@ Key metrics to display:
 ```bash
 # Manually check alias configuration
 aws lambda get-alias \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --name live
 
 # Force rollback to specific version
 aws lambda update-alias \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --name live \
   --function-version <VERSION> \
   --routing-config 'AdditionalVersionWeights={}'

@@ -1,7 +1,7 @@
-# Database Patterns - DS App Skeleton
+# Database Patterns - DS App Developer
 
 > This document defines DynamoDB patterns for all DigiStratum applications.
-> Applications based on ds-app-skeleton inherit these patterns.
+> Applications based on ds-app-developer inherit these patterns.
 
 ---
 

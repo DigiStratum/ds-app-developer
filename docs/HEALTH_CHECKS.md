@@ -1,6 +1,6 @@
 # Health Checks
 
-> This document describes the health check system for DS App Skeleton.
+> This document describes the health check system for DS App Developer.
 > Health checks support both load balancer probes and deep dependency verification.
 
 ---
@@ -432,7 +432,7 @@ openssl rand -hex 32
 
 # Store in AWS SSM Parameter Store
 aws ssm put-parameter \
-  --name "/ds-app-skeleton/health-m2m-token" \
+  --name "/ds-app-developer/health-m2m-token" \
   --value "$(openssl rand -hex 32)" \
   --type SecureString
 ```

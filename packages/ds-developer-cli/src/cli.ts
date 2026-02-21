@@ -6,8 +6,8 @@ import { diffCommand } from './commands/diff.js';
 const program = new Command();
 
 program
-  .name('ds-skeleton')
-  .description('CLI tool for creating and syncing DS App Skeleton derived applications')
+  .name('ds-developer')
+  .description('CLI tool for creating and syncing DS App Developer derived applications')
   .version('0.1.0');
 
 // Register commands

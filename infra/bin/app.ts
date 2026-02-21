@@ -8,7 +8,7 @@ const app = new cdk.App();
 // Get environment from context
 const environment = app.node.tryGetContext('env') || 'dev';
 
-new AppStack(app, `DSAppSkeleton-${environment}`, {
+new AppStack(app, `DSAppDeveloper-${environment}`, {
   environment,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,

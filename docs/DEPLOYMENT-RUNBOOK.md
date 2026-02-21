@@ -1,6 +1,6 @@
-# Deployment Runbook - DS App Skeleton
+# Deployment Runbook - DS App Developer
 
-> Step-by-step deployment guide for skeleton.digistratum.com
+> Step-by-step deployment guide for developer.digistratum.com
 > Last updated: 2026-02-19
 
 ---
@@ -20,16 +20,16 @@
 
 ## Overview
 
-DS App Skeleton is deployed to AWS with the following components:
+DS App Developer is deployed to AWS with the following components:
 
 | Component | Service | Resource Name |
 |-----------|---------|---------------|
-| Frontend | S3 + CloudFront | `ds-app-skeleton-frontend-{account}` |
-| API | Lambda + API Gateway | `ds-app-skeleton-api` |
-| Database | DynamoDB | `ds-app-skeleton` |
-| DNS | Route53 | `skeleton.digistratum.com` |
+| Frontend | S3 + CloudFront | `ds-app-developer-frontend-{account}` |
+| API | Lambda + API Gateway | `ds-app-developer-api` |
+| Database | DynamoDB | `ds-app-developer` |
+| DNS | Route53 | `developer.digistratum.com` |
 
-**Production URL:** https://skeleton.digistratum.com
+**Production URL:** https://developer.digistratum.com
 
 ---
 
@@ -84,7 +84,7 @@ AWS_REGION=us-west-2
                     ┌─────────────────────────────────────┐
                     │         CloudFront (CDN)            │
                     │   Distribution: E1ZIQHD3SMO9OH      │
-                    │   Domain: skeleton.digistratum.com  │
+                    │   Domain: developer.digistratum.com  │
                     └─────────────────────────────────────┘
                                │
               ┌────────────────┼────────────────┐
@@ -99,19 +99,19 @@ AWS_REGION=us-west-2
               ▼                         ▼
     ┌─────────────────┐     ┌─────────────────────┐
     │     S3 Bucket   │     │   API Gateway v2    │
-    │ ds-app-skeleton-│     │   hjd19jxhjg        │
+    │ ds-app-developer-│     │   hjd19jxhjg        │
     │ frontend-17...  │     └─────────────────────┘
     └─────────────────┘               │
                                       ▼
                           ┌─────────────────────┐
                           │   Lambda Function   │
-                          │ ds-app-skeleton-api │
+                          │ ds-app-developer-api │
                           └─────────────────────┘
                                       │
                                       ▼
                           ┌─────────────────────┐
                           │     DynamoDB        │
-                          │   ds-app-skeleton   │
+                          │   ds-app-developer   │
                           └─────────────────────┘
 ```
 
@@ -123,8 +123,8 @@ AWS_REGION=us-west-2
 
 ```bash
 cd ~/Documents/projects
-git clone https://github.com/DigiStratum/ds-app-skeleton.git
-cd ds-app-skeleton
+git clone https://github.com/DigiStratum/ds-app-developer.git
+cd ds-app-developer
 ```
 
 ### Step 2: Build Backend
@@ -192,7 +192,7 @@ aws s3 sync frontend/dist/ s3://$BUCKET_NAME/ --delete
 
 # Invalidate CloudFront cache
 DIST_ID=$(aws cloudfront list-distributions \
-  --query "DistributionList.Items[?Aliases.Items[?contains(@,'skeleton.digistratum.com')]].Id" \
+  --query "DistributionList.Items[?Aliases.Items[?contains(@,'developer.digistratum.com')]].Id" \
   --output text)
 
 aws cloudfront create-invalidation \
@@ -205,7 +205,7 @@ aws cloudfront create-invalidation \
 ```bash
 # Create secrets in AWS Secrets Manager
 aws secretsmanager create-secret \
-  --name ds-app-skeleton/secrets \
+  --name ds-app-developer/secrets \
   --secret-string '{
     "JWT_SECRET": "<generate-secure-random-string>",
     "DSACCOUNT_APP_ID": "<app-id-from-dsaccount>",
@@ -225,7 +225,7 @@ GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o dist/bootstrap ./cmd/api
 
 # Update Lambda function
 aws lambda update-function-code \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --zip-file fileb://<(cd dist && zip -r - bootstrap)
 ```
 
@@ -236,7 +236,7 @@ cd frontend
 npm run build
 
 # Sync to S3 and invalidate CloudFront
-aws s3 sync dist/ s3://ds-app-skeleton-frontend-171949636152/ --delete
+aws s3 sync dist/ s3://ds-app-developer-frontend-171949636152/ --delete
 aws cloudfront create-invalidation \
   --distribution-id E1ZIQHD3SMO9OH \
   --paths "/*"
@@ -257,7 +257,7 @@ cd frontend && npm run build && cd ..
 cd cdk && npx cdk deploy --require-approval never && cd ..
 
 # Sync frontend to S3
-aws s3 sync frontend/dist/ s3://ds-app-skeleton-frontend-171949636152/ --delete
+aws s3 sync frontend/dist/ s3://ds-app-developer-frontend-171949636152/ --delete
 
 # Invalidate CDN
 aws cloudfront create-invalidation \
@@ -275,21 +275,21 @@ After deployment, verify these endpoints and features:
 
 ```bash
 # Frontend loads
-curl -s -o /dev/null -w "%{http_code}" https://skeleton.digistratum.com/
+curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/
 # Expected: 200
 
 # Health endpoint (API)
-curl -s https://skeleton.digistratum.com/health
+curl -s https://developer.digistratum.com/health
 # Expected: {"status":"healthy","timestamp":"...","version":"1.0.0"}
 
 # API responds (will redirect to login if unauthenticated)
-curl -s -o /dev/null -w "%{http_code}" https://skeleton.digistratum.com/api/me
+curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/api/me
 # Expected: 302 (redirect to SSO)
 ```
 
 ### Manual Verification
 
-- [ ] **Homepage loads** - Navigate to https://skeleton.digistratum.com/
+- [ ] **Homepage loads** - Navigate to https://developer.digistratum.com/
 - [ ] **SPA routing works** - Navigate to /dashboard, refresh page
 - [ ] **Login button works** - Click "Login with DSAccount", redirects to SSO
 - [ ] **After login** - User info displayed, tenant switcher visible
@@ -334,8 +334,8 @@ go mod tidy
 
 ```bash
 aws lambda update-function-configuration \
-  --function-name ds-app-skeleton-api \
-  --environment "Variables={DYNAMODB_TABLE=ds-app-skeleton,DSACCOUNT_SSO_URL=https://account.digistratum.com,APP_URL=https://skeleton.digistratum.com,DSACCOUNT_APP_ID=<your-app-id>}"
+  --function-name ds-app-developer-api \
+  --environment "Variables={DYNAMODB_TABLE=ds-app-developer,DSACCOUNT_SSO_URL=https://account.digistratum.com,APP_URL=https://developer.digistratum.com,DSACCOUNT_APP_ID=<your-app-id>}"
 ```
 
 #### 4. CORS errors in browser console
@@ -359,11 +359,11 @@ aws cloudfront create-invalidation \
 
 ```bash
 # Lambda logs
-aws logs tail /aws/lambda/ds-app-skeleton-api --follow
+aws logs tail /aws/lambda/ds-app-developer-api --follow
 
 # Recent errors
 aws logs filter-log-events \
-  --log-group-name /aws/lambda/ds-app-skeleton-api \
+  --log-group-name /aws/lambda/ds-app-developer-api \
   --filter-pattern "ERROR" \
   --limit 20
 ```
@@ -377,12 +377,12 @@ aws logs filter-log-events \
 ```bash
 # List recent deployments
 aws lambda list-versions-by-function \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --query "Versions[-5:].Version"
 
 # Update alias to previous version (if using aliases)
 aws lambda update-alias \
-  --function-name ds-app-skeleton-api \
+  --function-name ds-app-developer-api \
   --name prod \
   --function-version <previous-version>
 ```
@@ -394,7 +394,7 @@ aws lambda update-alias \
 # To rollback, redeploy from a previous commit:
 git checkout <previous-commit>
 cd frontend && npm run build
-aws s3 sync dist/ s3://ds-app-skeleton-frontend-171949636152/ --delete
+aws s3 sync dist/ s3://ds-app-developer-frontend-171949636152/ --delete
 aws cloudfront create-invalidation --distribution-id E1ZIQHD3SMO9OH --paths "/*"
 ```
 
@@ -415,11 +415,11 @@ aws cloudformation cancel-update-stack --stack-name DSAppSkeletonStack
 | Resource | AWS Console Link |
 |----------|------------------|
 | CloudFront | [Distribution E1ZIQHD3SMO9OH](https://us-east-1.console.aws.amazon.com/cloudfront/home#/distributions/E1ZIQHD3SMO9OH) |
-| Lambda | [ds-app-skeleton-api](https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions/ds-app-skeleton-api) |
+| Lambda | [ds-app-developer-api](https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions/ds-app-developer-api) |
 | API Gateway | [hjd19jxhjg](https://us-west-2.console.aws.amazon.com/apigateway/home?region=us-west-2#/apis/hjd19jxhjg) |
-| DynamoDB | [ds-app-skeleton](https://us-west-2.console.aws.amazon.com/dynamodbv2/home?region=us-west-2#table?name=ds-app-skeleton) |
-| S3 | [ds-app-skeleton-frontend-171949636152](https://s3.console.aws.amazon.com/s3/buckets/ds-app-skeleton-frontend-171949636152) |
-| CloudWatch Logs | [/aws/lambda/ds-app-skeleton-api](https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252Fds-app-skeleton-api) |
+| DynamoDB | [ds-app-developer](https://us-west-2.console.aws.amazon.com/dynamodbv2/home?region=us-west-2#table?name=ds-app-developer) |
+| S3 | [ds-app-developer-frontend-171949636152](https://s3.console.aws.amazon.com/s3/buckets/ds-app-developer-frontend-171949636152) |
+| CloudWatch Logs | [/aws/lambda/ds-app-developer-api](https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252Fds-app-developer-api) |
 
 ---
 

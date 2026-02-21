@@ -1,6 +1,6 @@
 # Theming System
 
-The DS App Skeleton supports dynamic theming with tenant and user-level customization. This document explains how to configure and use the theming system.
+The DS App Developer supports dynamic theming with tenant and user-level customization. This document explains how to configure and use the theming system.
 
 ## Overview
 

@@ -7,7 +7,7 @@ export { Layout } from './Layout';
 export { ErrorBoundary, ErrorBoundaryWithKey } from './ErrorBoundary';
 
 // Standardized reusable components for DS apps
-export { SkeletonHeader } from './SkeletonHeader';
-export type { SkeletonHeaderProps, MenuItem } from './SkeletonHeader';
-export { SkeletonFooter, GdprBanner } from './SkeletonFooter';
-export type { SkeletonFooterProps, FooterLink } from './SkeletonFooter';
+export { DeveloperHeader } from './DeveloperHeader';
+export type { DeveloperHeaderProps, MenuItem } from './DeveloperHeader';
+export { DeveloperFooter, GdprBanner } from './DeveloperFooter';
+export type { DeveloperFooterProps, FooterLink } from './DeveloperFooter';

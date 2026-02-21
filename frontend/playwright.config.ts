@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright E2E Configuration for DS App Skeleton
+ * Playwright E2E Configuration for DS App Developer
  * 
  * See: https://playwright.dev/docs/test-configuration
  * Requirements: NFR-TEST-001

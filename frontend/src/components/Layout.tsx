@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { SkeletonHeader, MenuItem } from './SkeletonHeader';
-import { SkeletonFooter, FooterLink } from './SkeletonFooter';
+import { DeveloperHeader, MenuItem } from './DeveloperHeader';
+import { DeveloperFooter, FooterLink } from './DeveloperFooter';
 import { AdSlot } from './AdSlot';
 
 interface LayoutProps {
@@ -36,7 +36,7 @@ interface LayoutProps {
  * Containers float as distinct rounded elements with side margins.
  * Side margins: 5px on desktop, 0 on mobile (#291)
  *
- * Uses SkeletonHeader and SkeletonFooter for standardized, configurable navigation.
+ * Uses DeveloperHeader and DeveloperFooter for standardized, configurable navigation.
  * App-specific content is inserted into the main content container via {children}.
  */
 export function Layout({ 
@@ -58,7 +58,7 @@ export function Layout({
         className="ds-container-margins bg-white dark:bg-gray-800"
         style={{ borderBottomLeftRadius: 'var(--ds-container-radius)', borderBottomRightRadius: 'var(--ds-container-radius)' }}
       >
-        <SkeletonHeader 
+        <DeveloperHeader 
           appName={appName}
           appLogo={appLogo}
           currentAppId={currentAppId}
@@ -88,7 +88,7 @@ export function Layout({
         className="ds-container-margins bg-white dark:bg-gray-800"
         style={{ borderTopLeftRadius: 'var(--ds-container-radius)', borderTopRightRadius: 'var(--ds-container-radius)' }}
       >
-        <SkeletonFooter 
+        <DeveloperFooter 
           appName={appName}
           showGdprBanner={showGdprBanner}
           extraLinks={extraFooterLinks}

@@ -1,7 +1,7 @@
-# Architecture Patterns - DS App Skeleton
+# Architecture Patterns - DS App Developer
 
 > This document defines canonical architecture patterns for all DigiStratum applications.
-> Applications based on ds-app-skeleton inherit these patterns.
+> Applications based on ds-app-developer inherit these patterns.
 > Deviations require documented justification.
 
 ---
