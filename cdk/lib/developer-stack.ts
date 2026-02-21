@@ -170,6 +170,10 @@ export class DeveloperStack extends cdk.Stack {
       enableAlarms: isProd || isStaging,
     });
 
+    // Note: Shared Runtime CDN (apps.digistratum.com) is deployed via DSSharedRuntimeStack
+    // See: npx cdk deploy DSSharedRuntimeStack
+    // Asset deployment: ./scripts/deploy-shared-runtime.sh
+
     // Outputs
     new cdk.CfnOutput(this, 'DistributionDomain', {
       value: distribution.distributionDomainName,

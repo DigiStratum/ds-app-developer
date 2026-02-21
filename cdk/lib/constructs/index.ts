@@ -25,3 +25,4 @@ export { ApiLambda, ApiLambdaProps } from './api-lambda';
 export { SpaHosting, SpaHostingProps } from './spa-hosting';
 export { DataTable, DataTableProps } from './data-table';
 export { Monitoring, MonitoringProps, PerformanceBaselines } from './monitoring';
+export { SharedRuntimeCdn, SharedRuntimeCdnProps } from './shared-runtime-cdn';
