@@ -74,7 +74,7 @@
   
   /* Container Layout - Rounded containers with ad slot margins */
   --ds-container-radius: 12px;
-  --ds-bg-margin: #e5e7eb;
+  --ds-bg-margin: #9ca3af;  /* Medium gray to offset white containers */
   
   /* Side margins - breathing room on desktop, full-width on mobile (#291) */
   --ds-side-margin: 5px;

@@ -22,12 +22,23 @@ interface LayoutProps {
   showGdprBanner?: boolean;
 }
 
-// Standard layout wrapper [FR-NAV-001, FR-NAV-003, FR-NAV-004]
-// Layout structure: Header (rounded bottom) -> AdSlot -> Content (fully rounded) -> AdSlot -> Footer (rounded top)
-// Page background is the margin color; containers float as distinct rounded elements
-// Side margins: 5px on desktop, 0 on mobile (#291)
-//
-// Now uses SkeletonHeader and SkeletonFooter for standardized, configurable navigation.
+/**
+ * Standard layout wrapper [FR-NAV-001, FR-NAV-003, FR-NAV-004]
+ * 
+ * Layout structure:
+ * - Header: white bg, bottom corners radiused
+ * - AdSlot (optional)
+ * - Main Content: white bg, all four corners radiused
+ * - AdSlot (optional)  
+ * - Footer: white bg, top corners radiused
+ * 
+ * Page background is the margin color (medium gray in light, dark gray in dark).
+ * Containers float as distinct rounded elements with side margins.
+ * Side margins: 5px on desktop, 0 on mobile (#291)
+ *
+ * Uses SkeletonHeader and SkeletonFooter for standardized, configurable navigation.
+ * App-specific content is inserted into the main content container via {children}.
+ */
 export function Layout({ 
   children, 
   appName = 'DS App', 
@@ -42,7 +53,11 @@ export function Layout({
 }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--ds-bg-margin)' }}>
-      <header className="ds-container-margins">
+      {/* Header - white bg, bottom corners radiused */}
+      <header 
+        className="ds-container-margins bg-white dark:bg-gray-800"
+        style={{ borderBottomLeftRadius: 'var(--ds-container-radius)', borderBottomRightRadius: 'var(--ds-container-radius)' }}
+      >
         <SkeletonHeader 
           appName={appName}
           appLogo={appLogo}
@@ -53,17 +68,26 @@ export function Layout({
           showUserMenu={showUserMenu}
         />
       </header>
+      
       <AdSlot position="header" />
+      
+      {/* Main Content - white bg, all four corners radiused */}
       <main 
-        className="ds-container-margins flex-1 bg-gray-50 dark:bg-gray-900"
+        className="ds-container-margins flex-1 bg-white dark:bg-gray-800 my-2"
         style={{ borderRadius: 'var(--ds-container-radius)' }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
+      
       <AdSlot position="footer" />
-      <footer className="ds-container-margins">
+      
+      {/* Footer - white bg, top corners radiused */}
+      <footer 
+        className="ds-container-margins bg-white dark:bg-gray-800"
+        style={{ borderTopLeftRadius: 'var(--ds-container-radius)', borderTopRightRadius: 'var(--ds-container-radius)' }}
+      >
         <SkeletonFooter 
           appName={appName}
           showGdprBanner={showGdprBanner}
