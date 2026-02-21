@@ -50,8 +50,48 @@ cd frontend && npm test
 
 This skeleton imports from shared DigiStratum packages:
 - `@digistratum/ds-ui` - UI components (DSNav, themes, layouts)
+- `@digistratum/ds-core` - Core utilities and hooks
 - `@digistratum/ds-auth` - Authentication utilities
 - `@digistratum/ds-cdk` - CDK constructs
+
+### Publishing Packages
+
+To release a new version of `ds-core` or `ds-ui`:
+
+1. Update the version in the package's `package.json`
+2. Commit and push the change
+3. Create and push a tag:
+   ```bash
+   # For ds-core
+   git tag ds-core@X.Y.Z
+   git push origin ds-core@X.Y.Z
+
+   # For ds-ui
+   git tag ds-ui@X.Y.Z
+   git push origin ds-ui@X.Y.Z
+   ```
+4. The GitHub Action will automatically build and publish to GitHub Package Registry
+
+Alternatively, use the manual workflow dispatch from the Actions tab.
+
+### Installing from GitHub Package Registry
+
+To consume these packages in other repos:
+
+1. Create a `.npmrc` file in your project root:
+   ```
+   @digistratum:registry=https://npm.pkg.github.com
+   //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+   ```
+
+2. Set `NPM_TOKEN` environment variable to a GitHub PAT with `read:packages` scope
+
+3. Install packages normally:
+   ```bash
+   npm install @digistratum/ds-core @digistratum/ds-ui
+   ```
+
+For GitHub Actions, use `GITHUB_TOKEN` which has automatic package read access for repos in the same org.
 
 ## License
 

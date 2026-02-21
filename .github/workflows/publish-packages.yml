@@ -1,0 +1,77 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'ds-core@*'
+      - 'ds-ui@*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish (ds-core or ds-ui)'
+        required: true
+        type: choice
+        options:
+          - ds-core
+          - ds-ui
+      version:
+        description: 'Version to publish (e.g., 0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@digistratum'
+
+      - name: Determine package to publish
+        id: package
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PACKAGE="${{ github.event.inputs.package }}"
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Extract from tag (e.g., ds-core@0.1.0 -> ds-core, 0.1.0)
+            TAG="${GITHUB_REF#refs/tags/}"
+            PACKAGE="${TAG%@*}"
+            VERSION="${TAG#*@}"
+          fi
+          echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing $PACKAGE@$VERSION"
+
+      - name: Install dependencies
+        working-directory: packages/${{ steps.package.outputs.package }}
+        run: npm ci
+
+      - name: Build package
+        working-directory: packages/${{ steps.package.outputs.package }}
+        run: npm run build
+
+      - name: Verify version matches
+        working-directory: packages/${{ steps.package.outputs.package }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "${{ steps.package.outputs.version }}" ]; then
+            echo "::error::Tag version (${{ steps.package.outputs.version }}) doesn't match package.json version ($PKG_VERSION)"
+            exit 1
+          fi
+
+      - name: Publish to GitHub Packages
+        working-directory: packages/${{ steps.package.outputs.package }}
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
