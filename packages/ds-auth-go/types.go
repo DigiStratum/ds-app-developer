@@ -18,8 +18,15 @@ type Config struct {
 	// AppID is the application ID registered with DSAccount
 	AppID string
 
+	// AppSecret is the application secret for token exchange with DSAccount
+	AppSecret string
+
 	// AppURL is the base URL of this application (for redirect_uri)
 	AppURL string
+
+	// CookieDomain sets the Domain attribute on session cookies.
+	// Use ".digistratum.com" for cross-subdomain SSO, or "" for localhost/single domain.
+	CookieDomain string
 
 	// SessionCookieName is the name of the session cookie (default: "ds_session")
 	SessionCookieName string

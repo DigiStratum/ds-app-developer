@@ -75,11 +75,25 @@ func TestMustGetUser_WithoutUser_Panics(t *testing.T) {
 }
 
 func TestMiddleware_WithValidToken_ExtractsContext(t *testing.T) {
+	// Use a custom TokenValidator to avoid hitting real DSAccount
+	mockUser := &User{
+		ID:      "user-mock",
+		Email:   "mock@example.com",
+		Name:    "Mock User",
+		Tenants: []string{"tenant-123"},
+	}
+
 	cfg := Config{
 		SSOBaseURL:        "https://sso.example.com",
 		AppID:             "test-app",
 		AppURL:            "https://app.example.com",
 		SessionCookieName: "ds_session",
+		TokenValidator: func(token string) (*User, error) {
+			if token == "test-token" {
+				return mockUser, nil
+			}
+			return nil, http.ErrNoCookie
+		},
 	}
 
 	var capturedUser *User

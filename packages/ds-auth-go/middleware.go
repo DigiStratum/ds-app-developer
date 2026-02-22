@@ -1,10 +1,31 @@
 package dsauth
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
+
+// tokenCache provides a simple in-memory cache for validated tokens.
+// This reduces load on DSAccount by caching successful validations.
+var tokenCache = struct {
+	sync.RWMutex
+	entries map[string]cacheEntry
+}{
+	entries: make(map[string]cacheEntry),
+}
+
+type cacheEntry struct {
+	user      *User
+	expiresAt time.Time
+}
+
+const tokenCacheTTL = 60 * time.Second
 
 // Middleware creates HTTP middleware that validates authentication and extracts
 // user/tenant context. Unauthenticated requests are redirected to SSO login.
@@ -153,14 +174,74 @@ func buildLoginRedirectURL(cfg Config, r *http.Request) string {
 		"&state=" + currentURL
 }
 
+// defaultValidateToken validates a token by calling DSAccount's userinfo endpoint.
+// Results are cached for 60 seconds to reduce load on DSAccount.
 func defaultValidateToken(cfg Config, token string) (*User, error) {
-	// TODO: Implement actual DSAccount token validation
-	// This would make an HTTP request to DSAccount to validate the token
-	// For now, return a mock user for development
-	return &User{
-		ID:      "user-mock",
-		Email:   "mock@digistratum.com",
-		Name:    "Mock User",
-		Tenants: []string{"tenant-1"},
-	}, nil
+	// Check cache first
+	tokenCache.RLock()
+	if entry, ok := tokenCache.entries[token]; ok && time.Now().Before(entry.expiresAt) {
+		tokenCache.RUnlock()
+		return entry.user, nil
+	}
+	tokenCache.RUnlock()
+
+	// Call DSAccount userinfo endpoint
+	userInfoURL := cfg.SSOBaseURL + "/api/sso/userinfo"
+
+	req, err := http.NewRequest("GET", userInfoURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create userinfo request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("userinfo request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("token invalid or expired")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("userinfo returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read userinfo response: %w", err)
+	}
+
+	var user User
+	if err := json.Unmarshal(body, &user); err != nil {
+		return nil, fmt.Errorf("parse userinfo response: %w", err)
+	}
+
+	// Cache the result
+	tokenCache.Lock()
+	tokenCache.entries[token] = cacheEntry{
+		user:      &user,
+		expiresAt: time.Now().Add(tokenCacheTTL),
+	}
+	tokenCache.Unlock()
+
+	return &user, nil
+}
+
+// ClearTokenCache clears all cached token validations.
+// Useful for testing or when tokens are revoked.
+func ClearTokenCache() {
+	tokenCache.Lock()
+	tokenCache.entries = make(map[string]cacheEntry)
+	tokenCache.Unlock()
+}
+
+// InvalidateToken removes a specific token from the cache.
+// Call this when a user logs out to ensure re-validation on next request.
+func InvalidateToken(token string) {
+	tokenCache.Lock()
+	delete(tokenCache.entries, token)
+	tokenCache.Unlock()
 }

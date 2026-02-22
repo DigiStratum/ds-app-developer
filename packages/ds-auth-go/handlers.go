@@ -1,6 +1,10 @@
 package dsauth
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -22,6 +26,63 @@ func NewHandlers(cfg Config) *Handlers {
 	return &Handlers{cfg: cfg}
 }
 
+// tokenResponse represents the response from DSAccount token endpoint.
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+	Error       string `json:"error,omitempty"`
+	ErrorDesc   string `json:"error_description,omitempty"`
+}
+
+// exchangeCodeForToken exchanges an authorization code for an access token with DSAccount.
+func (h *Handlers) exchangeCodeForToken(code string) (string, error) {
+	tokenURL := h.cfg.SSOBaseURL + "/api/sso/token"
+
+	payload := map[string]string{
+		"code":       code,
+		"app_id":     h.cfg.AppID,
+		"app_secret": h.cfg.AppSecret,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal token request: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", tokenURL, bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("create token request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("token exchange request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read token response: %w", err)
+	}
+
+	var tokenResp tokenResponse
+	if err := json.Unmarshal(respBody, &tokenResp); err != nil {
+		return "", fmt.Errorf("parse token response: %w", err)
+	}
+
+	if tokenResp.Error != "" {
+		return "", fmt.Errorf("token exchange error: %s - %s", tokenResp.Error, tokenResp.ErrorDesc)
+	}
+
+	if tokenResp.AccessToken == "" {
+		return "", fmt.Errorf("no access_token in response")
+	}
+
+	return tokenResp.AccessToken, nil
+}
+
 // CallbackHandler handles the SSO callback after successful authentication.
 // It exchanges the authorization code for a session token and sets the session cookie.
 func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,26 +95,31 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	slog.Info("dsauth: SSO callback received", "code_length", len(code), "has_state", state != "")
 
-	// TODO: Exchange code for token with DSAccount
-	// token, err := h.exchangeCodeForToken(code)
-	// if err != nil {
-	//     http.Error(w, "Failed to exchange code", http.StatusInternalServerError)
-	//     return
-	// }
+	// Exchange code for access token with DSAccount
+	accessToken, err := h.exchangeCodeForToken(code)
+	if err != nil {
+		slog.Error("dsauth: token exchange failed", "error", err)
+		http.Error(w, "Failed to exchange authorization code", http.StatusInternalServerError)
+		return
+	}
 
-	// For development, create a mock session
-	sessionToken := "mock-session-token-" + code[:8]
-
-	// Set session cookie
-	http.SetCookie(w, &http.Cookie{
+	// Set session cookie with the access token
+	cookie := &http.Cookie{
 		Name:     h.cfg.SessionCookieName,
-		Value:    sessionToken,
+		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().Add(time.Duration(h.cfg.SessionMaxAge) * time.Second),
-	})
+	}
+
+	// Set Domain if configured (for cross-subdomain SSO)
+	if h.cfg.CookieDomain != "" {
+		cookie.Domain = h.cfg.CookieDomain
+	}
+
+	http.SetCookie(w, cookie)
 
 	// Redirect to the original URL (from state) or app root
 	redirectURL := state
@@ -69,14 +135,21 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 // LogoutHandler clears the session and redirects to DSAccount logout.
 func (h *Handlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Clear session cookie
-	http.SetCookie(w, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     h.cfg.SessionCookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		MaxAge:   -1,
-	})
+	}
+
+	// Set Domain if configured (must match the domain used when setting)
+	if h.cfg.CookieDomain != "" {
+		cookie.Domain = h.cfg.CookieDomain
+	}
+
+	http.SetCookie(w, cookie)
 
 	// Redirect to DSAccount logout
 	logoutURL := h.cfg.SSOBaseURL + "/logout?redirect_uri=" + h.cfg.AppURL

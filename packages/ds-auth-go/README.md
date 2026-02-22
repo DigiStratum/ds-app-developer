@@ -21,9 +21,11 @@ import (
 func main() {
     // Configure auth
     cfg := dsauth.Config{
-        SSOBaseURL: "https://account.digistratum.com",
-        AppID:      "your-app-id",
-        AppURL:     "https://your-app.example.com",
+        SSOBaseURL:   "https://account.digistratum.com",
+        AppID:        "your-app-id",
+        AppSecret:    "your-app-secret",  // From DSAccount app registration
+        AppURL:       "https://your-app.example.com",
+        CookieDomain: ".digistratum.com", // For cross-subdomain SSO
     }
 
     // Create handlers for auth routes
@@ -49,6 +51,45 @@ func main() {
     mux.Handle("/public", dsauth.OptionalAuthMiddleware(cfg)(publicHandler))
 
     http.ListenAndServe(":8080", mux)
+}
+```
+
+## Configuration
+
+```go
+cfg := dsauth.Config{
+    // Required
+    SSOBaseURL: "https://account.digistratum.com",  // DSAccount URL
+    AppID:      "your-app-id",                       // App ID from DSAccount
+    AppSecret:  "your-app-secret",                   // App secret from DSAccount
+    AppURL:     "https://your-app.example.com",      // Your app's base URL
+
+    // Cross-subdomain SSO (recommended for production)
+    CookieDomain: ".digistratum.com",  // Allows cookie sharing across subdomains
+                                        // Use "" for localhost/single domain
+
+    // Optional
+    SessionCookieName: "ds_session",  // Default: "ds_session"
+    SessionMaxAge:     86400,          // Default: 24 hours (in seconds)
+    
+    // Custom token validation (optional)
+    // If nil, uses default DSAccount validation with caching
+    TokenValidator: func(token string) (*dsauth.User, error) {
+        // Your custom validation logic
+        return validateWithYourService(token)
+    },
+}
+```
+
+### Environment Variables (Recommended Pattern)
+
+```go
+cfg := dsauth.Config{
+    SSOBaseURL:   os.Getenv("SSO_BASE_URL"),
+    AppID:        os.Getenv("SSO_APP_ID"),
+    AppSecret:    os.Getenv("SSO_APP_SECRET"),
+    AppURL:       os.Getenv("APP_URL"),
+    CookieDomain: os.Getenv("COOKIE_DOMAIN"), // Empty for local dev
 }
 ```
 
@@ -125,25 +166,16 @@ mux.Handle("/", dsauth.TenantFromSubdomainMiddleware("app.example.com")(
 ))
 ```
 
-### Configuration
+### Token Cache Management
+
+Token validations are cached for 60 seconds to reduce load on DSAccount:
 
 ```go
-cfg := dsauth.Config{
-    // Required
-    SSOBaseURL: "https://account.digistratum.com",  // DSAccount URL
-    AppID:      "your-app-id",                       // App ID from DSAccount
-    AppURL:     "https://your-app.example.com",      // Your app's base URL
+// Clear all cached tokens (useful for testing)
+dsauth.ClearTokenCache()
 
-    // Optional
-    SessionCookieName: "ds_session",  // Default: "ds_session"
-    SessionMaxAge:     86400,          // Default: 24 hours (in seconds)
-    
-    // Custom token validation (optional)
-    TokenValidator: func(token string) (*dsauth.User, error) {
-        // Your custom validation logic
-        return validateWithYourService(token)
-    },
-}
+// Invalidate a specific token (call on logout)
+dsauth.InvalidateToken(token)
 ```
 
 ## Types
@@ -157,6 +189,23 @@ type User struct {
     Tenants  []string `json:"tenants"`  // Tenant IDs user belongs to
 }
 ```
+
+## SSO Flow
+
+1. **User visits protected route** → Middleware redirects to DSAccount
+2. **User authenticates with DSAccount** → DSAccount redirects back with `code`
+3. **CallbackHandler receives code** → Exchanges code for `access_token` via POST to `/api/sso/token`
+4. **access_token stored in cookie** → User is now authenticated
+5. **Subsequent requests** → Middleware validates token via GET to `/api/sso/userinfo` (cached 60s)
+
+### DSAccount Endpoints Used
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/oauth/authorize` | GET | Initiate SSO flow |
+| `/api/sso/token` | POST | Exchange code for access_token |
+| `/api/sso/userinfo` | GET | Validate token, get user info |
+| `/logout` | GET | End SSO session |
 
 ## Integration with HTTP Clients
 
@@ -180,6 +229,34 @@ func TestHandler(t *testing.T) {
     
     req := httptest.NewRequest("GET", "/", nil).WithContext(ctx)
     // ... test your handler
+}
+```
+
+For testing without hitting DSAccount, provide a custom TokenValidator:
+
+```go
+cfg := dsauth.Config{
+    // ... other config
+    TokenValidator: func(token string) (*dsauth.User, error) {
+        if token == "test-token" {
+            return &dsauth.User{ID: "test-user", Email: "test@example.com"}, nil
+        }
+        return nil, fmt.Errorf("invalid token")
+    },
+}
+```
+
+## Local Development
+
+For local development (localhost), use an empty `CookieDomain`:
+
+```go
+cfg := dsauth.Config{
+    SSOBaseURL:   "http://localhost:3000",  // Local DSAccount
+    AppID:        "local-app",
+    AppSecret:    "local-secret",
+    AppURL:       "http://localhost:8080",
+    CookieDomain: "",  // Important: empty for localhost
 }
 ```
 
