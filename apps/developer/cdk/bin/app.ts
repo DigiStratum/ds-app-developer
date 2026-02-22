@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+import 'source-map-support/register';
+import * as cdk from 'aws-cdk-lib';
+import { SkeletonStack } from '../lib/skeleton-stack';
+
+const app = new cdk.App();
+
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION || 'us-west-2',
+};
+
+new SkeletonStack(app, 'DSAppSkeletonStack', {
+  env,
+  domainName: 'skeleton.digistratum.com',
+  hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
+  dsAccountUrl: 'https://account.digistratum.com',
+  dsAccountAppId: 'skeleton',
+  // Note: DSACCOUNT_APP_SECRET is injected post-deploy by GitHub Actions
+  // Secret ARN: arn:aws:secretsmanager:us-west-2:171949636152:secret:ds-app-skeleton/dsaccount-app-secret-LxwIA9
+});

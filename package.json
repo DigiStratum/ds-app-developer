@@ -1,0 +1,29 @@
+{
+  "name": "@digistratum/ds-app-skeleton",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DigiStratum application boilerplate with shared packages",
+  "workspaces": [
+    "packages/layout",
+    "packages/components",
+    "packages/cdk-constructs",
+    "apps/developer/frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:packages": "npm run build --workspace=@digistratum/layout --workspace=@digistratum/components --workspace=@digistratum/cdk-constructs",
+    "dev": "npm run dev --workspace=apps/developer",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digistratum/ds-app-skeleton.git"
+  },
+  "author": "DigiStratum",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

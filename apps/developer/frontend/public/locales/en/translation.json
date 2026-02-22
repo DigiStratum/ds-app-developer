@@ -1,0 +1,60 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "logout": "Logout",
+    "settings": "Settings"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "apps": "Apps",
+    "profile": "Profile",
+    "switchTenant": "Switch Organization",
+    "personal": "Personal",
+    "appSwitcher": "Switch app",
+    "dsApps": "DigiStratum Apps",
+    "current": "Current",
+    "menu": "Menu"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "loginWith": "Login with DSAccount",
+    "loggingIn": "Logging in...",
+    "unauthorized": "Please log in to continue"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français"
+  },
+  "footer": {
+    "copyright": "© 2016 - {{year}} DigiStratum LLC"
+  },
+  "cookies": {
+    "title": "We use cookies to improve your experience",
+    "message": "We use essential cookies for authentication, plus optional cookies for personalization, analytics, and relevant ads.",
+    "privacyPolicy": "Learn more in our Privacy Policy",
+    "acceptAll": "Accept All",
+    "onlyNecessary": "Only Necessary",
+    "acceptAllAriaLabel": "Accept all cookies including analytics and personalization",
+    "onlyNecessaryAriaLabel": "Accept only necessary cookies for authentication"
+  }
+}

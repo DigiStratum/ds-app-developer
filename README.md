@@ -1,73 +1,130 @@
-# DS App Developer
+# DS App Skeleton
 
-Canonical baseline template for all DigiStratum ecosystem applications.
+DigiStratum application boilerplate with shared packages. Derived applications IMPORT these packages instead of copying code.
 
-## Quick Start
+## Structure
 
-```bash
-# Clone and setup
-git clone https://github.com/DigiStratum/ds-app-developer.git my-app
-cd my-app
+```
+ds-app-skeleton/
+├── packages/
+│   ├── layout/           # @digistratum/layout - App shell components
+│   │   ├── src/
+│   │   │   ├── DSAppShell.tsx    # Main layout wrapper
+│   │   │   ├── DSHeader.tsx      # Standard header/nav
+│   │   │   ├── DSFooter.tsx      # Footer with GDPR
+│   │   │   └── ...
+│   │   └── package.json
+│   │
+│   ├── components/       # @digistratum/components - Reusable UI
+│   │   ├── src/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   └── ...
+│   │   └── package.json
+│   │
+│   ├── cdk-constructs/   # @digistratum/cdk-constructs - AWS CDK
+│   │   ├── src/
+│   │   │   ├── api-lambda.ts
+│   │   │   ├── data-table.ts
+│   │   │   ├── spa-hosting.ts
+│   │   │   └── ...
+│   │   └── package.json
+│   │
+│   └── backend-utils/    # github.com/digistratum/backend-utils (Go)
+│       ├── auth/         # Auth middleware
+│       ├── secrets/      # Secrets Manager with caching
+│       ├── dynamo/       # DynamoDB utilities
+│       ├── middleware/   # Common HTTP middleware
+│       └── go.mod
+│
+├── apps/
+│   └── developer/        # DS Developer app (uses packages)
+│       ├── frontend/
+│       ├── backend/
+│       └── cdk/
+│
+└── package.json          # Workspace root (npm workspaces)
+```
 
-# Run setup (installs deps, configures git hooks)
-./scripts/setup.sh
+## Using the Packages
 
-# Or initialize as a new app
-./scripts/init-app.sh my-app
+### In a New DS App
+
+```tsx
+// Import layout shell
+import { DSAppShell } from '@digistratum/layout';
+
+// Import components
+import { Button, Card, Modal } from '@digistratum/components';
+
+function App() {
+  return (
+    <DSAppShell appName="MyApp" auth={authContext} theme={themeContext}>
+      <Card title="Welcome">
+        <Button onClick={handleClick}>Get Started</Button>
+      </Card>
+    </DSAppShell>
+  );
+}
+```
+
+### Go Backend
+
+```go
+import (
+    "github.com/digistratum/backend-utils/auth"
+    "github.com/digistratum/backend-utils/middleware"
+    "github.com/digistratum/backend-utils/secrets"
+)
+
+// Use middleware
+handler := middleware.Chain(
+    middleware.Recovery,
+    middleware.CorrelationID,
+    middleware.Logging,
+    auth.Middleware(authConfig),
+)(yourHandler)
+
+// Get cached secrets
+secret, _ := secrets.Get(ctx, "my-secret-name")
+```
+
+### CDK Infrastructure
+
+```typescript
+import { ApiLambda, DataTable, SpaHosting } from '@digistratum/cdk-constructs';
+
+const table = new DataTable(this, 'Data', { appName: 'myapp', environment: 'prod' });
+const api = new ApiLambda(this, 'Api', { appName: 'myapp', environment: 'prod', codePath: './dist' });
 ```
 
 ## Development
 
 ```bash
-# Frontend (localhost:3000)
-cd frontend && npm run dev
+# Install dependencies
+npm install
 
-# Backend (localhost:8080)
-cd backend && go run ./cmd/api
+# Build all packages
+npm run build:packages
 
-# Run tests
-cd backend && go test ./...
-cd frontend && npm test
+# Run the developer app
+npm run dev
 ```
 
-## Architecture
+## Package Publishing
 
-- **Frontend:** React + TypeScript + Tailwind CSS v3
-- **Backend:** Go + Lambda handlers
-- **Database:** DynamoDB (single-table design)
-- **Infrastructure:** AWS CDK (TypeScript)
-- **Auth:** DSAccount SSO integration
+Packages are published to GitHub Packages:
+- npm packages: `https://npm.pkg.github.com` (private, @digistratum scope)
+- Go module: `github.com/digistratum/backend-utils`
 
-## Documentation
-
-- [REQUIREMENTS.md](./REQUIREMENTS.md) - Functional and non-functional requirements
-- [AGENTS.md](./AGENTS.md) - Agentic development guidelines
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
-- [docs/DATABASE.md](./docs/DATABASE.md) - DynamoDB patterns and single-table design
-- [docs/API.md](./docs/API.md) - API documentation
-
-## Shared Packages
-
-This skeleton imports from shared DigiStratum packages:
-- `@digistratum/ds-ui` - UI components (DSNav, themes, layouts)
-- `@digistratum/ds-core` - Core utilities and hooks
-- `@digistratum/ds-auth` - Authentication utilities
-- `@digistratum/ds-cdk` - CDK constructs
-
-### Publishing Packages
+### Publishing Workflow
 
 Packages are automatically published to GitHub Package Registry on merge to `main`:
 
 1. **Bump version** in the package's `package.json` as part of your PR (follow semver)
 2. **Merge to main** — CI detects changes and publishes new versions
 3. If the version already exists in the registry, publish is skipped (no failure)
-
-**Versioning convention (semver):**
-- `1.0.0` → `1.0.1` — Patch: bug fixes, no API changes
-- `1.0.0` → `1.1.0` — Minor: new features, backward compatible
-- `1.0.0` → `2.0.0` — Major: breaking changes
-
-**Manual publish:** Use workflow_dispatch from the Actions tab to force-publish a specific package.
 
 ### Installing from GitHub Package Registry
 
@@ -81,21 +138,17 @@ To consume these packages in other repos:
 
 2. Set `NPM_TOKEN` environment variable to a GitHub PAT with `read:packages` scope
 
-3. Install with semver ranges:
+3. Install packages:
    ```bash
-   # Compatible versions (recommended)
-   npm install @digistratum/ds-core@^1.0.0 @digistratum/ds-ui@^1.0.0
-
-   # Patch-only updates
-   npm install @digistratum/ds-core@~1.0.0
-
-   # Exact version
-   npm install @digistratum/ds-core@1.0.0
+   npm install @digistratum/layout @digistratum/components @digistratum/cdk-constructs
    ```
 
-For GitHub Actions, use `GITHUB_TOKEN` which has automatic package read access for repos in the same org.
+## Documentation
+
+- [REQUIREMENTS.md](./REQUIREMENTS.md) - Full requirements document
+- [AGENTS.md](./AGENTS.md) - Agent guidelines
+- [docs/](./docs/) - Additional documentation
 
 ## License
 
 Proprietary - DigiStratum LLC
-

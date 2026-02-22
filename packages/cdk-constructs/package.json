@@ -1,0 +1,45 @@
+{
+  "name": "@digistratum/cdk-constructs",
+  "version": "0.1.0",
+  "description": "Reusable AWS CDK constructs for DigiStratum applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "aws",
+    "cdk",
+    "constructs",
+    "lambda",
+    "dynamodb",
+    "cloudfront",
+    "api-gateway"
+  ],
+  "author": "DigiStratum",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digistratum/ds-app-skeleton.git",
+    "directory": "packages/cdk-constructs"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.120.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "aws-cdk-lib": "^2.120.0",
+    "constructs": "^10.3.0",
+    "typescript": "^5.3.0"
+  }
+}
