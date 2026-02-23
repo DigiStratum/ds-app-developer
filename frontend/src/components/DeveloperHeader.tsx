@@ -375,7 +375,7 @@ export function DeveloperHeader({
                           >
                             <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || user.email}</p>
                             {userName && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
-                            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Manage account →</p>
+                            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">My Account →</p>
                           </a>
                           <div className="py-1">
                             <a href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -447,7 +447,7 @@ export function DeveloperHeader({
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || user.email}</p>
                       {userName && <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>}
-                      <p className="text-xs text-blue-500 dark:text-blue-400">Manage account →</p>
+                      <p className="text-xs text-blue-500 dark:text-blue-400">My Account →</p>
                     </div>
                   </a>
                   
