@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://digistratum.com/schemas/app-manifest.json",
+  "title": "DS App Manifest",
+  "description": "Service discovery manifest for DigiStratum applications",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "$comment": {
+      "type": "string",
+      "description": "Optional comment"
+    },
+    "frontendRoutes": {
+      "type": "array",
+      "description": "Frontend routes exposed by the application",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Route path (e.g., '/dashboard')",
+            "pattern": "^/"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description"
+          },
+          "authRequired": {
+            "type": "boolean",
+            "description": "Whether authentication is required",
+            "default": false
+          }
+        },
+        "required": ["path", "name", "authRequired"],
+        "additionalProperties": false
+      }
+    },
+    "backendResources": {
+      "type": "array",
+      "description": "Backend API resources exposed by the application",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Canonical name (e.g., 'issues.list')",
+            "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$"
+          },
+          "path": {
+            "type": "string",
+            "description": "API path (e.g., '/api/issues')",
+            "pattern": "^/"
+          },
+          "methods": {
+            "type": "array",
+            "description": "HTTP methods supported",
+            "items": {
+              "type": "string",
+              "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+            },
+            "minItems": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description"
+          },
+          "authType": {
+            "type": "string",
+            "description": "Authentication type required",
+            "enum": ["none", "api_key", "jwt", "sso"],
+            "default": "none"
+          }
+        },
+        "required": ["name", "path", "methods"],
+        "additionalProperties": false
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Dependencies on other DS applications",
+      "items": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string",
+            "description": "Target app ID"
+          },
+          "resourceName": {
+            "type": "string",
+            "description": "Canonical resource name to depend on"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this dependency is required for operation",
+            "default": true
+          }
+        },
+        "required": ["appId", "resourceName", "required"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

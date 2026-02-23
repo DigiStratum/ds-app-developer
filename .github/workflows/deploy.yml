@@ -468,6 +468,29 @@ jobs:
           echo "  - Error Rate: ${{ needs.canary-validation.outputs.error_rate }}%"
           echo "  - P95 Latency: ${{ needs.canary-validation.outputs.p95_latency }}ms"
 
+      - uses: actions/checkout@v4
+
+      - name: Register manifest with DSAccount
+        run: |
+          # Get app secret from Secrets Manager
+          APP_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id ds-app-skeleton/dsaccount-app-secret \
+            --query SecretString \
+            --output text)
+          
+          # Get version from package.json
+          APP_VERSION=$(jq -r '.version' package.json)
+          
+          # Run registration script
+          chmod +x ./scripts/register-manifest.sh
+          ./scripts/register-manifest.sh
+        env:
+          DSACCOUNT_URL: https://account.digistratum.com
+          DSACCOUNT_APP_ID: ${{ secrets.DSACCOUNT_APP_ID || 'skeleton' }}
+          DSACCOUNT_APP_SECRET_ARN: ds-app-skeleton/dsaccount-app-secret
+          HEALTH_CHECK_URL: https://skeleton.digistratum.com/health
+          CDK_STACK_NAME: DSAppSkeleton
+
   rollback:
     name: Rollback
     needs: [deploy-canary, canary-validation]

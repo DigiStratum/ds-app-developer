@@ -1,0 +1,46 @@
+{
+  "$schema": "./manifest.schema.json",
+  "$comment": "App manifest for DSAccount service discovery. Registered post-deploy.",
+  "frontendRoutes": [
+    {
+      "path": "/",
+      "name": "Home",
+      "description": "Landing page",
+      "authRequired": false
+    },
+    {
+      "path": "/dashboard",
+      "name": "Dashboard",
+      "description": "Main developer dashboard",
+      "authRequired": true
+    }
+  ],
+  "backendResources": [
+    {
+      "name": "health.check",
+      "path": "/health",
+      "methods": ["GET"],
+      "description": "Health check endpoint",
+      "authType": "none"
+    },
+    {
+      "name": "auth.callback",
+      "path": "/auth/callback",
+      "methods": ["GET"],
+      "description": "SSO callback endpoint",
+      "authType": "none"
+    }
+  ],
+  "dependencies": [
+    {
+      "appId": "dsaccount",
+      "resourceName": "sso.authorize",
+      "required": true
+    },
+    {
+      "appId": "dsaccount",
+      "resourceName": "sso.token",
+      "required": true
+    }
+  ]
+}

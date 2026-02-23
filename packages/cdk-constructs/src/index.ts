@@ -52,6 +52,16 @@ export { ApiLambda, ApiLambdaProps } from './api-lambda';
 export { DataTable, DataTableProps } from './data-table';
 export { SpaHosting, SpaHostingProps } from './spa-hosting';
 
+// Manifest Registration
+export {
+  ManifestRegistration,
+  ManifestRegistrationProps,
+  AppManifestConfig,
+  FrontendRoute,
+  BackendResource,
+  AppDependency,
+} from './manifest-registration';
+
 // Utilities
 export {
   // Naming
