@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
 // Handler handles health check requests.

@@ -1,4 +1,4 @@
-module github.com/DigiStratum/ds-app-skeleton/backend
+module github.com/DigiStratum/ds-app-developer/backend
 
 go 1.23
 

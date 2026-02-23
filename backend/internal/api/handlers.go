@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
 )
 
 // Standard error response format [NFR-SEC-004]

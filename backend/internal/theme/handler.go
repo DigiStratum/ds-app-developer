@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
 // ThemeConfig represents the theme configuration returned to clients.

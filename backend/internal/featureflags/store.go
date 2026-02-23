@@ -61,7 +61,7 @@ func newStore() (*Store, error) {
 
 	tableName := os.Getenv("DYNAMODB_TABLE")
 	if tableName == "" {
-		tableName = "ds-app-skeleton"
+		tableName = "ds-app-developer"
 	}
 
 	return &Store{

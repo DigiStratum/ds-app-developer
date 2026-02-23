@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
 // ErrorResponse is a standard error response

@@ -127,7 +127,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	
 	appURL := os.Getenv("APP_URL")
 	if appURL == "" {
-		appURL = "https://skeleton.digistratum.com"
+		appURL = "https://developer.digistratum.com"
 	}
 	
 	// Include redirect_uri so DSAccount can redirect back after logout

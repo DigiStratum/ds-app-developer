@@ -286,7 +286,7 @@ func TestLogoutHandler_DefaultURLs(t *testing.T) {
 	}
 
 	location := rr.Header().Get("Location")
-	expected := "https://account.digistratum.com/api/sso/logout?redirect_uri=https://skeleton.digistratum.com"
+	expected := "https://account.digistratum.com/api/sso/logout?redirect_uri=https://developer.digistratum.com"
 	if location != expected {
 		t.Errorf("expected redirect to %s, got %s", expected, location)
 	}

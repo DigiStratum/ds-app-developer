@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/api"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/featureflags"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/health"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/middleware"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/theme"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/api"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/featureflags"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/health"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/theme"
 )
 
 var httpAdapter *httpadapter.HandlerAdapterV2

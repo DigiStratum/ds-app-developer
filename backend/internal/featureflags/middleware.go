@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/auth"
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
 type contextKey string

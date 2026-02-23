@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DigiStratum/ds-app-skeleton/backend/internal/session"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
 // Tests for FR-AUTH: Authentication & Authorization requirements
