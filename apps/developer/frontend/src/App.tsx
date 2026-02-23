@@ -67,7 +67,7 @@ function AppRoutes() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <Layout appName="DS App Skeleton">
+                <Layout appName="DS Developer">
                   <SettingsPage />
                 </Layout>
               </ProtectedRoute>
@@ -77,7 +77,7 @@ function AppRoutes() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Layout appName="DS App Skeleton">
+                <Layout appName="DS Developer">
                   <DashboardPage />
                 </Layout>
               </ProtectedRoute>

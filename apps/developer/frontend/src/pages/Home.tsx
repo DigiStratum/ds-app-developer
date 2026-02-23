@@ -14,13 +14,13 @@ export function HomePage() {
   const isPersonalContext = !currentTenant || currentTenant === 'personal';
 
   return (
-    <Layout appName="DS App Skeleton">
+    <Layout appName="DS Developer">
       <div className="text-center py-12">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          DS App Skeleton
+          DS Developer
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-          Canonical baseline template for DigiStratum applications
+          Developer Portal for DigiStratum
         </p>
 
         {/* Authenticated user - show skeleton placeholder for app features */}
@@ -88,7 +88,7 @@ export function HomePage() {
         {/* Additional sections for landing page */}
         <div className="mt-16 max-w-4xl mx-auto text-left">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-            {t('landing.whyTitle', 'Why DS App Skeleton?')}
+            {t('landing.whyTitle', 'Why DS Developer?')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
