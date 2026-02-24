@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DS_URLS } from '@digistratum/ds-core';
 
 const COOKIE_CONSENT_KEY = 'ds-cookie-consent';
 
@@ -90,7 +91,7 @@ export function GdprBanner() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <a
-              href="https://www.digistratum.com/privacy"
+              href={DS_URLS.PRIVACY}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline order-last sm:order-first"

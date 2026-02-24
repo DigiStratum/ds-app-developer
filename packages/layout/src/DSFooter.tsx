@@ -1,13 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DS_URLS } from '@digistratum/ds-core';
 import type { FooterLink } from './types';
 import { GdprBanner } from './GdprBanner';
 import { CookiePreferencesModal } from './CookiePreferencesModal';
 
 const DEFAULT_LINKS: FooterLink[] = [
-  { label: 'Privacy', url: 'https://www.digistratum.com/privacy', external: true },
-  { label: 'Terms', url: 'https://www.digistratum.com/terms', external: true },
-  { label: 'Support', url: 'https://www.digistratum.com/support', external: true },
+  { label: 'Privacy', url: DS_URLS.PRIVACY, external: true },
+  { label: 'Terms', url: DS_URLS.TERMS, external: true },
+  { label: 'Support', url: DS_URLS.SUPPORT, external: true },
 ];
 
 export interface DSFooterProps {

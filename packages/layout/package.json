@@ -26,12 +26,14 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "@digistratum/ds-core": "^0.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^13.0.0",
     "i18next": "^23.0.0"
   },
   "devDependencies": {
+    "@digistratum/ds-core": "file:../ds-core",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "react": "^18.2.0",

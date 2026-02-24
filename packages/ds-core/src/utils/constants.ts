@@ -10,6 +10,12 @@
 export const DS_URLS = {
   /** DSAccount SSO service */
   ACCOUNT: 'https://account.digistratum.com',
+  /** DSKanban Projects service */
+  PROJECTS: 'https://projects.digistratum.com',
+  /** DSCRM service */
+  CRM: 'https://crm.digistratum.com',
+  /** DS Developer portal */
+  DEVELOPER: 'https://developer.digistratum.com',
   /** Privacy policy page */
   PRIVACY: 'https://www.digistratum.com/privacy',
   /** Terms of service page */

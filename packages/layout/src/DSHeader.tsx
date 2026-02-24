@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DS_URLS } from '@digistratum/ds-core';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
 
 // Default DS apps for app-switcher (used when no apps prop or appsApiUrl provided)
 const DEFAULT_DS_APPS: DSApp[] = [
-  { id: 'dsaccount', name: 'DS Account', url: 'https://account.digistratum.com', icon: '👤' },
-  { id: 'dskanban', name: 'DS Projects', url: 'https://projects.digistratum.com', icon: '📋' },
-  { id: 'dscrm', name: 'DS CRM', url: 'https://crm.digistratum.com', icon: '💼' },
-  { id: 'dsdeveloper', name: 'DS Developer', url: 'https://developer.digistratum.com', icon: '🛠️' },
+  { id: 'dsaccount', name: 'DS Account', url: DS_URLS.ACCOUNT, icon: '👤' },
+  { id: 'dskanban', name: 'DS Projects', url: DS_URLS.PROJECTS, icon: '📋' },
+  { id: 'dscrm', name: 'DS CRM', url: DS_URLS.CRM, icon: '💼' },
+  { id: 'dsdeveloper', name: 'DS Developer', url: DS_URLS.DEVELOPER, icon: '🛠️' },
 ];
 
 // Get a default icon for known app IDs
@@ -385,7 +386,7 @@ export function DSHeader({
                     {showUserMenuDropdown && (
                       <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                         <a 
-                          href="https://account.digistratum.com" 
+                          href={DS_URLS.ACCOUNT} 
                           className="block px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || user.email}</p>
