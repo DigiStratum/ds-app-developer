@@ -1,6 +1,8 @@
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FooterLink } from './types';
 import { GdprBanner } from './GdprBanner';
+import { CookiePreferencesModal } from './CookiePreferencesModal';
 
 const DEFAULT_LINKS: FooterLink[] = [
   { label: 'Privacy', url: 'https://www.digistratum.com/privacy', external: true },
@@ -14,6 +16,7 @@ export interface DSFooterProps {
   copyrightHolder?: string;
   showGdprBanner?: boolean;
   showDefaultLinks?: boolean;
+  showCookieSettings?: boolean;
   className?: string;
 }
 
@@ -24,6 +27,7 @@ export interface DSFooterProps {
  * - Copyright with current year
  * - Standard links (Privacy, Terms, Support)
  * - Custom additional links
+ * - Cookie Settings link to manage preferences
  * - GDPR cookie consent banner (optional)
  */
 export function DSFooter({
@@ -32,10 +36,21 @@ export function DSFooter({
   copyrightHolder = 'DigiStratum',
   showGdprBanner = true,
   showDefaultLinks = true,
+  showCookieSettings = true,
   className = '',
 }: DSFooterProps) {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+
+  const handleOpenPreferences = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsPreferencesOpen(true);
+  }, []);
+
+  const handleClosePreferences = useCallback(() => {
+    setIsPreferencesOpen(false);
+  }, []);
 
   const allLinks = [
     ...(showDefaultLinks ? DEFAULT_LINKS : []),
@@ -45,6 +60,10 @@ export function DSFooter({
   return (
     <>
       {showGdprBanner && <GdprBanner />}
+      <CookiePreferencesModal 
+        isOpen={isPreferencesOpen} 
+        onClose={handleClosePreferences} 
+      />
 
       <div className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -53,20 +72,27 @@ export function DSFooter({
               {t('footer.copyright', '© {{year}} {{holder}}. All rights reserved.', { year, holder: copyrightHolder })}
             </p>
 
-            {allLinks.length > 0 && (
-              <nav className="flex flex-wrap justify-center sm:justify-end space-x-4 mt-2 sm:mt-0" aria-label={t('footer.navigation', 'Footer navigation')}>
-                {allLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                    {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            )}
+            <nav className="flex flex-wrap justify-center sm:justify-end space-x-4 mt-2 sm:mt-0" aria-label={t('footer.navigation', 'Footer navigation')}>
+              {allLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  {link.label}
+                </a>
+              ))}
+              {showCookieSettings && (
+                <button
+                  onClick={handleOpenPreferences}
+                  className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  aria-label={t('cookies.settingsAriaLabel', 'Open cookie preferences')}
+                >
+                  {t('cookies.settings', 'Cookie Settings')}
+                </button>
+              )}
+            </nav>
           </div>
         </div>
       </div>

@@ -25,6 +25,7 @@ export { DSHeader } from './DSHeader';
 export { DSFooter } from './DSFooter';
 export { AdSlot } from './AdSlot';
 export { GdprBanner, useConsent } from './GdprBanner';
+export { CookiePreferencesModal, useCookiePreferencesModal } from './CookiePreferencesModal';
 
 // Types
 export type {
@@ -42,3 +43,4 @@ export type { DSHeaderProps } from './DSHeader';
 export type { DSFooterProps } from './DSFooter';
 export type { AdSlotProps } from './AdSlot';
 export type { ConsentLevel } from './GdprBanner';
+export type { CookiePreferencesModalProps } from './CookiePreferencesModal';
