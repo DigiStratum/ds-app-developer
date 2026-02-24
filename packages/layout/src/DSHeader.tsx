@@ -2,12 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
 
-// Default DS apps for app-switcher
+// Default DS apps for app-switcher (used when no apps prop or appsApiUrl provided)
 const DEFAULT_DS_APPS: DSApp[] = [
-  { id: 'dsaccount', name: 'DSAccount', url: 'https://account.digistratum.com', icon: '👤' },
-  { id: 'dskanban', name: 'DSKanban', url: 'https://kanban.digistratum.com', icon: '📋' },
-  { id: 'dsdocs', name: 'DSDocs', url: 'https://docs.digistratum.com', icon: '📄' },
+  { id: 'dsaccount', name: 'DS Account', url: 'https://account.digistratum.com', icon: '👤' },
+  { id: 'dskanban', name: 'DS Projects', url: 'https://projects.digistratum.com', icon: '📋' },
+  { id: 'dscrm', name: 'DS CRM', url: 'https://crm.digistratum.com', icon: '💼' },
+  { id: 'dsdeveloper', name: 'DS Developer', url: 'https://developer.digistratum.com', icon: '🛠️' },
 ];
+
+// Get a default icon for known app IDs
+function getDefaultIcon(appId: string): string {
+  const iconMap: Record<string, string> = {
+    dsaccount: '👤',
+    dskanban: '📋',
+    dscrm: '💼',
+    dsdeveloper: '🛠️',
+    dsdocs: '📄',
+    dsbilling: '💳',
+  };
+  return iconMap[appId.toLowerCase()] || '📱';
+}
 
 export interface DSHeaderProps {
   appName: string;
@@ -17,7 +31,10 @@ export interface DSHeaderProps {
   auth?: DSAppShellProps['auth'];
   theme?: DSAppShellProps['theme'];
   navLinks?: NavLink[];
+  /** Static apps list for the app-switcher. If appsApiUrl is provided, apps from API take precedence. */
   apps?: DSApp[];
+  /** URL to fetch apps from registry API (e.g., https://registry.digistratum.com/api/apps) */
+  appsApiUrl?: string;
   showAppSwitcher?: boolean;
   showThemeToggle?: boolean;
   showUserMenu?: boolean;
@@ -32,7 +49,7 @@ export interface DSHeaderProps {
  * Features:
  * - Logo with home link
  * - Navigation links
- * - App-switcher dropdown
+ * - App-switcher dropdown (with optional dynamic loading from registry API)
  * - Theme toggle
  * - Tenant switcher
  * - User menu with logout
@@ -46,7 +63,8 @@ export function DSHeader({
   auth,
   theme,
   navLinks = [],
-  apps = DEFAULT_DS_APPS,
+  apps: propApps,
+  appsApiUrl,
   showAppSwitcher = true,
   showThemeToggle = true,
   showUserMenu = true,
@@ -59,10 +77,53 @@ export function DSHeader({
   const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [showAppSwitcherDropdown, setShowAppSwitcherDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [fetchedApps, setFetchedApps] = useState<DSApp[] | null>(null);
+  const [appsLoading, setAppsLoading] = useState(false);
 
   const appSwitcherRef = useRef<HTMLDivElement>(null);
   const tenantMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch apps from registry API if appsApiUrl is provided
+  useEffect(() => {
+    if (!appsApiUrl) return;
+    
+    let cancelled = false;
+    setAppsLoading(true);
+    
+    fetch(appsApiUrl)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch apps');
+        return res.json();
+      })
+      .then((data: Array<{ id: string; name: string; url: string; icon?: string; status?: string }>) => {
+        if (cancelled) return;
+        // Filter to production apps that have a URL
+        const productionApps = data
+          .filter(app => app.url && (!app.status || app.status === 'production'))
+          .map(app => ({
+            id: app.id,
+            name: app.name,
+            url: app.url,
+            icon: app.icon || getDefaultIcon(app.id),
+          }));
+        setFetchedApps(productionApps);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        console.error('Failed to fetch apps from registry:', err);
+        // Fall back to defaults on error
+        setFetchedApps(null);
+      })
+      .finally(() => {
+        if (!cancelled) setAppsLoading(false);
+      });
+    
+    return () => { cancelled = true; };
+  }, [appsApiUrl]);
+
+  // Determine which apps list to use: fetched > prop > defaults
+  const apps = fetchedApps ?? propApps ?? DEFAULT_DS_APPS;
 
   // Close dropdowns on outside click
   useEffect(() => {

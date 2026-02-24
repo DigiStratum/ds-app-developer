@@ -133,6 +133,9 @@ export interface DSAppShellProps {
   /** Apps for the app-switcher dropdown */
   apps?: DSApp[];
   
+  /** URL to fetch apps from registry API (e.g., https://registry.digistratum.com/api/apps) */
+  appsApiUrl?: string;
+  
   /** Footer links */
   footerLinks?: FooterLink[];
   

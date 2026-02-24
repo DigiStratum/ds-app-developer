@@ -42,6 +42,7 @@ export function DSAppShell({
   theme,
   navLinks = [],
   apps = [],
+  appsApiUrl,
   footerLinks,
   copyrightHolder = 'DigiStratum',
   privateBrandedHeader,
@@ -81,6 +82,7 @@ export function DSAppShell({
       theme,
       navLinks,
       apps,
+      appsApiUrl,
       footerLinks,
       copyrightHolder,
       privateBrandedHeader,
@@ -105,6 +107,7 @@ export function DSAppShell({
       theme={theme}
       navLinks={navLinks}
       apps={apps}
+      appsApiUrl={appsApiUrl}
       showAppSwitcher={showAppSwitcher}
       showThemeToggle={showThemeToggle}
       showUserMenu={showUserMenu}
@@ -124,6 +127,7 @@ export function DSAppShell({
       theme,
       navLinks,
       apps,
+      appsApiUrl,
       footerLinks,
       copyrightHolder,
       privateBrandedHeader,
