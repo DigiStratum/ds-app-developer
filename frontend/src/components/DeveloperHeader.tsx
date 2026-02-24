@@ -77,7 +77,7 @@ export function DeveloperHeader({
   currentAppId,
   menuItems = [],
   showAppSwitcher = true,
-  showThemeToggle = true,
+  showThemeToggle = false,
   showUserMenu = true,
   showPreferences = true,
   showTenantSwitcher = true,

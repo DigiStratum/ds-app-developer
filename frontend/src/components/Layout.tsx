@@ -47,7 +47,7 @@ export function Layout({
   currentAppId = 'dsdeveloper',
   extraFooterLinks = [],
   showAppSwitcher = true,
-  showThemeToggle = true,
+  showThemeToggle = false,
   showUserMenu = true,
   showGdprBanner = true,
 }: LayoutProps) {
