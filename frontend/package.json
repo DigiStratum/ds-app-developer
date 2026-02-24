@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@digistratum/ds-core": "file:packages/ds-core",
+    "@digistratum/layout": "file:../../ds-app-skeleton/packages/layout",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",

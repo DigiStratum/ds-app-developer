@@ -1,5 +1,8 @@
 import { ReactNode } from 'react';
-import { DeveloperHeader, MenuItem } from './DeveloperHeader';
+import { DSHeader } from '@digistratum/layout';
+import type { AuthContext, ThemeContext } from '@digistratum/layout';
+import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '@digistratum/ds-core';
 import { DeveloperFooter, FooterLink } from './DeveloperFooter';
 import { AdSlot } from './AdSlot';
 
@@ -8,8 +11,6 @@ interface LayoutProps {
   appName?: string;
   appLogo?: string;
   currentAppId?: string;  // Highlights current app in app-switcher
-  /** Custom menu items for app-specific navigation */
-  menuItems?: MenuItem[];
   /** Additional footer links */
   extraFooterLinks?: FooterLink[];
   /** Show app switcher in header (default: true) */
@@ -36,21 +37,45 @@ interface LayoutProps {
  * Containers float as distinct rounded elements with side margins.
  * Side margins: 5px on desktop, 0 on mobile (#291)
  *
- * Uses DeveloperHeader and DeveloperFooter for standardized, configurable navigation.
+ * Uses DSHeader from @digistratum/layout for standardized navigation.
  * App-specific content is inserted into the main content container via {children}.
  */
 export function Layout({ 
   children, 
-  appName = 'DS App', 
+  appName = 'DS Developer', 
   appLogo,
-  currentAppId,
-  menuItems = [],
+  currentAppId = 'dsdeveloper',
   extraFooterLinks = [],
   showAppSwitcher = true,
   showThemeToggle = true,
   showUserMenu = true,
   showGdprBanner = true,
 }: LayoutProps) {
+  const { user, isAuthenticated, login, logout, currentTenant, switchTenant } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  // Build auth context for DSHeader
+  const auth: AuthContext = {
+    user: user ? {
+      id: user.id || user.email || 'unknown',
+      email: user.email || '',
+      name: user.display_name || user.name,
+      tenants: user.tenants,
+    } : null,
+    isAuthenticated,
+    currentTenant,
+    login,
+    logout,
+    switchTenant,
+  };
+
+  // Build theme context for DSHeader
+  const themeContext: ThemeContext = {
+    theme,
+    resolvedTheme,
+    setTheme,
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--ds-bg-margin)' }}>
       {/* Header - white bg, bottom corners radiused */}
@@ -58,14 +83,17 @@ export function Layout({
         className="ds-container-margins bg-white dark:bg-gray-800"
         style={{ borderBottomLeftRadius: 'var(--ds-container-radius)', borderBottomRightRadius: 'var(--ds-container-radius)' }}
       >
-        <DeveloperHeader 
+        <DSHeader 
           appName={appName}
-          appLogo={appLogo}
+          logoUrl={appLogo}
           currentAppId={currentAppId}
-          menuItems={menuItems}
+          auth={auth}
+          theme={themeContext}
           showAppSwitcher={showAppSwitcher}
           showThemeToggle={showThemeToggle}
           showUserMenu={showUserMenu}
+          showPreferences={false}
+          showTenantSwitcher={true}
         />
       </header>
       
