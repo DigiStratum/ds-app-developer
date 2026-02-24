@@ -85,6 +85,14 @@ export function DSHeader({
   const tenantMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  // Derive auth state early (needed for apps fetch)
+  const user = auth?.user;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const currentTenant = auth?.currentTenant;
+  const currentTenantInfo = user?.tenants?.find(t => t.id === currentTenant);
+  const tenantName = currentTenantInfo?.name || t('nav.personal', 'Personal');
+  const userName = user?.name || user?.email || '';
+
   // Fetch apps from registry API if appsApiUrl is provided
   useEffect(() => {
     if (!appsApiUrl) return;
@@ -97,18 +105,27 @@ export function DSHeader({
         if (!res.ok) throw new Error('Failed to fetch apps');
         return res.json();
       })
-      .then((data: Array<{ id: string; name: string; url: string; icon?: string; status?: string }>) => {
+      .then((data: Array<{ id: string; name: string; url: string; icon?: string; status?: string; is_public?: boolean; display_order?: number }>) => {
         if (cancelled) return;
         // Filter to production apps that have a URL
-        const productionApps = data
-          .filter(app => app.url && (!app.status || app.status === 'production'))
+        // If user is not authenticated, only show public apps
+        const filteredApps = data
+          .filter(app => {
+            if (!app.url) return false;
+            if (app.status && app.status !== 'production') return false;
+            // Filter by is_public if user is not authenticated
+            if (!isAuthenticated && app.is_public === false) return false;
+            return true;
+          })
+          // Sort by display_order (undefined/null treated as Infinity to sort last)
+          .sort((a, b) => (a.display_order ?? Infinity) - (b.display_order ?? Infinity))
           .map(app => ({
             id: app.id,
             name: app.name,
             url: app.url,
             icon: app.icon || getDefaultIcon(app.id),
           }));
-        setFetchedApps(productionApps);
+        setFetchedApps(filteredApps);
       })
       .catch(err => {
         if (cancelled) return;
@@ -121,7 +138,7 @@ export function DSHeader({
       });
     
     return () => { cancelled = true; };
-  }, [appsApiUrl]);
+  }, [appsApiUrl, isAuthenticated]);
 
   // Determine which apps list to use: fetched > prop > defaults
   const apps = fetchedApps ?? propApps ?? DEFAULT_DS_APPS;
@@ -142,13 +159,6 @@ export function DSHeader({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const user = auth?.user;
-  const isAuthenticated = auth?.isAuthenticated ?? false;
-  const currentTenant = auth?.currentTenant;
-  const currentTenantInfo = user?.tenants?.find(t => t.id === currentTenant);
-  const tenantName = currentTenantInfo?.name || t('nav.personal', 'Personal');
-  const userName = user?.name || user?.email || '';
 
   // Theme toggle
   const cycleTheme = () => {
@@ -259,26 +269,35 @@ export function DSHeader({
                       </p>
                     </div>
                     <div className="py-1">
-                      {apps.map((app) => (
-                        <a
-                          key={app.id}
-                          href={app.url}
-                          className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                            currentAppId === app.id 
-                              ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
-                              : 'text-gray-700 dark:text-gray-200'
-                          }`}
-                          onClick={() => setShowAppSwitcherDropdown(false)}
-                        >
-                          <span className="text-lg mr-3">{app.icon}</span>
-                          <span className="font-medium">{app.name}</span>
-                          {currentAppId === app.id && (
-                            <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
-                              {t('nav.current', 'Current')}
-                            </span>
-                          )}
-                        </a>
-                      ))}
+                      {apps.map((app) => {
+                        const isCurrent = currentAppId === app.id;
+                        if (isCurrent) {
+                          // Render as non-clickable div for current app
+                          return (
+                            <div
+                              key={app.id}
+                              className="flex items-center px-4 py-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
+                            >
+                              <span className="text-lg mr-3">{app.icon}</span>
+                              <span className="font-medium">{app.name}</span>
+                              <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
+                                {t('nav.current', 'Current')}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <a
+                            key={app.id}
+                            href={app.url}
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() => setShowAppSwitcherDropdown(false)}
+                          >
+                            <span className="text-lg mr-3">{app.icon}</span>
+                            <span className="font-medium">{app.name}</span>
+                          </a>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -452,21 +471,34 @@ export function DSHeader({
                 <p className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                   {t('nav.dsApps', 'DigiStratum Apps')}
                 </p>
-                {apps.map((app) => (
-                  <a
-                    key={app.id}
-                    href={app.url}
-                    className={`flex items-center px-4 py-2 text-sm rounded-md ${
-                      currentAppId === app.id 
-                        ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
-                    onClick={() => setShowMobileMenu(false)}
-                  >
-                    <span className="text-lg mr-3">{app.icon}</span>
-                    <span className="font-medium">{app.name}</span>
-                  </a>
-                ))}
+                {apps.map((app) => {
+                  const isCurrent = currentAppId === app.id;
+                  if (isCurrent) {
+                    return (
+                      <div
+                        key={app.id}
+                        className="flex items-center px-4 py-2 text-sm rounded-md bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
+                      >
+                        <span className="text-lg mr-3">{app.icon}</span>
+                        <span className="font-medium">{app.name}</span>
+                        <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
+                          {t('nav.current', 'Current')}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <a
+                      key={app.id}
+                      href={app.url}
+                      className="flex items-center px-4 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <span className="text-lg mr-3">{app.icon}</span>
+                      <span className="font-medium">{app.name}</span>
+                    </a>
+                  );
+                })}
               </div>
             )}
 
