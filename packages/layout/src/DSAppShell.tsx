@@ -44,7 +44,7 @@ export function DSAppShell({
   apps = [],
   appsApiUrl,
   footerLinks,
-  copyrightHolder = 'DigiStratum',
+  copyrightHolder = 'DigiStratum LLC',
   privateBrandedHeader,
   leftAdMargin,
   rightAdMargin,

@@ -139,7 +139,7 @@ export interface DSAppShellProps {
   /** Footer links */
   footerLinks?: FooterLink[];
   
-  /** Copyright holder name (default: 'DigiStratum') */
+  /** Copyright holder name (default: 'DigiStratum LLC') */
   copyrightHolder?: string;
   
   // --- Slot configurations ---
