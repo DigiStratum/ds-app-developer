@@ -198,7 +198,7 @@ export function DSHeader({
         <div className="flex justify-between h-16">
           {/* Logo and nav links */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center">
+            <a href={DS_URLS.ACCOUNT} className="flex items-center">
               <img 
                 src={logoUrl} 
                 alt={logoAlt || appName}
