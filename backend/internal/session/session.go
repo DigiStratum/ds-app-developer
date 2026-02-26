@@ -125,6 +125,37 @@ func (s *Store) Delete(id string) {
 	delete(s.sessions, id)
 }
 
+// GetOrCreate retrieves an existing session or creates a new one with the given ID.
+// This is used for DSAccount SSO sessions where the session ID comes from DSAccount.
+func (s *Store) GetOrCreate(id string, tenantID string) *Session {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	session, ok := s.sessions[id]
+	if ok && time.Now().Before(session.ExpiresAt) {
+		return session
+	}
+
+	// Create new session with the provided ID (DSAccount session ID)
+	session = &Session{
+		ID:        id,
+		TenantID:  tenantID,
+		IsGuest:   true, // Will be set to false when user is associated
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	s.sessions[id] = session
+	return session
+}
+
+// Save persists a session to the store
+func (s *Store) Save(session *Session) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.sessions[session.ID] = session
+}
+
 // generateSessionID creates a cryptographically secure session ID
 func generateSessionID() string {
 	b := make([]byte, 32)
