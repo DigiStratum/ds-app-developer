@@ -219,6 +219,3 @@ Apps currently use `file:` dependencies:
 |------------|------|----------|---------|
 | DSAccount | Service | https://account.digistratum.com | SSO authentication |
 
-## License
-
-Proprietary - DigiStratum LLC
