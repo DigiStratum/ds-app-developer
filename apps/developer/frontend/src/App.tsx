@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
-import { CookieConsent, Layout, ErrorBoundaryWithKey } from './components';
+import { CookieConsent, DeveloperAppShell, ErrorBoundaryWithKey } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { SettingsPage } from './pages/Settings';
@@ -67,9 +67,9 @@ function AppRoutes() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <Layout appName="DS Developer">
+                <DeveloperAppShell>
                   <SettingsPage />
-                </Layout>
+                </DeveloperAppShell>
               </ProtectedRoute>
             }
           />
@@ -77,9 +77,9 @@ function AppRoutes() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Layout appName="DS Developer">
+                <DeveloperAppShell>
                   <DashboardPage />
-                </Layout>
+                </DeveloperAppShell>
               </ProtectedRoute>
             }
           />
