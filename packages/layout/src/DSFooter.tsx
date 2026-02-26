@@ -34,7 +34,7 @@ export interface DSFooterProps {
 export function DSFooter({
   appName,
   links = [],
-  copyrightHolder = 'DigiStratum',
+  copyrightHolder = 'DigiStratum LLC',
   showGdprBanner = true,
   showDefaultLinks = true,
   showCookieSettings = true,
