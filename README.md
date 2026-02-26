@@ -87,7 +87,8 @@ const api = new ApiLambda(this, 'Api', { appName: 'myapp', environment: 'prod' }
 - **Frontend:** React 18, Vite, TailwindCSS 4
 - **Backend:** Go 1.23, AWS Lambda (arm64), HTTP API Gateway
 - **Database:** DynamoDB (table: `ds-app-developer`)
-- **Hosting:** CloudFront (E1FPMBSERH3QXR) → S3 + Lambda
+- **Hosting:** CloudFront → S3 + Lambda
+- **Domain:** developer.digistratum.com
 
 ### SSO Integration
 Developer uses `pkg/dsauth` which is the **canonical source** for SSO validation:
@@ -119,7 +120,12 @@ npm run build:packages
 cd ~/repos/digistratum/ds-app-developer/frontend
 npm run build
 aws s3 sync dist s3://ds-app-developer-frontend-171949636152 --delete
-aws cloudfront create-invalidation --distribution-id E1FPMBSERH3QXR --paths "/*"
+# Get CloudFront distribution ID by domain
+DIST_ID=$(aws cloudfront list-distributions \
+  --query "DistributionList.Items[?Aliases.Items[?contains(@,'developer.digistratum.com')]].Id" \
+  --output text)
+
+aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
 ```
 
 ### Backend
