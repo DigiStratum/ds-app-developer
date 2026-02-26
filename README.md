@@ -196,9 +196,9 @@ Apps currently use `file:` dependencies:
 
 ## Dependencies
 
-| Dependency | Purpose |
-|------------|---------|
-| DSAccount | SSO authentication |
+| Dependency | Type | Location | Purpose |
+|------------|------|----------|---------|
+| DSAccount | Service | https://account.digistratum.com | SSO authentication |
 
 ## Contacts
 - **Owner:** @skelly
