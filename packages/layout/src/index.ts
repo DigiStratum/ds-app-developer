@@ -28,6 +28,7 @@ export { DSFooter } from './DSFooter';
 export { AdSlot } from './AdSlot';
 export { GdprBanner, useConsent } from './GdprBanner';
 export { CookiePreferencesModal, useCookiePreferencesModal } from './CookiePreferencesModal';
+export { CustomHeaderZone } from './components/CustomHeaderZone';
 
 // Types
 export type {
@@ -46,3 +47,4 @@ export type { DSFooterProps } from './DSFooter';
 export type { AdSlotProps } from './AdSlot';
 export type { ConsentLevel } from './GdprBanner';
 export type { CookiePreferencesModalProps } from './CookiePreferencesModal';
+export type { CustomHeaderZoneProps } from './components/CustomHeaderZone';
