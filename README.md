@@ -91,10 +91,25 @@ const api = new ApiLambda(this, 'Api', { appName: 'myapp', environment: 'prod' }
 - **Domain:** developer.digistratum.com
 
 ### SSO Integration
-Developer uses `pkg/dsauth` which is the **canonical source** for SSO validation:
-1. Session middleware checks for `ds_session` cookie
-2. Validates against DSAccount via `GET /api/auth/me`
-3. `/api/session` endpoint returns session state for frontend
+
+Developer uses `pkg/dsauth` which is the **canonical source** for SSO validation that other DS apps should copy.
+
+#### SSO Endpoints
+
+| Endpoint | Method | Purpose | Request | Response |
+|----------|--------|---------|---------|----------|
+| `/api/auth/login` | GET | Initiates SSO login | `?return_to=/path` (optional) | 302 redirect to DSAccount |
+| `/api/auth/callback` | GET | OAuth callback — receives auth code from DSAccount | `?code=XXX&state=YYY` | Sets `ds_session` cookie, redirects |
+| `/api/auth/logout` | POST | Clears session | (none) | Clears cookie, 200 OK |
+| `/api/session` | GET | Returns session state for frontend | `ds_session` cookie | `{authenticated: bool, user: {...}}` |
+
+#### OAuth Flow
+1. Frontend calls `/api/session` → gets `{authenticated: false}`
+2. Frontend redirects to `/api/auth/login?return_to=/current-page`
+3. Backend redirects to `https://account.digistratum.com/api/sso/authorize?app_id=developer&redirect_uri=.../callback`
+4. User authenticates at DSAccount
+5. DSAccount redirects to `/api/auth/callback?code=XXX`
+6. Backend exchanges code, sets `ds_session` cookie, redirects to `return_to`
 
 **Key Files:**
 - `backend/pkg/dsauth/` — Canonical dsauth package (copy to other apps)
