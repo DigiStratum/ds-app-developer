@@ -76,14 +76,14 @@ func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call DSAccount to validate JWT and get user info (including tenants)
-	// Use /api/sso/userinfo which validates JWT tokens and returns tenants
+	// Call DSAccount to validate session and get user info (including tenants)
+	// Use /api/auth/me which validates session tokens and returns user with tenants
 	dsAccountURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if dsAccountURL == "" {
 		dsAccountURL = "https://account.digistratum.com"
 	}
 
-	req, _ := http.NewRequest("GET", dsAccountURL+"/api/sso/userinfo", nil)
+	req, _ := http.NewRequest("GET", dsAccountURL+"/api/auth/me", nil)
 	req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
 	client := &http.Client{Timeout: 5 * time.Second}
