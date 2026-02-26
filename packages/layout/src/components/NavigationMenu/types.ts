@@ -1,60 +1,8 @@
-import { ReactNode } from 'react';
 import type { User } from '../../types';
+import type { MenuItem, Tenant } from '../AppShell/types';
 
-/**
- * Tenant context for menu item generation
- */
-export interface Tenant {
-  id: string;
-  name: string;
-  role?: string;
-}
-
-/**
- * Menu item for navigation
- * 
- * @example
- * ```typescript
- * const menuItem: MenuItem = {
- *   id: 'dashboard',
- *   label: 'Dashboard',
- *   path: '/dashboard',
- *   icon: '📊',
- *   badge: 5,
- * };
- * ```
- */
-export interface MenuItem {
-  /** Unique identifier for the menu item */
-  id: string;
-  
-  /** Display label */
-  label: string;
-  
-  /** Navigation path (relative URL) - optional if onClick is provided */
-  path?: string;
-  
-  /** Optional icon (emoji, string, or React node) */
-  icon?: ReactNode;
-  
-  /** Badge text or number (e.g., notification count) */
-  badge?: string | number;
-  
-  /** Nested menu items (for submenus/dropdowns) */
-  children?: MenuItem[];
-  
-  /** Click handler (alternative to path navigation) */
-  onClick?: () => void;
-  
-  /** Whether this item is visible (default: true) */
-  visible?: boolean;
-  
-  /** Whether this item is currently active */
-  active?: boolean;
-  
-  /** Whether this item is disabled */
-  disabled?: boolean;
-}
+// Re-export for convenience
+export type { MenuItem, Tenant };
 
 /**
  * Callback type for generating menu items based on user/tenant context.

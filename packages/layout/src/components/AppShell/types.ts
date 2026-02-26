@@ -12,24 +12,34 @@ export interface Tenant {
 
 /**
  * Menu item for navigation
+ * 
+ * Supports the full NavigationMenu feature set:
+ * - Optional path (can use onClick instead)
+ * - Nested children for submenus
+ * - Badges for counts/notifications
+ * - Visibility control
  */
 export interface MenuItem {
   /** Unique identifier for the menu item */
   id: string;
   /** Display label */
   label: string;
-  /** Navigation path (relative URL) */
-  path: string;
+  /** Navigation path (relative URL) - optional if onClick is provided */
+  path?: string;
   /** Optional icon (emoji or React node) */
   icon?: ReactNode;
+  /** Badge text or number (e.g., notification count) */
+  badge?: string | number;
+  /** Nested menu items (for submenus/dropdowns) */
+  children?: MenuItem[];
+  /** Click handler (alternative to path navigation) */
+  onClick?: () => void;
+  /** Whether this item is visible (default: true) */
+  visible?: boolean;
   /** Whether this item is currently active */
   active?: boolean;
-  /** Nested menu items (for submenus) */
-  children?: MenuItem[];
   /** Whether this item is disabled */
   disabled?: boolean;
-  /** Badge text (e.g., count) */
-  badge?: string | number;
 }
 
 /**
