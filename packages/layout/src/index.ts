@@ -17,8 +17,10 @@
  * ```
  */
 
-// Main shell
+// Main shell components
 export { DSAppShell } from './DSAppShell';
+export { AppShell } from './components/AppShell';
+export type { AppShellProps, AppShellExtendedProps, MenuItem, Tenant } from './components/AppShell';
 
 // Layout components
 export { DSHeader } from './DSHeader';
