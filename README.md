@@ -35,12 +35,14 @@ ds-app-developer/
 
 ## Shared Packages
 
-| Package | Purpose | Consumers |
-|---------|---------|-----------|
-| `@digistratum/layout` | DSHeader, DSFooter, DSAppShell, GdprBanner | All DS frontends |
-| `@digistratum/components` | Shared UI components | All DS frontends |
-| `@digistratum/cdk-constructs` | Reusable CDK patterns | All DS infra |
-| `backend-utils` (Go) | Auth, dynamo, secrets, middleware | All DS backends |
+| Package | Type | Purpose | Status |
+|---------|------|---------|--------|
+| `@digistratum/layout` | npm | DSHeader, DSFooter, DSAppShell, GdprBanner | ✅ Active |
+| `@digistratum/components` | npm | Shared UI components | ✅ Active |
+| `@digistratum/cdk-constructs` | npm | Reusable CDK patterns | ✅ Active |
+| `backend-utils` | Go module | Auth, dynamo, secrets, middleware | ⚠️ Exists but not imported — apps copy `pkg/dsauth` instead |
+
+> **Note:** The Go packages are currently copy-pasted between repos rather than imported as modules. This is a known tech debt item.
 
 ### Using the Packages
 
