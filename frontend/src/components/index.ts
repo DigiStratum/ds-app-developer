@@ -13,3 +13,6 @@ export { DeveloperHeader } from './DeveloperHeader';
 export type { DeveloperHeaderProps, MenuItem } from './DeveloperHeader';
 export { DeveloperFooter, GdprBanner } from './DeveloperFooter';
 export type { DeveloperFooterProps, FooterLink } from './DeveloperFooter';
+
+// AppShell reference implementation (#593)
+export { DeveloperAppShell } from './DeveloperAppShell';

@@ -11,3 +11,6 @@ export { SkeletonHeader } from './SkeletonHeader';
 export type { SkeletonHeaderProps, MenuItem } from './SkeletonHeader';
 export { SkeletonFooter, GdprBanner } from './SkeletonFooter';
 export type { SkeletonFooterProps, FooterLink } from './SkeletonFooter';
+
+// AppShell reference implementation (#593)
+export { DeveloperAppShell } from './DeveloperAppShell';

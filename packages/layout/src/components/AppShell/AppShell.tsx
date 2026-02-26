@@ -74,7 +74,7 @@ export interface AppShellExtendedProps extends AppShellProps {
 function menuItemToNavLink(item: MenuItem): NavLink {
   return {
     label: item.label,
-    path: item.path,
+    path: item.path ?? '#',
     icon: item.icon,
     active: item.active,
   };
