@@ -1,8 +1,10 @@
 # DS Developer
 
-Developer portal and shared packages hub for DigiStratum. Serves two purposes:
-1. **Developer Portal** — Web app at developer.digistratum.com for developer resources
-2. **Shared Packages** — Reusable libraries that all DS apps depend on (layout, components, auth, etc.)
+This repo serves three purposes:
+
+1. **Shared Packages** — Reusable libraries that all DS apps depend on (layout, components, CDK constructs, backend utilities)
+2. **Boilerplate/Reference App** — Template application demonstrating how to use the shared packages correctly
+3. **Developer Portal** — The deployed instance of the boilerplate app at developer.digistratum.com, hosting API docs and developer resources
 
 **This repo exports the packages that other apps consume.** When updating shared code, all consuming apps may need updates.
 
