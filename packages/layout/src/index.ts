@@ -22,6 +22,10 @@ export { DSAppShell } from './DSAppShell';
 export { AppShell } from './components/AppShell';
 export type { AppShellProps, AppShellExtendedProps, MenuItem, Tenant } from './components/AppShell';
 
+// Content components
+export { ContentContainer } from './components/ContentContainer';
+export type { ContentContainerProps, LoadingConfig, ErrorConfig } from './components/ContentContainer';
+
 // Layout components
 export { DSHeader } from './DSHeader';
 export { DSFooter } from './DSFooter';
