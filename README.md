@@ -215,10 +215,6 @@ Apps currently use `file:` dependencies:
 |------------|------|----------|---------|
 | DSAccount | Service | https://account.digistratum.com | SSO authentication |
 
-## Contacts
-- **Owner:** @skelly
-- **Repo:** https://github.com/DigiStratum/ds-app-developer
-
 ## License
 
 Proprietary - DigiStratum LLC
