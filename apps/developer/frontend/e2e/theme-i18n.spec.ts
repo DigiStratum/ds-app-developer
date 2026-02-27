@@ -187,19 +187,21 @@ test.describe('Error Handling', () => {
   test('404 page shows for unknown routes', async ({ page }) => {
     await page.goto('/this-route-does-not-exist-123');
     
-    // Either shows 404 content or redirects to home
-    // Check for 404 heading, "not found" text, or "page doesn't exist" text
-    const heading404 = page.getByRole('heading', { name: /404/i });
-    const notFoundText = page.getByRole('heading', { name: /not found/i });
-    const doesntExistText = page.getByText(/page doesn't exist|page you're looking for/i);
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
     
-    const is404 = await heading404.isVisible().catch(() => false) ||
-                  await notFoundText.isVisible().catch(() => false) ||
-                  await doesntExistText.isVisible().catch(() => false);
+    // Check for 404 content - look for the actual content we added
+    const page404Heading = page.locator('h1:has-text("404")');
+    const pageNotFoundHeading = page.locator('h2:has-text("Page Not Found")');
+    const notFoundParagraph = page.getByText(/page you're looking for/i);
     
-    const isHome = page.url().endsWith('/') || page.url().includes('/?');
+    const is404 = await page404Heading.isVisible().catch(() => false) ||
+                  await pageNotFoundHeading.isVisible().catch(() => false) ||
+                  await notFoundParagraph.isVisible().catch(() => false);
     
-    // Should either show 404 or redirect
+    const isHome = page.url().endsWith('/') && !page.url().includes('/this-route-does-not-exist');
+    
+    // Should either show 404 or redirect to home
     expect(is404 || isHome).toBeTruthy();
   });
 });
