@@ -83,6 +83,9 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          
+          {/* Catch-all route - redirect unknown paths to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SessionLoader>
     </ErrorBoundary>
