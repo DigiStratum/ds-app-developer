@@ -1,10 +1,11 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
-import { CookieConsent, DeveloperAppShell, ErrorBoundaryWithKey } from './components';
+import { DeveloperAppShell, ErrorBoundaryWithKey } from './components';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { SettingsPage } from './pages/Settings';
+import { NotFoundPage } from './pages/NotFound';
 import { useTranslation } from 'react-i18next';
 
 // Protected route wrapper [FR-AUTH-002]
@@ -83,6 +84,9 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          
+          {/* 404 catch-all route */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </SessionLoader>
     </ErrorBoundaryWithKey>
@@ -94,7 +98,6 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <AppRoutes />
-        <CookieConsent />
       </AuthProvider>
     </ThemeProvider>
   );

@@ -66,19 +66,19 @@ export function HomePage() {
         {/* Feature cards - visible to all users */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <div className="card">
-            <h3 className="font-semibold text-lg mb-2">Multi-Tenant</h3>
+            <h2 className="font-semibold text-lg mb-2">Multi-Tenant</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               Built-in tenant context switching and data isolation
             </p>
           </div>
           <div className="card">
-            <h3 className="font-semibold text-lg mb-2">Internationalized</h3>
+            <h2 className="font-semibold text-lg mb-2">Internationalized</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               i18n support with language packs and dynamic translation
             </p>
           </div>
           <div className="card">
-            <h3 className="font-semibold text-lg mb-2">Accessible</h3>
+            <h2 className="font-semibold text-lg mb-2">Accessible</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               WCAG 2.1 AA compliant with keyboard navigation
             </p>
@@ -92,7 +92,7 @@ export function HomePage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white" aria-level={3}>
                 {t('landing.feature1Title', 'Production Ready')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
@@ -100,7 +100,7 @@ export function HomePage() {
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white" aria-level={3}>
                 {t('landing.feature2Title', 'Developer Experience')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
