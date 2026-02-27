@@ -203,7 +203,7 @@ func defaultValidateToken(cfg Config, token string) (*User, error) {
 		slog.Error("dsauth: auth/me request failed", "error", err)
 		return nil, fmt.Errorf("auth/me request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

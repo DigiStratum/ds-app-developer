@@ -1,13 +1,8 @@
 package dsauth
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
-	"time"
 )
 
 // Handlers provides HTTP handlers for SSO authentication flow.
@@ -24,63 +19,6 @@ func NewHandlers(cfg Config) *Handlers {
 		cfg.SessionMaxAge = 86400 // 24 hours
 	}
 	return &Handlers{cfg: cfg}
-}
-
-// tokenResponse represents the response from DSAccount token endpoint.
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	Error       string `json:"error,omitempty"`
-	ErrorDesc   string `json:"error_description,omitempty"`
-}
-
-// exchangeCodeForToken exchanges an authorization code for an access token with DSAccount.
-func (h *Handlers) exchangeCodeForToken(code string) (string, error) {
-	tokenURL := h.cfg.SSOBaseURL + "/api/sso/token"
-
-	payload := map[string]string{
-		"code":       code,
-		"app_id":     h.cfg.AppID,
-		"app_secret": h.cfg.AppSecret,
-	}
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "", fmt.Errorf("marshal token request: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", tokenURL, bytes.NewReader(body))
-	if err != nil {
-		return "", fmt.Errorf("create token request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("token exchange request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("read token response: %w", err)
-	}
-
-	var tokenResp tokenResponse
-	if err := json.Unmarshal(respBody, &tokenResp); err != nil {
-		return "", fmt.Errorf("parse token response: %w", err)
-	}
-
-	if tokenResp.Error != "" {
-		return "", fmt.Errorf("token exchange error: %s - %s", tokenResp.Error, tokenResp.ErrorDesc)
-	}
-
-	if tokenResp.AccessToken == "" {
-		return "", fmt.Errorf("no access_token in response")
-	}
-
-	return tokenResp.AccessToken, nil
 }
 
 // CallbackHandler handles the SSO callback after successful authentication.
@@ -159,7 +97,7 @@ func (h *Handlers) MeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	// Using simple string formatting to avoid encoding/json import for this simple case
 	// In production, use proper JSON encoding
-	w.Write([]byte(`{"id":"` + user.ID + `","email":"` + user.Email + `","name":"` + user.Name + `"}`))
+	_, _ = w.Write([]byte(`{"id":"` + user.ID + `","email":"` + user.Email + `","name":"` + user.Name + `"}`))
 }
 
 // RegisterRoutes registers all auth routes on the given mux with a prefix.
