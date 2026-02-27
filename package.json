@@ -7,7 +7,9 @@
     "packages/layout",
     "packages/components",
     "packages/cdk-constructs",
-    "apps/developer/frontend"
+    "apps/developer/frontend",
+    "packages/ds-core",
+    "packages/ds-ui"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

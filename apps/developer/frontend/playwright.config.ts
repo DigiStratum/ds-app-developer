@@ -33,7 +33,7 @@ export default defineConfig({
   // Shared settings for all tests
   use: {
     // Base URL for navigation
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3000',
 
     // Collect trace when retrying a failed test
     trace: 'on-first-retry',
@@ -93,7 +93,7 @@ export default defineConfig({
   // Run local dev server before starting tests
   webServer: {
     command: process.env.CI ? 'npm run preview' : 'npm run dev',
-    url: process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173',
+    url: process.env.CI ? 'http://localhost:4173' : 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
