@@ -14,9 +14,6 @@ env:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -26,21 +23,31 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install root dependencies (workspaces)
         run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+        working-directory: frontend
 
       - name: Build frontend
         run: npm run build
+        working-directory: frontend
         env:
           VITE_API_URL: ''
 
       - name: Run E2E tests
         run: npm run e2e:ci
+        working-directory: frontend
         env:
           E2E_BASE_URL: http://localhost:4173
           # Run against preview server (built output)
@@ -65,9 +72,6 @@ jobs:
   # Mobile E2E tests (Safari on iPhone)
   e2e-mobile:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -77,21 +81,31 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install root dependencies (workspaces)
         run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
 
       - name: Install Playwright browsers (WebKit for Safari)
         run: npx playwright install --with-deps webkit
+        working-directory: frontend
 
       - name: Build frontend
         run: npm run build
+        working-directory: frontend
         env:
           VITE_API_URL: ''
 
       - name: Run mobile E2E tests
         run: npx playwright test --project=mobile-safari --reporter=list,junit
+        working-directory: frontend
         env:
           E2E_BASE_URL: http://localhost:4173
           CI: true
