@@ -26,7 +26,8 @@ npm install @digistratum/ds-core
 │   ├── useConsent     # GDPR cookie consent state
 │   ├── useFeatureFlags# Feature flag provider & hooks
 │   ├── useTheme       # Light/dark mode theme
-│   └── useTenantTheme # Tenant-specific branding
+│   ├── useTenantTheme # Tenant-specific branding
+│   └── useDiscovery   # Service registry discovery
 ├── components/        # React components
 │   ├── ErrorBoundary  # Error catching wrapper
 │   ├── FeatureFlag    # Conditional rendering by flag
@@ -35,7 +36,8 @@ npm install @digistratum/ds-core
 ├── utils/             # Utility functions
 │   ├── api-client     # HTTP client with tenant support
 │   ├── constants      # DS URLs, storage keys
-│   └── storage        # Safe localStorage wrappers
+│   ├── storage        # Safe localStorage wrappers
+│   └── discovery      # Registry discovery client
 └── types/             # TypeScript definitions
 ```
 
@@ -132,6 +134,34 @@ function Header() {
 }
 ```
 
+#### useDiscovery
+
+```tsx
+import { useDiscovery, useDiscoveryPrefetch } from '@digistratum/ds-core';
+
+// Discover a single resource
+function SSOLink() {
+  const { resource, isLoading, error } = useDiscovery('sso.authorize');
+  
+  if (isLoading) return <Loading />;
+  if (error) return <span>SSO unavailable</span>;
+  
+  return (
+    <a href={`${resource.url}${resource.path}`}>
+      Sign In
+    </a>
+  );
+}
+
+// Prefetch multiple resources on app load
+function App() {
+  // Pre-warm the cache for commonly used resources
+  useDiscoveryPrefetch(['sso.authorize', 'users.profile', 'tenants.list']);
+  
+  return <MyApp />;
+}
+```
+
 ### Components
 
 #### ErrorBoundary
@@ -214,6 +244,37 @@ console.log(DS_URLS.PRIVACY); // https://www.digistratum.com/privacy
 // Storage keys
 console.log(STORAGE_KEYS.THEME); // ds-theme
 console.log(STORAGE_KEYS.COOKIE_CONSENT); // ds-cookie-consent
+```
+
+#### Discovery Client
+
+```tsx
+import { 
+  discoverResource, 
+  prefetchResources, 
+  invalidateDiscoveryCache,
+  discoveryClient,
+  DiscoveryClient 
+} from '@digistratum/ds-core';
+
+// Discover a resource by canonical name
+const resource = await discoverResource('sso.authorize');
+console.log(resource);
+// { appId: 'dsaccount', url: 'https://account.digistratum.com', path: '/api/sso/authorize', methods: ['GET', 'POST'] }
+
+// Prefetch multiple resources
+await prefetchResources(['sso.authorize', 'users.profile', 'tenants.list']);
+
+// Invalidate cache
+invalidateDiscoveryCache('sso.authorize'); // Single resource
+invalidateDiscoveryCache(); // All resources
+
+// Create custom client with different options
+const customClient = new DiscoveryClient({
+  baseURL: 'https://staging.account.digistratum.com',
+  cacheTTL: 10 * 60 * 1000, // 10 minutes
+  persistCache: false, // Don't use localStorage
+});
 ```
 
 ## Build Outputs

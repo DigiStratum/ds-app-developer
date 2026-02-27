@@ -22,3 +22,6 @@ export type { ThemeProviderProps } from './useTheme';
 // Tenant theming
 export { useTenantTheme } from './useTenantTheme';
 export type { TenantThemeState, UseTenantThemeOptions } from './useTenantTheme';
+
+// Discovery
+export { useDiscovery, useDiscoveryPrefetch } from './useDiscovery';

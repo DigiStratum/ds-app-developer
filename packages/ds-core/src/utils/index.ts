@@ -12,3 +12,12 @@ export { DS_URLS, STORAGE_KEYS, TIMEOUTS, CSS_VARS } from './constants';
 
 // Storage utilities
 export { storage, sessionStore } from './storage';
+
+// Discovery client
+export {
+  DiscoveryClient,
+  discoveryClient,
+  discoverResource,
+  prefetchResources,
+  invalidateDiscoveryCache,
+} from './discovery';

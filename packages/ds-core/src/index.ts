@@ -33,6 +33,15 @@ export type {
   FooterLink,
 } from './types';
 
+export type {
+  // Discovery
+  DiscoveredResource,
+  DiscoveryCacheEntry,
+  DiscoveryCache,
+  DiscoveryClientOptions,
+  UseDiscoveryState,
+} from './types/discovery';
+
 // =============================================================================
 // Hooks
 // =============================================================================
@@ -59,6 +68,9 @@ export type { ThemeProviderProps } from './hooks/useTheme';
 // Tenant theming
 export { useTenantTheme } from './hooks/useTenantTheme';
 export type { TenantThemeState, UseTenantThemeOptions } from './hooks/useTenantTheme';
+
+// Discovery
+export { useDiscovery, useDiscoveryPrefetch } from './hooks/useDiscovery';
 
 // =============================================================================
 // Components
@@ -92,3 +104,12 @@ export { DS_URLS, STORAGE_KEYS, TIMEOUTS, CSS_VARS } from './utils/constants';
 
 // Storage utilities
 export { storage, sessionStore } from './utils/storage';
+
+// Discovery client
+export {
+  DiscoveryClient,
+  discoveryClient,
+  discoverResource,
+  prefetchResources,
+  invalidateDiscoveryCache,
+} from './utils/discovery';

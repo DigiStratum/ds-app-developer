@@ -42,6 +42,8 @@ export const STORAGE_KEYS = {
   FEATURE_FLAGS: 'ds-feature-flags',
   /** Tenant theme cache */
   TENANT_THEME: 'ds-tenant-theme',
+  /** Discovery cache */
+  DISCOVERY_CACHE: 'ds-discovery-cache',
 } as const;
 
 /**
@@ -52,6 +54,8 @@ export const TIMEOUTS = {
   THEME_FETCH: 2500,
   /** Feature flags cache TTL */
   FLAGS_CACHE_TTL: 5 * 60 * 1000, // 5 minutes
+  /** Discovery cache TTL */
+  DISCOVERY_CACHE_TTL: 5 * 60 * 1000, // 5 minutes
 } as const;
 
 /**

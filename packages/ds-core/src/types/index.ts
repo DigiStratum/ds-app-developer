@@ -168,3 +168,15 @@ export interface FooterLink {
   label: string;
   url: string;
 }
+
+// =============================================================================
+// Discovery Types
+// =============================================================================
+
+export type {
+  DiscoveredResource,
+  DiscoveryCacheEntry,
+  DiscoveryCache,
+  DiscoveryClientOptions,
+  UseDiscoveryState,
+} from './discovery';
