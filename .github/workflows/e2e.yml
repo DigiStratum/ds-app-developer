@@ -46,7 +46,7 @@ jobs:
           VITE_API_URL: ''
 
       - name: Run E2E tests
-        run: npm run e2e:ci
+        run: npx playwright test --project=chromium --reporter=list,junit
         working-directory: frontend
         env:
           E2E_BASE_URL: http://localhost:4173
