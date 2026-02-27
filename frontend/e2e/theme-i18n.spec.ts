@@ -162,10 +162,22 @@ test.describe('Error Handling', () => {
   test('404 page shows for unknown routes', async ({ page }) => {
     await page.goto('/this-route-does-not-exist-123');
     
+    // Wait for either: redirect to home, 404 text appears, or page to stabilize
+    // The SPA may take a moment to process the route and redirect
+    await page.waitForFunction(() => {
+      const url = window.location.href;
+      const isHome = url.endsWith('/') || url.includes('/?') || url.match(/:\d+\/?$/);
+      const is404 = document.body?.innerText?.toLowerCase().includes('not found') ||
+                    document.body?.innerText?.includes('404');
+      return isHome || is404;
+    }, { timeout: 5000 }).catch(() => {});
+    
     // Either shows 404 content or redirects to home
     const is404 = await page.getByText(/not found|404|page doesn't exist/i).isVisible()
       .catch(() => false);
-    const isHome = page.url().endsWith('/') || page.url().includes('/?');
+    const currentUrl = page.url();
+    const isHome = currentUrl.endsWith('/') || currentUrl.includes('/?') || 
+                   /:\d+\/?$/.test(currentUrl); // Matches localhost:port/ or localhost:port
     
     // Should either show 404 or redirect
     expect(is404 || isHome).toBeTruthy();

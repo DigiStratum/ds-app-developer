@@ -12,7 +12,7 @@ func TestGetUser_WithUser_ReturnsUser(t *testing.T) {
 		ID:      "user-123",
 		Email:   "test@example.com",
 		Name:    "Test User",
-		Tenants: []Tenant{{ID: "tenant-1", Name: "Tenant 1"}},
+		Tenants: []Tenant{{ID: "tenant-1", Name: "Tenant 1", Role: "member"}},
 	}
 
 	ctx := WithUser(context.Background(), user)
@@ -80,7 +80,7 @@ func TestMiddleware_WithValidToken_ExtractsContext(t *testing.T) {
 		ID:      "user-mock",
 		Email:   "mock@example.com",
 		Name:    "Mock User",
-		Tenants: []Tenant{{ID: "tenant-123", Name: "Tenant 123"}},
+		Tenants: []Tenant{{ID: "tenant-123", Name: "Tenant 123", Role: "member"}},
 	}
 
 	cfg := Config{
