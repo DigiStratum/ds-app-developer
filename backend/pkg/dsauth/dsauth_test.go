@@ -12,7 +12,7 @@ func TestGetUser_WithUser_ReturnsUser(t *testing.T) {
 		ID:      "user-123",
 		Email:   "test@example.com",
 		Name:    "Test User",
-		Tenants: []string{"tenant-1"},
+		Tenants: []Tenant{{ID: "tenant-1", Name: "Tenant 1"}},
 	}
 
 	ctx := WithUser(context.Background(), user)
@@ -80,7 +80,7 @@ func TestMiddleware_WithValidToken_ExtractsContext(t *testing.T) {
 		ID:      "user-mock",
 		Email:   "mock@example.com",
 		Name:    "Mock User",
-		Tenants: []string{"tenant-123"},
+		Tenants: []Tenant{{ID: "tenant-123", Name: "Tenant 123"}},
 	}
 
 	cfg := Config{
@@ -201,7 +201,7 @@ func TestOptionalAuthMiddleware_WithoutToken_PassesThrough(t *testing.T) {
 func TestDefaultTenantValidator_UserHasTenant_ReturnsTrue(t *testing.T) {
 	user := &User{
 		ID:      "user-1",
-		Tenants: []string{"tenant-a", "tenant-b"},
+		Tenants: []Tenant{{ID: "tenant-a", Name: "Tenant A"}, {ID: "tenant-b", Name: "Tenant B"}},
 	}
 
 	if !DefaultTenantValidator(user, "tenant-a") {
@@ -212,7 +212,7 @@ func TestDefaultTenantValidator_UserHasTenant_ReturnsTrue(t *testing.T) {
 func TestDefaultTenantValidator_UserLacksTenant_ReturnsFalse(t *testing.T) {
 	user := &User{
 		ID:      "user-1",
-		Tenants: []string{"tenant-a"},
+		Tenants: []Tenant{{ID: "tenant-a", Name: "Tenant A"}},
 	}
 
 	if DefaultTenantValidator(user, "tenant-c") {
