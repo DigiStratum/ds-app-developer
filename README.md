@@ -213,6 +213,90 @@ Apps currently use `file:` dependencies:
 **Cause:** Repo was renamed from ds-app-skeleton to ds-app-developer  
 **Fix:** Update references; both refer to same repo
 
+## Creating New Apps
+
+Use the boilerplate to scaffold a new DS application with pre-configured backend, frontend, and project structure.
+
+### Quick Start
+
+```bash
+# Clone this repo if you haven't already
+git clone https://github.com/DigiStratum/ds-app-developer.git
+cd ds-app-developer
+
+# Create a new app
+./scripts/create-app.sh <app-name> <domain> [destination-path]
+
+# Example
+./scripts/create-app.sh ds-crm crm.digistratum.com
+```
+
+### What's Included
+
+The boilerplate creates a fully-functional app scaffold with:
+
+| Component | Contents |
+|-----------|----------|
+| **Backend** | Go 1.23 Lambda handler, auth middleware, DynamoDB repository, health endpoint |
+| **Frontend** | React 18 + Vite + TailwindCSS, auth hook, theme hook, i18n setup |
+| **Docs** | AGENTS.md, REQUIREMENTS.md, README.md with placeholders replaced |
+
+### Placeholders
+
+The script replaces these placeholders throughout the codebase:
+
+| Placeholder | Replaced With |
+|-------------|---------------|
+| `{{APP_NAME}}` | Your app name (e.g., `ds-crm`) |
+| `{{DOMAIN}}` | Your domain (e.g., `crm.digistratum.com`) |
+| `{{APP_DESCRIPTION}}` | Default description (edit after creation) |
+
+### Post-Creation Steps
+
+After running the script:
+
+1. **Review and customize**
+   - Update `REQUIREMENTS.md` with your app's requirements
+   - Customize `README.md` description
+   - Add app-specific routes and components
+
+2. **Set up dependencies**
+   ```bash
+   cd your-app/backend && go mod tidy
+   cd your-app/frontend && npm install
+   ```
+
+3. **Copy SSO package**
+   ```bash
+   # Copy the canonical dsauth package for SSO
+   cp -r ds-app-developer/backend/pkg/dsauth your-app/backend/pkg/
+   ```
+
+4. **Create GitHub repo**
+   ```bash
+   gh repo create DigiStratum/your-app --private
+   git remote add origin https://github.com/DigiStratum/your-app.git
+   git push -u origin main
+   ```
+
+5. **Register in DSAccount** — Add your app for SSO
+
+6. **Deploy infrastructure** — Set up CDK stack
+
+### Boilerplate vs Cloning
+
+**Use boilerplate** (this method) when:
+- Creating a new DS app from scratch
+- You want clean placeholders replaced automatically
+- You need minimal, focused scaffolding
+
+**Don't clone ds-app-developer wholesale** because:
+- It causes identity issues (wrong app name everywhere)
+- Includes packages/ and apps/ directories you don't need
+- The Developer Portal specific code will confuse the codebase
+
+---
+
 ## Dependencies
 
 | Dependency | Type | Location | Purpose |
