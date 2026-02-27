@@ -16,6 +16,8 @@ export const DS_URLS = {
   CRM: 'https://crm.digistratum.com',
   /** DS Developer portal */
   DEVELOPER: 'https://developer.digistratum.com',
+  /** DS NOC - Network Operations Center */
+  NOC: 'https://noc.digistratum.com',
   /** Privacy policy page */
   PRIVACY: 'https://www.digistratum.com/privacy',
   /** Terms of service page */
