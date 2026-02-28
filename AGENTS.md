@@ -5,6 +5,48 @@
 
 ---
 
+## DS App Factory
+
+**This repo is the boilerplate for all DS apps.** Creating a new app is a single command:
+
+```bash
+./scripts/create-app.sh <slug>
+
+# Example:
+./scripts/create-app.sh crm
+# Creates: ds-app-crm at crm.digistratum.com
+```
+
+The script does everything automatically:
+1. Copies `boilerplate/` with `developer` → `<slug>` substitution
+2. Creates GitHub repo (`DigiStratum/ds-app-<slug>`)
+3. Pushes code
+4. Creates AWS secret (placeholder)
+5. Monitors CI/Deploy
+6. Confirms site is live
+
+**Target time:** < 1 hour from command to live site, zero manual intervention.
+
+### Repository Structure
+
+```
+ds-app-developer/
+├── boilerplate/           # THE app template (canonical "developer")
+│   ├── .github/workflows/ # CI/CD workflows
+│   ├── backend/           # Go backend (Lambda)
+│   ├── frontend/          # React frontend
+│   └── cdk/               # CDK infrastructure
+├── packages/              # Shared npm packages
+├── scripts/
+│   └── create-app.sh      # App factory script
+└── docs/                  # Documentation
+```
+
+The **Developer Portal** (developer.digistratum.com) deploys directly from `boilerplate/`.
+New apps are forks with string substitution.
+
+---
+
 ## Quick Start for Agents
 
 Before making any changes:

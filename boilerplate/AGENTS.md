@@ -1,4 +1,4 @@
-# Agentic Development Guidelines - {{APP_NAME}}
+# Agentic Development Guidelines - ds-app-developer
 
 > Guidelines for AI agents working on this codebase.
 > For comprehensive patterns and workflows, refer to the [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) repository.
@@ -34,7 +34,7 @@ See: https://github.com/DigiStratum/ds-app-developer/blob/main/AGENTS.md
 ## Project Structure
 
 ```
-{{APP_NAME}}/
+ds-app-developer/
 ├── REQUIREMENTS.md      # What the app must do (source of truth)
 ├── AGENTS.md           # This file
 ├── README.md           # Setup and overview
