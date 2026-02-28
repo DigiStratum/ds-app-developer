@@ -308,11 +308,70 @@ jobs:
           retention-days: 1
 
   # ============================================================
+  # E2E Tests
+  # ============================================================
+  e2e-tests:
+    name: E2E Tests
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install root dependencies (workspaces)
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: frontend
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+      - name: Run E2E tests
+        run: npm run e2e:ci
+        working-directory: frontend
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
+  # ============================================================
   # CI Summary Gate
   # ============================================================
   ci-pass:
     name: CI Pass
-    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth, build-backend, build-frontend]
+    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth, build-backend, build-frontend, e2e-tests]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -325,7 +384,8 @@ jobs:
              [[ "${{ needs.security-scan.result }}" != "success" ]] || \
              [[ "${{ needs.cdk-synth.result }}" != "success" ]] || \
              [[ "${{ needs.build-backend.result }}" != "success" ]] || \
-             [[ "${{ needs.build-frontend.result }}" != "success" ]]; then
+             [[ "${{ needs.build-frontend.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e-tests.result }}" != "success" ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi
