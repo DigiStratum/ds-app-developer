@@ -100,21 +100,15 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install root dependencies (workspaces)
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+      - name: Install boilerplate dependencies (workspaces)
+        run: npm ci
+        working-directory: boilerplate
 
-      - name: Build workspace packages
+      - name: Build boilerplate packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-
-      - name: Install frontend dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
-        working-directory: boilerplate/frontend
+        working-directory: boilerplate
 
       - name: Run ESLint
         run: npm run lint
@@ -135,21 +129,15 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install root dependencies (workspaces)
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+      - name: Install boilerplate dependencies (workspaces)
+        run: npm ci
+        working-directory: boilerplate
 
-      - name: Build workspace packages
+      - name: Build boilerplate packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-
-      - name: Install frontend dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
-        working-directory: boilerplate/frontend
+        working-directory: boilerplate
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -296,23 +284,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install root dependencies (workspaces)
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+      - name: Install boilerplate dependencies (workspaces)
+        run: npm ci
+        working-directory: boilerplate
 
-      - name: Build workspace packages
+      - name: Build boilerplate packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
+        working-directory: boilerplate
 
-      - name: Install frontend dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
-        working-directory: boilerplate/frontend
-
-      - name: Build
+      - name: Build frontend
         working-directory: boilerplate/frontend
         run: npm run build
         env:
