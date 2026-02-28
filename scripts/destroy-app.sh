@@ -200,11 +200,25 @@ fi
 echo ""
 echo -e "${BLUE}[2/6] S3 Bucket${NC}"
 
-# The bucket name pattern from CDK - typically includes stack name or app name
-# Common patterns: dsapp{name}bucket, {stackname}-bucket, etc.
-# Let's search for buckets containing the app name
+# The bucket name pattern from CDK is: dsapp{slug}bucket{suffix} (no hyphens in slug part)
+# e.g., for app "hello3" -> dsapphello3bucket12345678
+# We also check for ds-app-{slug} prefix pattern
+# IMPORTANT: Use shell-side filtering to avoid jq/JMESPath shell expansion issues
 
-BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, '${APP_SLUG}') || contains(Name, '$(echo $APP_SLUG | tr '-' '')')].Name" --output text 2>/dev/null || echo "")
+APP_SLUG_NOHYPHENS=$(echo "$APP_SLUG" | tr -d '-')
+
+# Get all bucket names, then filter in shell
+ALL_BUCKETS=$(aws s3api list-buckets --query "Buckets[].Name" --output text 2>/dev/null || echo "")
+BUCKETS=""
+for bucket in $ALL_BUCKETS; do
+    # Match: dsapp{slug}bucket* OR ds-app-{slug}-* OR ds-app-{slug}
+    if [[ "$bucket" == dsapp${APP_SLUG_NOHYPHENS}bucket* ]] || \
+       [[ "$bucket" == ds-app-${APP_SLUG}-* ]] || \
+       [[ "$bucket" == ds-app-${APP_SLUG} ]]; then
+        BUCKETS="$BUCKETS $bucket"
+    fi
+done
+BUCKETS=$(echo "$BUCKETS" | xargs)  # trim whitespace
 
 if [ -n "$BUCKETS" ] && [ "$BUCKETS" != "None" ]; then
     for BUCKET in $BUCKETS; do
