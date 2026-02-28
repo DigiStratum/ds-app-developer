@@ -11,9 +11,15 @@
 #   1. Copies boilerplate/ with developer → newname substitution
 #   2. Creates GitHub repo
 #   3. Pushes code
-#   4. Creates AWS secret
-#   5. Waits for deploy
-#   6. Confirms site is live
+#   4. Creates AWS secret placeholder
+#   5. Registers app in DSAccount (if DSACCOUNT_ADMIN_TOKEN set)
+#   6. Stores app_secret in AWS Secrets Manager
+#   7. Waits for deploy
+#   8. Confirms site is live
+#
+# Environment variables:
+#   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration
+#   DSACCOUNT_API_URL     - DSAccount API URL (default: https://account.digistratum.com)
 
 set -e
 
@@ -261,10 +267,19 @@ if [ "$HTTP_CODE" = "200" ]; then
     echo "  Site: https://$DOMAIN"
     echo "  Repo: https://github.com/$GITHUB_ORG/$APP_NAME"
     echo ""
-    echo "  Next steps:"
-    echo "    1. Register app in DSAccount for SSO"
-    echo "    2. Update AWS secret with actual app secret"
-    echo "    3. Start building features!"
+    if [ "$DSACCOUNT_REGISTERED" = true ]; then
+        echo -e "  ${GREEN}✓ SSO configured in DSAccount${NC}"
+        echo "  App users can now log in via DSAccount SSO."
+    else
+        echo -e "  ${YELLOW}⚠ SSO not configured${NC}"
+        echo "  Next steps:"
+        echo "    1. Register app in DSAccount for SSO"
+        echo "       - Set DSACCOUNT_ADMIN_TOKEN env var and re-run, or"
+        echo "       - Use DSAccount admin portal: https://account.digistratum.com/admin/apps"
+        echo "    2. Update AWS secret: $SECRET_NAME"
+    fi
+    echo ""
+    echo "  Start building features!"
     echo ""
 else
     echo ""
