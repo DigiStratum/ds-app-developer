@@ -32,6 +32,8 @@ export interface DSHeaderProps {
   currentAppId?: string;
   logoUrl?: string;
   logoAlt?: string;
+  /** URL the logo links to (defaults to DS_URLS.ACCOUNT) */
+  logoLinkUrl?: string;
   auth?: DSAppShellProps['auth'];
   theme?: DSAppShellProps['theme'];
   navLinks?: NavLink[];
@@ -64,6 +66,7 @@ export function DSHeader({
   currentAppId,
   logoUrl = '/ds-logo.svg',
   logoAlt,
+  logoLinkUrl = DS_URLS.ACCOUNT,
   auth,
   theme,
   navLinks = [],
@@ -201,7 +204,7 @@ export function DSHeader({
         <div className="flex justify-between h-16">
           {/* Logo and nav links */}
           <div className="flex items-center">
-            <a href={DS_URLS.ACCOUNT} className="flex items-center">
+            <a href={logoLinkUrl} className="flex items-center">
               <img 
                 src={logoUrl} 
                 alt={logoAlt || appName}
