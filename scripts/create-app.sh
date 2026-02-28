@@ -12,13 +12,14 @@
 #   2. Creates GitHub repo
 #   3. Pushes code
 #   4. Creates AWS secret placeholder
-#   5. Registers app in DSAccount (if DSACCOUNT_ADMIN_TOKEN set)
-#   6. Stores app_secret in AWS Secrets Manager
-#   7. Waits for deploy
+#   5. Waits for deploy
+#   6. Registers app in DSAccount (if DSACCOUNT_ADMIN_TOKEN available)
+#   7. Stores app_secret in AWS Secrets Manager
 #   8. Confirms site is live
 #
 # Environment variables:
-#   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration
+#   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration (optional)
+#                           Auto-sourced from ~/.openclaw/workspace/dsaccount-admin-credentials.env
 #   DSACCOUNT_API_URL     - DSAccount API URL (default: https://account.digistratum.com)
 
 set -e
@@ -132,11 +133,11 @@ echo ""
 mkdir -p "$DEST_PATH"
 
 # Step 1: Copy boilerplate (excluding node_modules)
-echo -e "${BLUE}[1/6] Copying boilerplate...${NC}"
+echo -e "${BLUE}[1/7] Copying boilerplate...${NC}"
 rsync -a --exclude='node_modules' --exclude='.git' "$BOILERPLATE_DIR"/ "$DEST_PATH/"
 
 # Step 2: Replace "developer" with new app name throughout
-echo -e "${BLUE}[2/6] Replacing developer → $APP_SLUG...${NC}"
+echo -e "${BLUE}[2/7] Replacing developer → $APP_SLUG...${NC}"
 
 # CDK_STACK_NAME: e.g., "testlaunch" -> "DSAppTestlaunchStack"
 CDK_STACK_NAME="DSApp$(echo "$APP_SLUG" | sed -r 's/(^|-)([a-z])/\U\2/g')Stack"
@@ -172,7 +173,7 @@ fi
 # For now, keep them - they're layout components that work for any app
 
 # Step 3: Create GitHub repo (if needed)
-echo -e "${BLUE}[3/6] Setting up GitHub repo...${NC}"
+echo -e "${BLUE}[3/7] Setting up GitHub repo...${NC}"
 cd "$DEST_PATH"
 git init -q
 
@@ -185,7 +186,7 @@ else
 fi
 
 # Step 4: Commit and push
-echo -e "${BLUE}[4/6] Committing and pushing...${NC}"
+echo -e "${BLUE}[4/7] Committing and pushing...${NC}"
 git add -A
 git commit -q -m "Initial commit from ds-app-developer boilerplate
 
@@ -198,7 +199,7 @@ git push -u origin main --force
 echo "  Pushed to GitHub"
 
 # Step 5: Create AWS secret (if needed)
-echo -e "${BLUE}[5/6] Setting up AWS secret...${NC}"
+echo -e "${BLUE}[5/7] Setting up AWS secret...${NC}"
 SECRET_NAME="$APP_NAME/dsaccount-app-secret"
 
 if aws secretsmanager describe-secret --secret-id "$SECRET_NAME" &> /dev/null; then
@@ -214,7 +215,7 @@ else
 fi
 
 # Step 6: Wait for CI/Deploy
-echo -e "${BLUE}[6/6] Waiting for CI/Deploy...${NC}"
+echo -e "${BLUE}[6/7] Waiting for CI/Deploy...${NC}"
 echo "  Monitoring GitHub Actions..."
 
 # Wait for CI to start (give it a moment)
@@ -250,6 +251,88 @@ done
 
 if [ $ELAPSED -ge $MAX_WAIT ]; then
     echo -e "${YELLOW}Timeout waiting for deploy. Check manually: https://github.com/$GITHUB_ORG/$APP_NAME/actions${NC}"
+fi
+
+# Step 7: Register with DSAccount (optional)
+echo ""
+echo -e "${BLUE}[7/7] Registering with DSAccount...${NC}"
+
+DSACCOUNT_REGISTERED=false
+DSACCOUNT_CREDENTIALS_FILE="$HOME/.openclaw/workspace/dsaccount-admin-credentials.env"
+DSACCOUNT_API_URL="${DSACCOUNT_API_URL:-https://account.digistratum.com}"
+
+# Source credentials if file exists
+if [ -f "$DSACCOUNT_CREDENTIALS_FILE" ]; then
+    source "$DSACCOUNT_CREDENTIALS_FILE"
+fi
+
+if [ -z "$DSACCOUNT_ADMIN_TOKEN" ]; then
+    echo -e "  ${YELLOW}DSACCOUNT_ADMIN_TOKEN not set. Skipping SSO registration.${NC}"
+    echo "  App will work but without SSO. Set token and re-run to enable SSO."
+else
+    # Prepare registration payload
+    REDIRECT_URI="https://$DOMAIN/api/auth/sso/callback"
+    DISPLAY_NAME="$(echo "$APP_SLUG" | sed 's/-/ /g' | sed 's/\b\w/\u&/g') App"
+    
+    REGISTER_PAYLOAD=$(cat <<EOF
+{
+  "app_id": "$APP_SLUG",
+  "name": "$DISPLAY_NAME",
+  "redirect_uris": ["$REDIRECT_URI"]
+}
+EOF
+)
+    
+    echo "  Calling DSAccount registration API..."
+    echo "  App ID: $APP_SLUG"
+    echo "  Redirect URI: $REDIRECT_URI"
+    
+    # Call registration endpoint
+    REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+        "$DSACCOUNT_API_URL/api/admin/apps/register" \
+        -H "Authorization: Bearer $DSACCOUNT_ADMIN_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$REGISTER_PAYLOAD" 2>/dev/null)
+    
+    HTTP_STATUS=$(echo "$REGISTER_RESPONSE" | tail -n1)
+    RESPONSE_BODY=$(echo "$REGISTER_RESPONSE" | sed '$d')
+    
+    if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
+        # Extract app_secret from response
+        APP_SECRET=$(echo "$RESPONSE_BODY" | jq -r '.app_secret // empty')
+        SUCCESS=$(echo "$RESPONSE_BODY" | jq -r '.success // false')
+        
+        if [ -n "$APP_SECRET" ] && [ "$APP_SECRET" != "null" ]; then
+            echo -e "  ${GREEN}Registration successful!${NC}"
+            
+            # Store secret in AWS Secrets Manager
+            echo "  Storing app_secret in AWS Secrets Manager..."
+            aws secretsmanager put-secret-value \
+                --secret-id "$SECRET_NAME" \
+                --secret-string "$APP_SECRET" \
+                --region us-west-2 > /dev/null 2>&1
+            
+            if [ $? -eq 0 ]; then
+                echo -e "  ${GREEN}Secret stored: $SECRET_NAME${NC}"
+                DSACCOUNT_REGISTERED=true
+            else
+                echo -e "  ${YELLOW}Warning: Failed to store secret in AWS. Manual update required.${NC}"
+                echo "  Secret value: $APP_SECRET"
+            fi
+        else
+            echo -e "  ${YELLOW}Registration response missing app_secret${NC}"
+            echo "  Response: $RESPONSE_BODY"
+        fi
+    elif [ "$HTTP_STATUS" = "409" ]; then
+        echo -e "  ${YELLOW}App already registered in DSAccount${NC}"
+        echo "  If you need the app_secret, check DSAccount admin portal."
+        # Consider it "registered" since it exists
+        DSACCOUNT_REGISTERED=true
+    else
+        echo -e "  ${YELLOW}Registration failed (HTTP $HTTP_STATUS)${NC}"
+        echo "  Response: $RESPONSE_BODY"
+        echo "  App will work but without SSO. Register manually if needed."
+    fi
 fi
 
 # Final check
