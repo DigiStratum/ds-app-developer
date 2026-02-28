@@ -32,8 +32,8 @@ export default defineConfig({
 
   // Shared settings for all tests
   use: {
-    // Base URL for navigation
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+    // Base URL for navigation - use preview port (4173) in CI, dev port (5173) locally
+    baseURL: process.env.E2E_BASE_URL || (process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173'),
 
     // Collect trace when retrying a failed test
     trace: 'on-first-retry',
