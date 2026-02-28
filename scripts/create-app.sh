@@ -103,6 +103,8 @@ cd "$REPO_ROOT"
 # Copy boilerplate
 echo "Copying boilerplate..."
 cp -r "$BOILERPLATE_DIR"/* "$DEST_PATH/"
+# Also copy hidden files/directories (like .github)
+cp -r "$BOILERPLATE_DIR"/.[!.]* "$DEST_PATH/" 2>/dev/null || true
 
 # Create docs directory
 mkdir -p "$DEST_PATH/docs"
@@ -150,6 +152,16 @@ echo "Replacing placeholders..."
 
 APP_DESCRIPTION="Description for $APP_NAME. Update this with your app's purpose."
 
+# Derive additional placeholders from APP_NAME
+# APP_SLUG: e.g., "ds-app-helloworld" -> "helloworld"
+APP_SLUG=$(echo "$APP_NAME" | sed 's/^ds-app-//' | sed 's/^ds-//')
+
+# CDK_STACK_NAME: e.g., "ds-app-helloworld" -> "DSAppHelloworldStack"
+# Convert to PascalCase: ds-app-helloworld -> DsAppHelloworld -> DSAppHelloworld
+CDK_STACK_NAME=$(echo "$APP_NAME" | sed -r 's/(^|-)([a-z])/\U\2/g')Stack
+# Fix common prefixes to uppercase
+CDK_STACK_NAME=$(echo "$CDK_STACK_NAME" | sed 's/^Ds/DS/')
+
 # Find all relevant files and replace placeholders
 # Uses explicit sed calls to avoid bash associative array quirks with special characters
 while read -r file; do
@@ -157,12 +169,16 @@ while read -r file; do
         sed -i '' "s|{{APP_NAME}}|$APP_NAME|g" "$file"
         sed -i '' "s|{{DOMAIN}}|$DOMAIN|g" "$file"
         sed -i '' "s|{{APP_DESCRIPTION}}|$APP_DESCRIPTION|g" "$file"
+        sed -i '' "s|{{APP_SLUG}}|$APP_SLUG|g" "$file"
+        sed -i '' "s|{{CDK_STACK_NAME}}|$CDK_STACK_NAME|g" "$file"
     else
         sed -i "s|{{APP_NAME}}|$APP_NAME|g" "$file"
         sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$file"
         sed -i "s|{{APP_DESCRIPTION}}|$APP_DESCRIPTION|g" "$file"
+        sed -i "s|{{APP_SLUG}}|$APP_SLUG|g" "$file"
+        sed -i "s|{{CDK_STACK_NAME}}|$CDK_STACK_NAME|g" "$file"
     fi
-done < <(find "$DEST_PATH" -type f \( -name "*.md" -o -name "*.go" -o -name "*.tsx" -o -name "*.ts" -o -name "*.json" -o -name "*.html" -o -name "*.css" \))
+done < <(find "$DEST_PATH" -type f \( -name "*.md" -o -name "*.go" -o -name "*.tsx" -o -name "*.ts" -o -name "*.json" -o -name "*.html" -o -name "*.css" -o -name "*.yml" -o -name "*.yaml" \))
 
 # Update go.mod module path
 GO_MOD="$DEST_PATH/backend/go.mod"
