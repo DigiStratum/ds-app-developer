@@ -78,12 +78,72 @@ echo ""
 # Create destination directory
 mkdir -p "$DEST_PATH"
 
+# Build and bundle DigiStratum packages
+echo "Building DigiStratum packages..."
+cd "$REPO_ROOT"
+
+# Ensure dependencies are installed
+if [ ! -d "node_modules" ]; then
+    echo "  Installing root dependencies..."
+    npm install --silent
+fi
+
+# Build ds-core first (layout depends on it)
+echo "  Building @digistratum/ds-core..."
+cd "$REPO_ROOT/packages/ds-core"
+npm run build --silent 2>/dev/null || npm run build
+
+# Build layout
+echo "  Building @digistratum/layout..."
+cd "$REPO_ROOT/packages/layout"
+npm run build --silent 2>/dev/null || npm run build
+
+cd "$REPO_ROOT"
+
 # Copy boilerplate
 echo "Copying boilerplate..."
 cp -r "$BOILERPLATE_DIR"/* "$DEST_PATH/"
 
 # Create docs directory
 mkdir -p "$DEST_PATH/docs"
+
+# Create .ds-packages directory and copy built packages
+echo "Bundling DigiStratum packages..."
+mkdir -p "$DEST_PATH/frontend/.ds-packages"
+
+# Copy ds-core package
+cp -r "$REPO_ROOT/packages/ds-core" "$DEST_PATH/frontend/.ds-packages/ds-core"
+rm -rf "$DEST_PATH/frontend/.ds-packages/ds-core/node_modules"
+# Fix ds-core's internal file: dependency for standalone use
+if [ -f "$DEST_PATH/frontend/.ds-packages/ds-core/package.json" ]; then
+    # Remove file: dependencies that won't work standalone
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' 's|"file:[^"]*"|"*"|g' "$DEST_PATH/frontend/.ds-packages/ds-core/package.json"
+    else
+        sed -i 's|"file:[^"]*"|"*"|g' "$DEST_PATH/frontend/.ds-packages/ds-core/package.json"
+    fi
+fi
+
+# Copy layout package
+cp -r "$REPO_ROOT/packages/layout" "$DEST_PATH/frontend/.ds-packages/layout"
+rm -rf "$DEST_PATH/frontend/.ds-packages/layout/node_modules"
+# Update layout's ds-core reference to point to sibling
+if [ -f "$DEST_PATH/frontend/.ds-packages/layout/package.json" ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' 's|"@digistratum/ds-core": "file:[^"]*"|"@digistratum/ds-core": "file:../ds-core"|g' "$DEST_PATH/frontend/.ds-packages/layout/package.json"
+    else
+        sed -i 's|"@digistratum/ds-core": "file:[^"]*"|"@digistratum/ds-core": "file:../ds-core"|g' "$DEST_PATH/frontend/.ds-packages/layout/package.json"
+    fi
+fi
+
+# Add .ds-packages to .gitignore if not already there
+if [ -f "$DEST_PATH/frontend/.gitignore" ]; then
+    if ! grep -q ".ds-packages" "$DEST_PATH/frontend/.gitignore"; then
+        echo -e "\n# Bundled DigiStratum packages\n.ds-packages/" >> "$DEST_PATH/frontend/.gitignore"
+    fi
+else
+    echo -e "# Bundled DigiStratum packages\n.ds-packages/" > "$DEST_PATH/frontend/.gitignore"
+fi
 
 # Replace placeholders in all files
 echo "Replacing placeholders..."
