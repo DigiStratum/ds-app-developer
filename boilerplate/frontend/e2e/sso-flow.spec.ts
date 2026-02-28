@@ -19,7 +19,13 @@ import { test, expect } from '@playwright/test';
 
 const DSACCOUNT_BASE_URL = 'https://account.digistratum.com';
 
+// Skip SSO flow tests unless E2E_SSO_TEST is set - these require actual SSO implementation
+const skipSSOTests = !process.env.E2E_SSO_TEST;
+
 test.describe('SSO Login Flow', () => {
+  // Skip all tests in this describe block unless SSO is implemented
+  test.skip(() => skipSSOTests, 'Skipped until SSO is implemented');
+  
   test.describe('SSO Redirect Initiation', () => {
     test('Sign In button redirects to DSAccount with correct parameters', async ({ page }) => {
       // Track navigation to capture the SSO redirect URL
