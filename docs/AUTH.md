@@ -147,7 +147,7 @@ func extractToken(r *http.Request) string {
 
 ### Token Validation
 
-**Current State (Skeleton):** Mock validation returns a demo user.
+**Current State (Developer):** Mock validation returns a demo user.
 
 **Production Implementation Required:**
 

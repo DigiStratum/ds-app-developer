@@ -1,30 +1,29 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import HttpBackend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Initialize i18next
+// i18n configuration [FR-I18N-001, FR-I18N-003]
 i18n
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    debug: false,
+    supportedLngs: ['en', 'es', 'fr'],
+    debug: import.meta.env.DEV,
+    
     interpolation: {
       escapeValue: false,
     },
-    resources: {
-      en: {
-        translation: {
-          home: {
-            title: 'Welcome to {{APP_NAME}}',
-            login_prompt: 'Please log in to continue.',
-          },
-          auth: {
-            login: 'Log In',
-            logout: 'Log Out',
-          },
-        },
-      },
+    
+    backend: {
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
+    },
+    
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
     },
   });
 

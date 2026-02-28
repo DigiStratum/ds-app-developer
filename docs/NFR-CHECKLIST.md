@@ -98,7 +98,7 @@ slog.Info("request started",
 
 | Item | Status | Evidence | Verification Notes |
 |------|--------|----------|-------------------|
-| AWS Secrets Manager | ⚠️ Partial | `deploy.yml:116-133` | **VERIFIED:** Secrets injected during deploy, but no Secrets Manager CDK construct in skeleton |
+| AWS Secrets Manager | ⚠️ Partial | `deploy.yml:116-133` | **VERIFIED:** Secrets injected during deploy, but no Secrets Manager CDK construct in developer |
 | No secrets in code | ✅ Done | `.gitignore`, env patterns | **VERIFIED:** No hardcoded secrets found; all via env vars |
 
 ---
@@ -168,7 +168,7 @@ _, _ = fmt.Fprintf(w, `{"error":{"code":"INTERNAL_ERROR","message":"An unexpecte
 
 | Item | Status | Evidence | Verification Notes |
 |------|--------|----------|-------------------|
-| Coverage threshold (>80%) | ⚠️ Partial | CI enforces, but current coverage low | **VERIFIED ISSUE:** Actual coverage: auth=31.2%, health=72.3%, most packages=0%. CI threshold exists but skeleton doesn't meet it. |
+| Coverage threshold (>80%) | ⚠️ Partial | CI enforces, but current coverage low | **VERIFIED ISSUE:** Actual coverage: auth=31.2%, health=72.3%, most packages=0%. CI threshold exists but developer doesn't meet it. |
 | Go unit tests | ⚠️ Partial | 3 test files found | **VERIFIED:** `middleware_test.go` (252 lines), `health_test.go` (374 lines), `api_test.go` (129 lines). Many packages have NO tests. |
 | React/Vitest tests | ⚠️ Partial | `frontend/src/__tests__/` | **VERIFIED:** Only 1 test file: `auth.test.tsx` (6721 lines). Limited coverage. |
 | Test templates | ✅ Done | `docs/TEST-TEMPLATES.md` | **VERIFIED:** Templates exist |
@@ -362,4 +362,4 @@ ls -la frontend/e2e/*.spec.ts
 *Document version: 2.0.0 (Deep Verified)*
 *Created: 2026-02-20*
 *Deep Verified: 2026-02-20*
-*Skeleton version verified: HEAD (as of 2026-02-20)*
+*Developer version verified: HEAD (as of 2026-02-20)*

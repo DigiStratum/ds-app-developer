@@ -1,50 +1,62 @@
-// Package dynamo provides DynamoDB repository operations.
 package dynamo
 
 import (
 	"context"
 	"fmt"
+	"os"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-// Repository provides DynamoDB operations.
+// Repository provides base DynamoDB operations [FR-TENANT-003]
 type Repository struct {
 	client    *dynamodb.Client
 	tableName string
 }
 
-// NewRepository creates a new DynamoDB repository.
-func NewRepository(client *dynamodb.Client, tableName string) *Repository {
+// NewRepository creates a new repository instance
+func NewRepository(tableName string) (*Repository, error) {
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	client := dynamodb.NewFromConfig(cfg)
+
+	// Allow table name override for testing
+	if override := os.Getenv("DYNAMODB_TABLE"); override != "" {
+		tableName = override
+	}
+
 	return &Repository{
 		client:    client,
 		tableName: tableName,
-	}
+	}, nil
 }
 
-// BuildTenantKey creates a tenant-scoped partition key.
-// Format: TENANT#{tenantID}#{entityType}#{entityID}
-// This ensures all queries are scoped to a tenant (FR-TENANT-003).
+// Client returns the DynamoDB client for custom operations
+func (r *Repository) Client() *dynamodb.Client {
+	return r.client
+}
+
+// TableName returns the table name
+func (r *Repository) TableName() string {
+	return r.tableName
+}
+
+// BuildTenantKey builds a partition key with tenant prefix [FR-TENANT-003]
 func BuildTenantKey(tenantID, entityType, entityID string) string {
+	if tenantID == "" {
+		tenantID = "PERSONAL"
+	}
 	return fmt.Sprintf("TENANT#%s#%s#%s", tenantID, entityType, entityID)
 }
 
-// Example methods - implement based on your needs:
-
-// GetItem retrieves an item by partition key.
-func (r *Repository) GetItem(ctx context.Context, pk string) (map[string]interface{}, error) {
-	// TODO: Implement DynamoDB GetItem
-	return nil, fmt.Errorf("not implemented")
-}
-
-// PutItem stores an item.
-func (r *Repository) PutItem(ctx context.Context, pk string, item map[string]interface{}) error {
-	// TODO: Implement DynamoDB PutItem
-	return fmt.Errorf("not implemented")
-}
-
-// QueryByTenant queries items for a tenant.
-func (r *Repository) QueryByTenant(ctx context.Context, tenantID, entityType string) ([]map[string]interface{}, error) {
-	// TODO: Implement DynamoDB Query with tenant-scoped key condition
-	return nil, fmt.Errorf("not implemented")
+// BuildTenantPrefix builds a partition key prefix for queries [FR-TENANT-003]
+func BuildTenantPrefix(tenantID, entityType string) string {
+	if tenantID == "" {
+		tenantID = "PERSONAL"
+	}
+	return fmt.Sprintf("TENANT#%s#%s#", tenantID, entityType)
 }

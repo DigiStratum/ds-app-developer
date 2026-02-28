@@ -571,7 +571,7 @@ Cross-Origin Resource Sharing (CORS) controls which domains can make requests to
 ### AWS API Gateway HTTP API Configuration
 
 ```typescript
-// cdk/lib/skeleton-stack.ts
+// cdk/lib/developer-stack.ts
 
 const httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
     apiName: `${props.appName}-api`,
@@ -841,7 +841,7 @@ Secrets Manager
 ### CDK Secret Creation
 
 ```typescript
-// cdk/lib/skeleton-stack.ts
+// cdk/lib/developer-stack.ts
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 // Reference existing secrets (created manually or by another stack)

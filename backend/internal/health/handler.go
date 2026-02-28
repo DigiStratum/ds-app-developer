@@ -124,7 +124,7 @@ func isValidM2MToken(r *http.Request) bool {
 	
 	// Check for M2M token marker
 	// In production, this would validate against DSAccount's token validation endpoint
-	// For the skeleton, we accept tokens with a specific prefix or check a claim
+	// For the boilerplate, we accept tokens with a specific prefix or check a claim
 	
 	// Option 1: Check against configured M2M token (simple approach)
 	configuredToken := os.Getenv("HEALTH_M2M_TOKEN")
@@ -157,7 +157,7 @@ func isSuperadminSession(r *http.Request) bool {
 	
 	// Check for superadmin role
 	// In production, this would check a roles/permissions claim
-	// For the skeleton, we check for a specific user ID or email pattern
+	// For the boilerplate, we check for a specific user ID or email pattern
 	
 	// Check against configured superadmin IDs
 	superadminIDsStr := os.Getenv("SUPERADMIN_USER_IDS")

@@ -94,17 +94,17 @@
 | FR-I18N-001 | `frontend/src/i18n/config.ts`, `frontend/public/locales/{en,es,fr}/translation.json` | `frontend/e2e/theme-i18n.spec.ts:translations load without errors` | ✅ |
 | FR-I18N-002 | - | - | ❌ Not implemented |
 | FR-I18N-003 | `frontend/src/i18n/config.ts` (localStorage via LanguageDetector) | `frontend/e2e/theme-i18n.spec.ts:default language is loaded` | ⚠️ |
-| NFR-PERF-001 | Infrastructure: CloudFront CDN (`cdk/lib/skeleton-stack.ts`) | - | ⚠️ No automated test |
+| NFR-PERF-001 | Infrastructure: CloudFront CDN (`cdk/lib/developer-stack.ts`) | - | ⚠️ No automated test |
 | NFR-PERF-002 | `cdk/lib/constructs/monitoring.ts:PerformanceBaselines.apiLatencyP95Ms` (500ms target) | - | ⚠️ No automated test |
 | NFR-PERF-003 | Infrastructure design (CloudFront + Lambda) | - | ⚠️ No automated test |
 | NFR-AVAIL-001 | `cdk/lib/constructs/monitoring.ts:PerformanceBaselines.availabilityTarget` (99.9%) | - | ⚠️ Infra only |
 | NFR-AVAIL-002 | `backend/internal/health/health.go:CalculateOverallStatus` (graceful degradation) | `backend/internal/health/health_test.go:TestCalculateOverallStatus` | ✅ |
 | NFR-AVAIL-003 | `backend/internal/health/health.go`, `backend/internal/health/handler.go` | `backend/internal/health/health_test.go` (comprehensive) | ✅ |
 | NFR-SEC-001 | Partial: redirect sanitization in `backend/internal/auth/handlers.go` | `backend/internal/auth/handlers_test.go` (partial) | ⚠️ |
-| NFR-SEC-002 | `cdk/lib/skeleton-stack.ts`: CloudFront HTTPS_ONLY, REDIRECT_TO_HTTPS | - | ⚠️ Infra only |
-| NFR-SEC-003 | `cdk/lib/skeleton-stack.ts` comment: "DSACCOUNT_APP_SECRET injected post-deploy" | - | ⚠️ Infra only |
+| NFR-SEC-002 | `cdk/lib/developer-stack.ts`: CloudFront HTTPS_ONLY, REDIRECT_TO_HTTPS | - | ⚠️ Infra only |
+| NFR-SEC-003 | `cdk/lib/developer-stack.ts` comment: "DSACCOUNT_APP_SECRET injected post-deploy" | - | ⚠️ Infra only |
 | NFR-SEC-004 | `backend/internal/middleware/recovery.go` (standardized error response) | - | ⚠️ Partial |
-| NFR-SEC-005 | `cdk/lib/skeleton-stack.ts`: API Gateway CORS configuration | - | ⚠️ Infra only |
+| NFR-SEC-005 | `cdk/lib/developer-stack.ts`: API Gateway CORS configuration | - | ⚠️ Infra only |
 | NFR-A11Y-001 | Frontend components use semantic HTML, aria attributes | `frontend/e2e/accessibility.spec.ts` (comprehensive) | ✅ |
 | NFR-A11Y-002 | `frontend/src/components/*.tsx` (semantic elements: header, main, nav, footer) | `frontend/e2e/accessibility.spec.ts:page has proper heading hierarchy`, `main landmark is present` | ✅ |
 | NFR-A11Y-003 | `frontend/src/components/DSNav.tsx` (keyboard handlers), `frontend/e2e/navigation.spec.ts` | `frontend/e2e/accessibility.spec.ts:Focus Management`, `frontend/e2e/navigation.spec.ts:Keyboard Navigation` | ✅ |

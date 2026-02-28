@@ -183,7 +183,7 @@ cd ..
 ```bash
 # Get bucket name from CDK output
 BUCKET_NAME=$(aws cloudformation describe-stacks \
-  --stack-name DSAppSkeletonStack \
+  --stack-name DSAppDeveloperStack \
   --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
   --output text)
 
@@ -403,7 +403,7 @@ aws cloudfront create-invalidation --distribution-id E1ZIQHD3SMO9OH --paths "/*"
 ```bash
 # CDK doesn't have built-in rollback, but CloudFormation does
 # Rollback to previous successful deployment:
-aws cloudformation cancel-update-stack --stack-name DSAppSkeletonStack
+aws cloudformation cancel-update-stack --stack-name DSAppDeveloperStack
 
 # Or rollback from CloudFormation console
 ```

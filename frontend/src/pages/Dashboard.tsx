@@ -47,7 +47,7 @@ export function DashboardPage() {
         <h2 className="text-lg font-semibold mb-4">Your App Content Here</h2>
         <p className="text-gray-600 dark:text-gray-400">
           This is where you build your application-specific features.
-          The skeleton provides the foundation: auth, theming, i18n, and tenant context.
+          The boilerplate provides the foundation: auth, theming, i18n, and tenant context.
         </p>
       </div>
     </div>

@@ -109,7 +109,7 @@ func GetTenantID(ctx context.Context) string {
 // loadUser loads user data from DSAccount or cache
 func loadUser(userID string) (*User, error) {
 	// TODO: Implement actual DSAccount user lookup
-	// For skeleton, return mock user
+	// For the boilerplate, return mock user
 	return &User{
 		ID:      userID,
 		Email:   "demo@digistratum.com",

@@ -436,7 +436,7 @@ monitoring.addCustomMetric(
     title: 'Custom Business Metric',
     left: [
       new cloudwatch.Metric({
-        namespace: 'DS/AppSkeleton',
+        namespace: 'DS/AppDeveloper',
         metricName: 'OrdersCreated',
         statistic: 'Sum',
         period: cdk.Duration.minutes(5),
@@ -451,7 +451,7 @@ monitoring.addCustomMetric(
 ### Full Stack Example
 
 ```typescript
-// skeleton-stack.ts
+// developer-stack.ts
 import * as cdk from 'aws-cdk-lib';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Monitoring } from './constructs';
@@ -568,7 +568,7 @@ Save frequently used queries in CloudWatch Logs Insights for quick access:
 
 1. Run the query
 2. Click "Save"
-3. Name it descriptively (e.g., "DS-Skeleton: Error Rate by Endpoint")
+3. Name it descriptively (e.g., "DS-Developer: Error Rate by Endpoint")
 
 ---
 

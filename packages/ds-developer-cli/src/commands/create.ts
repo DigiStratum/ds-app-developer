@@ -7,7 +7,7 @@ import inquirer from 'inquirer';
 import { simpleGit } from 'simple-git';
 import { glob } from 'glob';
 import {
-  SkeletonConfig,
+  DeveloperConfig,
   defaultConfig,
   saveConfig,
   toPascalCase,
@@ -34,15 +34,15 @@ const EXCLUDE_PATTERNS = [
 ];
 
 /**
- * Replacement mappings for the skeleton
+ * Replacement mappings for the developer
  */
 const REPLACEMENTS = {
   name: {
     'ds-app-developer': '', // Will be replaced with app name
-    'DSAppSkeleton': '',   // Will be replaced with PascalCase name
+    'DSAppDeveloper': '',   // Will be replaced with PascalCase name
   },
   domain: {
-    'skeleton.digistratum.com': '', // Will be replaced with domain
+    'developer.digistratum.com': '', // Will be replaced with domain
   },
   module: {
     'github.com/digistratum/ds-app-developer': '', // Go module path
@@ -50,7 +50,7 @@ const REPLACEMENTS = {
 };
 
 /**
- * Create a new app from the skeleton
+ * Create a new app from the developer
  */
 export async function createApp(
   appName: string,
@@ -60,7 +60,7 @@ export async function createApp(
   const pascalName = toPascalCase(appName);
   const targetDir = path.resolve(process.cwd(), kebabName);
   
-  console.log(chalk.blue('\n🦴 DS Skeleton - Create New App\n'));
+  console.log(chalk.blue('\n🦴 DS Developer - Create New App\n'));
   console.log(chalk.gray(`  App name: ${chalk.white(kebabName)}`));
   console.log(chalk.gray(`  PascalCase: ${chalk.white(pascalName)}`));
   console.log(chalk.gray(`  Directory: ${chalk.white(targetDir)}`));
@@ -90,15 +90,15 @@ export async function createApp(
     domain = answers.domain;
   }
   
-  const repoUrl = options.repo || defaultConfig.skeletonRepo!;
+  const repoUrl = options.repo || defaultConfig.developerRepo!;
   
-  // Clone the skeleton repository
-  const spinner = ora('Cloning skeleton repository...').start();
+  // Clone the developer repository
+  const spinner = ora('Cloning developer repository...').start();
   
   try {
     const git = simpleGit();
     await git.clone(repoUrl, targetDir, ['--depth', '1']);
-    spinner.succeed('Cloned skeleton repository');
+    spinner.succeed('Cloned developer repository');
   } catch (error) {
     spinner.fail('Failed to clone repository');
     console.error(chalk.red(error));
@@ -110,8 +110,8 @@ export async function createApp(
   fs.rmSync(path.join(targetDir, '.git'), { recursive: true });
   spinner.succeed('Removed git history');
   
-  // Remove skeleton-specific files/directories
-  spinner.start('Cleaning up skeleton-specific files...');
+  // Remove developer-specific files/directories
+  spinner.start('Cleaning up developer-specific files...');
   const cleanupPatterns = [
     'packages/ds-developer-cli', // Don't include the CLI in derived apps
   ];
@@ -121,23 +121,23 @@ export async function createApp(
       fs.rmSync(cleanupPath, { recursive: true });
     }
   }
-  spinner.succeed('Cleaned up skeleton-specific files');
+  spinner.succeed('Cleaned up developer-specific files');
   
   // Perform replacements
   spinner.start('Performing name replacements...');
   await performReplacements(targetDir, {
     'ds-app-developer': kebabName,
-    'DSAppSkeleton': pascalName,
-    'skeleton.digistratum.com': domain!,
+    'DSAppDeveloper': pascalName,
+    'developer.digistratum.com': domain!,
     'github.com/digistratum/ds-app-developer/backend': `github.com/digistratum/${kebabName}/backend`,
   });
   spinner.succeed('Performed name replacements');
   
   // Create config file
-  spinner.start('Creating skeleton config...');
-  const config: SkeletonConfig = {
-    skeletonVersion: '0.1.0', // TODO: Get from skeleton repo
-    skeletonRepo: repoUrl,
+  spinner.start('Creating developer config...');
+  const config: DeveloperConfig = {
+    developerVersion: '0.1.0', // TODO: Get from developer repo
+    developerRepo: repoUrl,
     appName: kebabName,
     appNamePascal: pascalName,
     domain: domain!,
@@ -146,7 +146,7 @@ export async function createApp(
     skipPatterns: defaultConfig.skipPatterns!,
   };
   saveConfig(targetDir, config);
-  spinner.succeed('Created skeleton config');
+  spinner.succeed('Created developer config');
   
   // Initialize new git repo
   spinner.start('Initializing new git repository...');
@@ -297,8 +297,8 @@ function isBinaryFile(filePath: string): boolean {
 export function createCommand(program: Command): void {
   program
     .command('create <app-name>')
-    .description('Create a new app from the DS App Skeleton')
-    .option('-r, --repo <url>', 'Skeleton repository URL', defaultConfig.skeletonRepo)
+    .description('Create a new app from the DS App Developer')
+    .option('-r, --repo <url>', 'Developer repository URL', defaultConfig.developerRepo)
     .option('-d, --domain <domain>', 'Domain for the app')
     .option('-f, --force', 'Overwrite existing directory')
     .option('--skip-install', 'Skip dependency installation')

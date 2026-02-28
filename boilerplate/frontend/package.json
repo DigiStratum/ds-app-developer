@@ -1,5 +1,5 @@
 {
-  "name": "{{APP_NAME}}-frontend",
+  "name": "ds-app-developer-frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -11,11 +11,15 @@
     "test:coverage": "vitest --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "e2e": "playwright test",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report",
+    "e2e:codegen": "playwright codegen",
+    "e2e:ci": "playwright test --reporter=list,junit"
   },
   "dependencies": {
-    "@digistratum/ds-core": "file:./.ds-packages/ds-core",
-    "@digistratum/layout": "file:./.ds-packages/layout",
+    "@digistratum/ds-core": "file:../packages/ds-core",
+    "@digistratum/layout": "file:../packages/layout",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",

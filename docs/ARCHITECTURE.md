@@ -107,7 +107,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-For the skeleton, the `init()` function creates dependencies:
+For the developer, the `init()` function creates dependencies:
 
 ```go
 func init() {
@@ -825,7 +825,7 @@ frontend/src/
 
 ## Refactoring Guidelines
 
-The skeleton establishes patterns. If deviating, document why.
+The developer establishes patterns. If deviating, document why.
 
 ### When Aligned (No Changes Needed)
 

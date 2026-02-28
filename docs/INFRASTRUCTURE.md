@@ -51,7 +51,7 @@ cdk/
 ├── bin/
 │   └── app.ts              # CDK app entry point
 ├── lib/
-│   ├── skeleton-stack.ts   # Main application stack
+│   ├── developer-stack.ts   # Main application stack
 │   ├── constructs/         # Reusable L2/L3 constructs
 │   │   ├── api-lambda.ts
 │   │   ├── spa-hosting.ts
@@ -92,12 +92,12 @@ cdk/
 
 ```typescript
 // Pattern: {AppName}-{Environment}
-new AppStack(app, `DSAppSkeleton-${environment}`, { ... });
+new AppStack(app, `DSAppDeveloper-${environment}`, { ... });
 
 // Results in:
-// - DSAppSkeleton-dev
-// - DSAppSkeleton-staging  
-// - DSAppSkeleton-prod
+// - DSAppDeveloper-dev
+// - DSAppDeveloper-staging  
+// - DSAppDeveloper-prod
 ```
 
 ### Environment-Specific Configuration
@@ -146,7 +146,7 @@ throttlingRateLimit: isProd ? 100 : 20,
 
 const domainName = isProd 
   ? 'developer.digistratum.com'
-  : `skeleton-${environment}.digistratum.com`;
+  : `developer-${environment}.digistratum.com`;
 ```
 
 ---
@@ -690,10 +690,10 @@ export class DataTable extends Construct {
 ### Using Constructs
 
 ```typescript
-// cdk/lib/skeleton-stack.ts
+// cdk/lib/developer-stack.ts
 import { ApiLambda, SpaHosting, DataTable } from './constructs';
 
-export class SkeletonStack extends cdk.Stack {
+export class DeveloperStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
@@ -860,7 +860,7 @@ jobs:
 
 | Resource Type | Pattern | Example |
 |---------------|---------|---------|
-| Stack | `{App}-{Env}` | `DSAppSkeleton-prod` |
+| Stack | `{App}-{Env}` | `DSAppDeveloper-prod` |
 | Lambda | `{app}-{purpose}-{env}` | `ds-app-developer-api-prod` |
 | API Gateway | `{app}-api-{env}` | `ds-app-developer-api-prod` |
 | DynamoDB Table | `{app}-{env}` | `ds-app-developer-prod` |

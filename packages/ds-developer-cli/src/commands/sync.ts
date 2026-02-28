@@ -6,7 +6,7 @@ import ora from 'ora';
 import inquirer from 'inquirer';
 import { simpleGit } from 'simple-git';
 import { glob } from 'glob';
-import { loadConfig, saveConfig, SkeletonConfig } from '../config.js';
+import { loadConfig, saveConfig, DeveloperConfig } from '../config.js';
 
 interface SyncOptions {
   dryRun?: boolean;
@@ -34,7 +34,7 @@ const SAFE_UPDATE_PATTERNS = [
  * Files that should never be synced
  */
 const NEVER_SYNC_PATTERNS = [
-  '.ds-skeleton.json',             // Config file
+  '.ds-developer.json',             // Config file
   'README.md',                     // App-specific readme
   '.env*',                         // Environment files
   'backend/internal/**',           // App-specific backend
@@ -44,29 +44,29 @@ const NEVER_SYNC_PATTERNS = [
 ];
 
 /**
- * Sync scaffolding updates from the skeleton to a derived app
+ * Sync scaffolding updates from the developer to a derived app
  */
 export async function syncApp(
   dir: string = process.cwd(),
   options: SyncOptions = {}
 ): Promise<void> {
-  console.log(chalk.blue('\n🔄 DS Skeleton - Sync Updates\n'));
+  console.log(chalk.blue('\n🔄 DS Developer - Sync Updates\n'));
   
   // Load config
   const config = loadConfig(dir);
   if (!config) {
-    console.log(chalk.red('❌ Not a ds-skeleton derived app (missing .ds-skeleton.json)'));
+    console.log(chalk.red('❌ Not a ds-developer derived app (missing .ds-developer.json)'));
     console.log(chalk.gray('   Run this command from the root of a derived app.'));
     process.exit(1);
   }
   
   console.log(chalk.gray(`  App: ${chalk.white(config.appName)}`));
-  console.log(chalk.gray(`  Created from: ${chalk.white(config.skeletonVersion)}`));
+  console.log(chalk.gray(`  Created from: ${chalk.white(config.developerVersion)}`));
   console.log(chalk.gray(`  Last sync: ${chalk.white(config.lastSyncAt || 'Never')}`));
   
-  // Clone skeleton to temp directory
-  const spinner = ora('Fetching latest skeleton...').start();
-  const tempDir = path.join(dir, '.skeleton-sync-temp');
+  // Clone developer to temp directory
+  const spinner = ora('Fetching latest developer...').start();
+  const tempDir = path.join(dir, '.developer-sync-temp');
   
   try {
     // Clean up any existing temp dir
@@ -75,10 +75,10 @@ export async function syncApp(
     }
     
     const git = simpleGit();
-    await git.clone(config.skeletonRepo, tempDir, ['--depth', '1']);
-    spinner.succeed('Fetched latest skeleton');
+    await git.clone(config.developerRepo, tempDir, ['--depth', '1']);
+    spinner.succeed('Fetched latest developer');
   } catch (error) {
-    spinner.fail('Failed to fetch skeleton');
+    spinner.fail('Failed to fetch developer');
     console.error(chalk.red(error));
     process.exit(1);
   }
@@ -151,13 +151,13 @@ export async function syncApp(
   for (const file of safeFiles) {
     try {
       if (file.status === 'removed') {
-        // Remove file that was deleted from skeleton
+        // Remove file that was deleted from developer
         const targetPath = path.join(dir, file.path);
         if (fs.existsSync(targetPath)) {
           fs.unlinkSync(targetPath);
         }
       } else {
-        // Copy file from skeleton
+        // Copy file from developer
         const sourcePath = path.join(tempDir, file.path);
         const targetPath = path.join(dir, transformPath(file.path, config));
         
@@ -207,15 +207,15 @@ interface FileUpdate {
  */
 async function findSafeUpdates(
   appDir: string,
-  skeletonDir: string,
-  config: SkeletonConfig
+  developerDir: string,
+  config: DeveloperConfig
 ): Promise<FileUpdate[]> {
   const updates: FileUpdate[] = [];
   
-  // Find all safe files in skeleton
+  // Find all safe files in developer
   for (const pattern of SAFE_UPDATE_PATTERNS) {
     const files = await glob(pattern, {
-      cwd: skeletonDir,
+      cwd: developerDir,
       nodir: true,
       ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-developer-cli/**'],
     });
@@ -231,7 +231,7 @@ async function findSafeUpdates(
         continue;
       }
       
-      const skeletonPath = path.join(skeletonDir, file);
+      const developerPath = path.join(developerDir, file);
       const appPath = path.join(appDir, transformPath(file, config));
       
       if (!fs.existsSync(appPath)) {
@@ -239,13 +239,13 @@ async function findSafeUpdates(
         updates.push({ path: file, status: 'new' });
       } else {
         // Check if modified
-        const skeletonContent = transformContent(
-          fs.readFileSync(skeletonPath, 'utf-8'),
+        const developerContent = transformContent(
+          fs.readFileSync(developerPath, 'utf-8'),
           config
         );
         const appContent = fs.readFileSync(appPath, 'utf-8');
         
-        if (skeletonContent !== appContent) {
+        if (developerContent !== appContent) {
           updates.push({ path: file, status: 'modified' });
         }
       }
@@ -260,13 +260,13 @@ async function findSafeUpdates(
  */
 async function findSkippedFiles(
   appDir: string,
-  skeletonDir: string,
-  config: SkeletonConfig
+  developerDir: string,
+  config: DeveloperConfig
 ): Promise<string[]> {
   const skipped: string[] = [];
   
   const allFiles = await glob('**/*', {
-    cwd: skeletonDir,
+    cwd: developerDir,
     nodir: true,
     ignore: ['node_modules/**', 'dist/**', '.git/**', 'packages/ds-developer-cli/**'],
   });
@@ -295,7 +295,7 @@ async function findSkippedFiles(
 /**
  * Check if a file should never be synced
  */
-function shouldNeverSync(file: string, config: SkeletonConfig): boolean {
+function shouldNeverSync(file: string, config: DeveloperConfig): boolean {
   for (const pattern of [...NEVER_SYNC_PATTERNS, ...config.skipPatterns]) {
     // Simple glob matching
     if (pattern.includes('*')) {
@@ -313,20 +313,20 @@ function shouldNeverSync(file: string, config: SkeletonConfig): boolean {
 }
 
 /**
- * Transform a file path from skeleton to app
+ * Transform a file path from developer to app
  */
-function transformPath(file: string, config: SkeletonConfig): string {
+function transformPath(file: string, config: DeveloperConfig): string {
   return file.replace(/ds-app-developer/g, config.appName);
 }
 
 /**
- * Transform file content from skeleton to app
+ * Transform file content from developer to app
  */
-function transformContent(content: string, config: SkeletonConfig): string {
+function transformContent(content: string, config: DeveloperConfig): string {
   return content
     .replace(/ds-app-developer/g, config.appName)
-    .replace(/DSAppSkeleton/g, config.appNamePascal)
-    .replace(/skeleton\.digistratum\.com/g, config.domain);
+    .replace(/DSAppDeveloper/g, config.appNamePascal)
+    .replace(/developer\.digistratum\.com/g, config.domain);
 }
 
 /**
@@ -344,7 +344,7 @@ function cleanup(tempDir: string): void {
 export function syncCommand(program: Command): void {
   program
     .command('sync')
-    .description('Sync scaffolding updates from the skeleton to this app')
+    .description('Sync scaffolding updates from the developer to this app')
     .option('-n, --dry-run', 'Show what would be updated without making changes')
     .option('-f, --force', 'Force update even if files are customized')
     .option('-y, --yes', 'Skip confirmation prompt')

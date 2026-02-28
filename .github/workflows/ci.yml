@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: boilerplate/backend
     steps:
       - uses: actions/checkout@v4
 
@@ -36,7 +36,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          working-directory: backend
+          working-directory: boilerplate/backend
           version: latest
 
   backend-test:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: boilerplate/backend
     steps:
       - uses: actions/checkout@v4
 
@@ -84,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: backend/coverage.out
+          path: boilerplate/backend/coverage.out
 
   # ============================================================
   # Frontend Lint & Test
@@ -110,15 +110,15 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
       - name: Run ESLint
         run: npm run lint
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
       - name: Run TypeScript type check
         run: npm run type-check || npx tsc --noEmit
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
   frontend-test:
     name: Frontend Test
@@ -141,17 +141,17 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
-          path: frontend/coverage/
+          path: boilerplate/frontend/coverage/
 
   # ============================================================
   # Security Scan
@@ -172,7 +172,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run govulncheck
-        working-directory: backend
+        working-directory: boilerplate/backend
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           # Note: govulncheck may report stdlib vulns that require Go version bump
@@ -186,11 +186,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: NPM Audit (Frontend)
-        working-directory: frontend
+        working-directory: boilerplate/frontend
         run: npm audit --audit-level=high || true
 
       - name: NPM Audit (CDK)
-        working-directory: cdk
+        working-directory: boilerplate/cdk
         run: npm audit --audit-level=high || true
 
       # CodeQL Analysis
@@ -217,7 +217,7 @@ jobs:
     needs: [build-backend]  # CDK synth needs backend binary
     defaults:
       run:
-        working-directory: cdk
+        working-directory: boilerplate/cdk
     steps:
       - uses: actions/checkout@v4
 
@@ -226,13 +226,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: cdk/package-lock.json
+          cache-dependency-path: boilerplate/cdk/package-lock.json
 
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-binary
-          path: backend/dist
+          path: boilerplate/backend/dist
 
       - name: Install dependencies
         run: npm ci
@@ -262,7 +262,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Build Lambda binary (ARM64)
-        working-directory: backend
+        working-directory: boilerplate/backend
         run: |
           mkdir -p dist
           GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/bootstrap ./cmd/api
@@ -271,7 +271,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-binary
-          path: backend/dist/bootstrap
+          path: boilerplate/backend/dist/bootstrap
           retention-days: 1
 
   build-frontend:
@@ -296,10 +296,10 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: frontend
+        working-directory: boilerplate/frontend
 
       - name: Build
-        working-directory: frontend
+        working-directory: boilerplate/frontend
         run: npm run build
         env:
           VITE_API_URL: ''
@@ -308,7 +308,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: frontend/dist/
+          path: boilerplate/frontend/dist/
           retention-days: 1
 
   # ============================================================

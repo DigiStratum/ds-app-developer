@@ -2,13 +2,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 /**
- * Configuration for a derived skeleton app
+ * Configuration for a derived developer app
  */
-export interface SkeletonConfig {
-  /** Version of the skeleton this app was created from */
-  skeletonVersion: string;
-  /** Skeleton repository URL */
-  skeletonRepo: string;
+export interface DeveloperConfig {
+  /** Version of the developer this app was created from */
+  developerVersion: string;
+  /** Developer repository URL */
+  developerRepo: string;
   /** App name (used for replacements) */
   appName: string;
   /** App name in PascalCase (for class names) */
@@ -25,13 +25,13 @@ export interface SkeletonConfig {
   skipPatterns: string[];
 }
 
-const CONFIG_FILE = '.ds-skeleton.json';
+const CONFIG_FILE = '.ds-developer.json';
 
 /**
  * Default configuration values
  */
-export const defaultConfig: Partial<SkeletonConfig> = {
-  skeletonRepo: 'https://github.com/DigiStratum/ds-app-developer.git',
+export const defaultConfig: Partial<DeveloperConfig> = {
+  developerRepo: 'https://github.com/DigiStratum/ds-app-developer.git',
   customizedFiles: [],
   skipPatterns: [
     'node_modules',
@@ -39,14 +39,14 @@ export const defaultConfig: Partial<SkeletonConfig> = {
     '.git',
     '*.log',
     '.env*',
-    '.ds-skeleton.json',
+    '.ds-developer.json',
   ],
 };
 
 /**
- * Load skeleton config from a directory
+ * Load developer config from a directory
  */
-export function loadConfig(dir: string): SkeletonConfig | null {
+export function loadConfig(dir: string): DeveloperConfig | null {
   const configPath = path.join(dir, CONFIG_FILE);
   
   if (!fs.existsSync(configPath)) {
@@ -55,7 +55,7 @@ export function loadConfig(dir: string): SkeletonConfig | null {
   
   try {
     const content = fs.readFileSync(configPath, 'utf-8');
-    return JSON.parse(content) as SkeletonConfig;
+    return JSON.parse(content) as DeveloperConfig;
   } catch (error) {
     console.error(`Failed to load config from ${configPath}:`, error);
     return null;
@@ -63,9 +63,9 @@ export function loadConfig(dir: string): SkeletonConfig | null {
 }
 
 /**
- * Save skeleton config to a directory
+ * Save developer config to a directory
  */
-export function saveConfig(dir: string, config: SkeletonConfig): void {
+export function saveConfig(dir: string, config: DeveloperConfig): void {
   const configPath = path.join(dir, CONFIG_FILE);
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
 }

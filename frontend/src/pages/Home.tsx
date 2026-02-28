@@ -43,7 +43,7 @@ export function HomePage() {
               )}
             </p>
             
-            {/* SKELETON: Authenticated user content placeholder */}
+            {/* BOILERPLATE: Authenticated user content placeholder */}
             <div className="mt-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center text-gray-500 dark:text-gray-400">
               <p className="font-mono text-sm mb-2">{'<!-- Your authenticated app content here -->'}</p>
               <p className="text-sm">

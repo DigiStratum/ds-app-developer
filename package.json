@@ -7,14 +7,14 @@
     "packages/layout",
     "packages/components",
     "packages/cdk-constructs",
-    "apps/developer/frontend",
+    "boilerplate/frontend",
     "packages/ds-core",
     "packages/ds-ui"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
     "build:packages": "npm run build --workspace=@digistratum/layout --workspace=@digistratum/components --workspace=@digistratum/cdk-constructs",
-    "dev": "npm run dev --workspace=apps/developer",
+    "dev": "npm run dev --workspace=boilerplate/frontend",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"

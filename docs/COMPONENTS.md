@@ -1,17 +1,17 @@
-# Skeleton Components
+# Developer Components
 
 This document describes the standardized, reusable components provided by the DS App Developer for building DigiStratum apps.
 
 ## Overview
 
-The Skeleton provides two main standardized components:
+The Developer provides two main standardized components:
 
-1. **SkeletonHeader** - Configurable app header with navigation, auth, and app switching
-2. **SkeletonFooter** - Configurable footer with GDPR banner and links
+1. **DeveloperHeader** - Configurable app header with navigation, auth, and app switching
+2. **DeveloperFooter** - Configurable footer with GDPR banner and links
 
 These components are designed to be configured via props rather than re-implemented by each app, ensuring consistency across the DS ecosystem.
 
-## SkeletonHeader
+## DeveloperHeader
 
 A fully-featured header component that includes:
 
@@ -25,7 +25,7 @@ A fully-featured header component that includes:
 ### Props
 
 ```tsx
-interface SkeletonHeaderProps {
+interface DeveloperHeaderProps {
   appName: string;                    // Required: Display name for the app
   appLogo?: string;                   // Custom logo URL (falls back to tenant/DS default)
   currentAppId?: string;              // Highlights current app in switcher
@@ -50,11 +50,11 @@ interface MenuItem {
 #### Minimal (All Defaults)
 
 ```tsx
-import { SkeletonHeader } from '@/components';
+import { DeveloperHeader } from '@/components';
 
 function App() {
   return (
-    <SkeletonHeader appName="My App" />
+    <DeveloperHeader appName="My App" />
   );
 }
 ```
@@ -62,12 +62,12 @@ function App() {
 #### Full Customization
 
 ```tsx
-import { SkeletonHeader } from '@/components';
+import { DeveloperHeader } from '@/components';
 import { BoardIcon, SettingsIcon } from './icons';
 
 function App() {
   return (
-    <SkeletonHeader
+    <DeveloperHeader
       appName="DSKanban"
       appLogo="/kanban-logo.svg"
       currentAppId="dskanban"
@@ -87,7 +87,7 @@ function App() {
 #### Guest-Only Mode (No Auth)
 
 ```tsx
-<SkeletonHeader
+<DeveloperHeader
   appName="Public Site"
   showUserMenu={false}
   showTenantSwitcher={false}
@@ -96,7 +96,7 @@ function App() {
 
 ---
 
-## SkeletonFooter
+## DeveloperFooter
 
 A footer component with built-in GDPR compliance:
 
@@ -108,7 +108,7 @@ A footer component with built-in GDPR compliance:
 ### Props
 
 ```tsx
-interface SkeletonFooterProps {
+interface DeveloperFooterProps {
   appName: string;                    // Required: Used in copyright
   showGdprBanner?: boolean;           // Show GDPR banner if needed (default: true)
   showCopyright?: boolean;            // Show copyright line (default: true)
@@ -128,11 +128,11 @@ interface FooterLink {
 #### Minimal (All Defaults)
 
 ```tsx
-import { SkeletonFooter } from '@/components';
+import { DeveloperFooter } from '@/components';
 
 function App() {
   return (
-    <SkeletonFooter appName="My App" />
+    <DeveloperFooter appName="My App" />
   );
 }
 ```
@@ -140,7 +140,7 @@ function App() {
 #### With Extra Links
 
 ```tsx
-<SkeletonFooter
+<DeveloperFooter
   appName="DSKanban"
   extraLinks={[
     { label: 'API Docs', url: '/docs' },
@@ -153,7 +153,7 @@ function App() {
 #### Minimal Footer (No GDPR)
 
 ```tsx
-<SkeletonFooter
+<DeveloperFooter
   appName="Internal Tool"
   showGdprBanner={false}
   showDefaultLinks={false}
@@ -164,7 +164,7 @@ function App() {
 
 ## Layout Component
 
-For most apps, use the `Layout` component which combines SkeletonHeader, SkeletonFooter, and the standard page structure:
+For most apps, use the `Layout` component which combines DeveloperHeader, DeveloperFooter, and the standard page structure:
 
 ```tsx
 import { Layout } from '@/components';
@@ -345,14 +345,14 @@ function App() {
 ### After
 
 ```tsx
-import { SkeletonHeader, SkeletonFooter } from '@/components';
+import { DeveloperHeader, DeveloperFooter } from '@/components';
 
 function App() {
   return (
     <div>
-      <SkeletonHeader appName="My App" currentAppId="myapp" />
+      <DeveloperHeader appName="My App" currentAppId="myapp" />
       <main>{/* content */}</main>
-      <SkeletonFooter appName="My App" />
+      <DeveloperFooter appName="My App" />
     </div>
   );
 }
@@ -378,7 +378,7 @@ function App() {
 
 ```
 Layout
-├── SkeletonHeader
+├── DeveloperHeader
 │   ├── Logo (tenant-aware)
 │   ├── Custom Menu Items
 │   ├── App Switcher Dropdown
@@ -392,7 +392,7 @@ Layout
 ├── AdSlot (header)
 ├── Main Content (children)
 ├── AdSlot (footer)
-└── SkeletonFooter
+└── DeveloperFooter
     ├── GdprBanner (if not consented)
     ├── Copyright
     └── Links (Privacy, Terms, Support + custom)

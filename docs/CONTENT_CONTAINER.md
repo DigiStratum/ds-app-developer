@@ -84,7 +84,7 @@ interface LoadingConfig {
 <ContentContainer
   loading={{
     isLoading: true,
-    loadingComponent: <MySkeleton />
+    loadingComponent: <MyDeveloper />
   }}
 >
   {/* ... */}

@@ -10,7 +10,7 @@ ds-app-developer uses DSAccount for SSO authentication. This document covers the
 
 The app must be registered in DSAccount with:
 
-- **App ID:** `skeleton`
+- **App ID:** `developer`
 - **Name:** `DS App Developer`
 - **Redirect URIs:** Must include:
   - `https://developer.digistratum.com/api/auth/callback` (production)
@@ -22,10 +22,10 @@ The Lambda function requires these environment variables:
 
 | Variable | Description | Source |
 |----------|-------------|--------|
-| `DSACCOUNT_SSO_URL` | DSAccount base URL | CDK (skeleton-stack.ts) |
-| `DSACCOUNT_APP_ID` | App identifier | CDK (skeleton-stack.ts) |
+| `DSACCOUNT_SSO_URL` | DSAccount base URL | CDK (developer-stack.ts) |
+| `DSACCOUNT_APP_ID` | App identifier | CDK (developer-stack.ts) |
 | `DSACCOUNT_APP_SECRET` | App secret for token exchange | AWS Secrets Manager |
-| `APP_URL` | This app's base URL | CDK (skeleton-stack.ts) |
+| `APP_URL` | This app's base URL | CDK (developer-stack.ts) |
 
 ### 3. Register Redirect URI via Admin API
 
@@ -36,8 +36,8 @@ A super-admin needs to register the redirect URI:
 curl -X GET "https://account.digistratum.com/api/admin/apps" \
   -H "Authorization: Bearer $SESSION_TOKEN"
 
-# Update redirect URIs for skeleton app
-curl -X PUT "https://account.digistratum.com/api/admin/apps/skeleton/redirect-uris" \
+# Update redirect URIs for developer app
+curl -X PUT "https://account.digistratum.com/api/admin/apps/developer/redirect-uris" \
   -H "Authorization: Bearer $SESSION_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -51,11 +51,11 @@ curl -X PUT "https://account.digistratum.com/api/admin/apps/skeleton/redirect-ur
 ## SSO Flow
 
 1. User clicks "Sign In" on developer.digistratum.com
-2. Skeleton redirects to DSAccount: `/api/sso/authorize?app_id=skeleton&redirect_uri=https://developer.digistratum.com/api/auth/callback&state=/`
+2. Developer redirects to DSAccount: `/api/sso/authorize?app_id=developer&redirect_uri=https://developer.digistratum.com/api/auth/callback&state=/`
 3. DSAccount authenticates user (shows login if needed)
 4. DSAccount redirects back: `https://developer.digistratum.com/api/auth/callback?code=XXX&state=/`
-5. Skeleton exchanges code for JWT via DSAccount's `/api/sso/token`
-6. Skeleton sets `ds_session` cookie (domain: `.digistratum.com`)
+5. Developer exchanges code for JWT via DSAccount's `/api/sso/token`
+6. Developer sets `ds_session` cookie (domain: `.digistratum.com`)
 7. User redirected to original path (from `state` param)
 
 ## Cookie Strategy
@@ -80,7 +80,7 @@ This allows future cross-subdomain SSO where authenticated users don't need to r
 - kanban.digistratum.com
 - etc.
 
-**Current Workaround:** Each app (like skeleton) sets its own `ds_session` cookie after SSO callback. Users must complete SSO flow per-app, but at least they're redirected back correctly.
+**Current Workaround:** Each app (like developer) sets its own `ds_session` cookie after SSO callback. Users must complete SSO flow per-app, but at least they're redirected back correctly.
 
 ### Redirect URI Registration
 

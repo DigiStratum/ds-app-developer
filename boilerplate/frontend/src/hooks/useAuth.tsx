@@ -1,88 +1,126 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '../types';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { User, Session, AuthContext, AppInfo } from '../types';
 import { api } from '../api/client';
 
-interface AuthContextType {
-  user: User | null;
-  /** Current tenant ID (for multi-tenant apps) */
-  currentTenant: string | null;
-  /** @deprecated Use currentTenant instead */
-  tenantId: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: () => void;
-  logout: () => Promise<void>;
-  switchTenant: (tenantId: string) => void;
-}
+const AuthContextInstance = createContext<AuthContext | null>(null);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const DSACCOUNT_URL = 'https://account.digistratum.com';
 
+// Auth provider supporting guest session pattern [FR-AUTH-001, FR-AUTH-003]
+// - Creates/loads session on mount (guest or authenticated)
+// - Session survives auth flow (upgrade, not replace)
+// - Provides auth state and controls to the app
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [currentTenant, setCurrentTenant] = useState<string | null>(null);
+  const [availableApps, setAvailableApps] = useState<AppInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkSession();
+    // Load session on mount
+    loadSession();
+    // Load available apps (doesn't require auth)
+    loadAvailableApps();
   }, []);
 
-  useEffect(() => {
-    if (currentTenant) {
-      api.setTenant(currentTenant);
-    }
-  }, [currentTenant]);
-
-  async function checkSession() {
+  const loadAvailableApps = async () => {
     try {
-      const session: Session = await api.getSession();
-      if (session.authenticated && session.user) {
-        setUser(session.user);
-        setCurrentTenant(session.tenantId || session.user.tenants[0] || null);
+      const response = await fetch(`${DSACCOUNT_URL}/api/apps/available`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableApps(data.apps || []);
       }
     } catch (error) {
-      console.error('Session check failed:', error);
+      console.error('Failed to load available apps:', error);
+      // Keep empty array on error - app switcher will be empty
+    }
+  };
+
+  const loadSession = async () => {
+    try {
+      // Get session state (works for both guest and authenticated)
+      const sessionData = await api.get<Session>('/api/session');
+      setSession(sessionData);
+      
+      // If authenticated, set user from session response
+      if (sessionData.is_authenticated && sessionData.user) {
+        setUser(sessionData.user);
+        
+        // Restore tenant from localStorage or use session tenant
+        const savedTenant = localStorage.getItem('currentTenant');
+        const tenantToUse = savedTenant && sessionData.user.tenants.some(t => t.id === savedTenant)
+          ? savedTenant
+          : sessionData.tenant_id || null;
+        
+        setCurrentTenant(tenantToUse);
+        api.setTenant(tenantToUse);
+      } else {
+        // Guest session - clear user but keep session
+        setUser(null);
+        api.setTenant(null);
+      }
+    } catch (error) {
+      // On error, we still have a guest session (created server-side)
+      // The cookie is set by the server response
+      console.error('Failed to load session:', error);
+      setSession(null);
+      setUser(null);
+      api.setTenant(null);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
-  function login() {
-    const returnTo = encodeURIComponent(window.location.pathname);
-    window.location.href = `/api/auth/login?return_to=${returnTo}`;
-  }
+  // Redirect to login with optional return URL
+  const login = useCallback((redirectTo?: string) => {
+    const redirect = redirectTo || window.location.pathname;
+    window.location.href = '/api/auth/login?redirect=' + encodeURIComponent(redirect);
+  }, []);
 
-  async function logout() {
-    await api.logout();
-    setUser(null);
-    setCurrentTenant(null);
-  }
+  // Logout and redirect [FR-AUTH-004]
+  const logout = useCallback(() => {
+    localStorage.removeItem('currentTenant');
+    window.location.href = '/api/auth/logout';
+  }, []);
 
-  function switchTenant(newTenantId: string) {
-    setCurrentTenant(newTenantId);
-  }
+  // Switch tenant context [FR-TENANT-002, FR-TENANT-004]
+  // Updates local state and localStorage for persistence within browser
+  // Tenant is sent via X-Tenant-ID header on subsequent API calls
+  const switchTenant = useCallback((tenantId: string | null) => {
+    setCurrentTenant(tenantId);
+    api.setTenant(tenantId);
+    if (tenantId) {
+      localStorage.setItem('currentTenant', tenantId);
+    } else {
+      localStorage.removeItem('currentTenant');
+    }
+  }, []);
+
+  const contextValue: AuthContext = {
+    session,
+    user,
+    currentTenant,
+    availableApps,
+    isLoading,
+    isAuthenticated: session?.is_authenticated ?? false,
+    isGuest: session?.is_guest ?? true,
+    login,
+    logout,
+    switchTenant,
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        currentTenant,
-        tenantId: currentTenant, // Backward compatibility
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-        switchTenant,
-      }}
-    >
+    <AuthContextInstance.Provider value={contextValue}>
       {children}
-    </AuthContext.Provider>
+    </AuthContextInstance.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+export function useAuth(): AuthContext {
+  const context = useContext(AuthContextInstance);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 }

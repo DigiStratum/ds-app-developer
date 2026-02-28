@@ -1,46 +1,55 @@
 import { useAuth } from '../hooks/useAuth';
-import { Navigate } from 'react-router-dom';
 
-export default function Dashboard() {
-  const { isAuthenticated, isLoading, user, tenantId, logout } = useAuth();
-
-  if (isLoading) {
-    return <div className="py-8 text-center">Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
+export function DashboardPage() {
+  const { user, currentTenant } = useAuth();
 
   return (
-    <div className="py-8">
-      <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-      
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-2">User Info</h2>
-        <dl className="grid grid-cols-2 gap-2 text-sm">
-          <dt className="font-medium">Name:</dt>
-          <dd>{user?.name}</dd>
-          <dt className="font-medium">Email:</dt>
-          <dd>{user?.email}</dd>
-          <dt className="font-medium">Current Tenant:</dt>
-          <dd>{tenantId || 'None'}</dd>
-        </dl>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Dashboard
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-4">User Info</h2>
+          <dl className="space-y-2">
+            <div>
+              <dt className="text-sm text-gray-500">Name</dt>
+              <dd className="font-medium">{user?.name}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-500">Email</dt>
+              <dd className="font-medium">{user?.email}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-4">Tenant Context</h2>
+          <dl className="space-y-2">
+            <div>
+              <dt className="text-sm text-gray-500">Current Context</dt>
+              <dd className="font-medium">
+                {currentTenant || 'Personal (No Organization)'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-500">Available Tenants</dt>
+              <dd className="font-medium">
+                {user?.tenants.length ? user.tenants.join(', ') : 'None'}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Your Content</h2>
+      <div className="mt-8 card">
+        <h2 className="text-lg font-semibold mb-4">Your App Content Here</h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Add your dashboard content here.
+          This is where you build your application-specific features.
+          The boilerplate provides the foundation: auth, theming, i18n, and tenant context.
         </p>
       </div>
-
-      <button
-        onClick={logout}
-        className="mt-6 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-      >
-        Log Out
-      </button>
     </div>
   );
 }
