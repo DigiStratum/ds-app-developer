@@ -32,7 +32,13 @@ export type { UserSessionProps, UserSessionMenuProps, UserSessionVariant } from 
 
 // Content components
 export { ContentContainer } from './components/ContentContainer';
-export type { ContentContainerProps, LoadingConfig, ErrorConfig } from './components/ContentContainer';
+export type { 
+  ContentContainerProps, 
+  LoadingConfig, 
+  ErrorConfig,
+  BreadcrumbItem,
+  BreadcrumbConfig,
+} from './components/ContentContainer';
 
 // Layout components
 export { DSHeader } from './DSHeader';
