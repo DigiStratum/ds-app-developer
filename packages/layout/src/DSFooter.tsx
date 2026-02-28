@@ -12,24 +12,50 @@ const DEFAULT_LINKS: FooterLink[] = [
 ];
 
 export interface DSFooterProps {
+  /** App display name (used for context) */
   appName: string;
+  /** Custom footer links */
   links?: FooterLink[];
+  /** Copyright holder name (default: 'DigiStratum LLC') */
   copyrightHolder?: string;
+  /** Show GDPR cookie consent banner (default: true) */
   showGdprBanner?: boolean;
+  /** Show default Privacy/Terms/Support links (default: true) */
   showDefaultLinks?: boolean;
+  /** Show Cookie Settings link (default: true) */
   showCookieSettings?: boolean;
+  /** Additional CSS classes */
   className?: string;
+  /** App version to display (e.g., '1.2.3') */
+  appVersion?: string;
+  /** 
+   * Sticky positioning mode:
+   * - false: normal flow (default)
+   * - true: sticky to bottom of viewport when content is short
+   */
+  sticky?: boolean;
 }
 
 /**
  * DSFooter - Standard DigiStratum footer component
  * 
  * Features:
- * - Copyright with current year
+ * - Dynamic copyright with current year
  * - Standard links (Privacy, Terms, Support)
  * - Custom additional links
  * - Cookie Settings link to manage preferences
  * - GDPR cookie consent banner (optional)
+ * - Optional app version display
+ * - Sticky bottom option when content is short
+ * 
+ * @example
+ * ```tsx
+ * <DSFooter 
+ *   appName="MyApp" 
+ *   appVersion="1.2.3"
+ *   sticky
+ * />
+ * ```
  */
 export function DSFooter({
   appName,
@@ -39,6 +65,8 @@ export function DSFooter({
   showDefaultLinks = true,
   showCookieSettings = true,
   className = '',
+  appVersion,
+  sticky = false,
 }: DSFooterProps) {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
@@ -58,6 +86,10 @@ export function DSFooter({
     ...links,
   ];
 
+  // Sticky footer: use mt-auto to push to bottom when in a flex container
+  // The parent should use min-h-screen flex flex-col for this to work
+  const stickyClasses = sticky ? 'mt-auto' : '';
+
   return (
     <>
       {showGdprBanner && <GdprBanner />}
@@ -66,14 +98,32 @@ export function DSFooter({
         onClose={handleClosePreferences} 
       />
 
-      <div className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 ${className}`}>
+      <footer 
+        className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 ${stickyClasses} ${className}`}
+        role="contentinfo"
+      >
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-            <p>
-              {t('footer.copyright', '© {{year}} {{holder}}. All rights reserved.', { year, holder: copyrightHolder })}
-            </p>
+          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400 gap-2">
+            {/* Copyright and version */}
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
+              <p>
+                {t('footer.copyright', '© {{year}} {{holder}}. All rights reserved.', { year, holder: copyrightHolder })}
+              </p>
+              {appVersion && (
+                <span 
+                  className="text-xs text-gray-400 dark:text-gray-500"
+                  aria-label={t('footer.version', 'Version {{version}}', { version: appVersion })}
+                >
+                  v{appVersion}
+                </span>
+              )}
+            </div>
 
-            <nav className="flex flex-wrap justify-center sm:justify-end space-x-4 mt-2 sm:mt-0" aria-label={t('footer.navigation', 'Footer navigation')}>
+            {/* Navigation links */}
+            <nav 
+              className="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-1" 
+              aria-label={t('footer.navigation', 'Footer navigation')}
+            >
               {allLinks.map((link, index) => (
                 <a
                   key={index}
@@ -96,7 +146,7 @@ export function DSFooter({
             </nav>
           </div>
         </div>
-      </div>
+      </footer>
     </>
   );
 }
