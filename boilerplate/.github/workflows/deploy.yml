@@ -396,7 +396,7 @@ jobs:
           echo "✓ Health endpoint OK"
           
           # Test API endpoint (unauthenticated should return 401)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/api/v1/status)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/api/session)
           if [ "$API_STATUS" != "200" ] && [ "$API_STATUS" != "401" ]; then
             echo "::error::API endpoint returned unexpected status $API_STATUS"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
