@@ -103,13 +103,13 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install root dependencies (workspaces)
-        run: npm ci
+        run: npm install
 
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
 
       - name: Run ESLint
@@ -134,13 +134,13 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install root dependencies (workspaces)
-        run: npm ci
+        run: npm install
 
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
 
       - name: Run tests with coverage
@@ -235,7 +235,7 @@ jobs:
           path: boilerplate/backend/dist
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build CDK
         run: npm run build
@@ -289,13 +289,13 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install root dependencies (workspaces)
-        run: npm ci
+        run: npm install
 
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
 
       - name: Build
