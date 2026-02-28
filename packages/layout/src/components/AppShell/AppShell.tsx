@@ -41,7 +41,7 @@ export interface AppShellExtendedProps extends AppShellProps {
   /** Copyright holder name (default: 'DigiStratum') */
   copyrightHolder?: string;
   
-  // --- Feature toggles ---
+  // --- Feature toggles (granular header controls) ---
   
   /** Show app-switcher dropdown (default: true) */
   showAppSwitcher?: boolean;
@@ -147,6 +147,11 @@ export function AppShell({
   getMenuItems,
   children,
   customFooter,
+  // Zone visibility props
+  hideCustomHeader = false,
+  hideHeader = false,
+  hideNavigation = false,
+  hideFooter = false,
   // Extended props
   appName = 'App',
   currentAppId,
@@ -182,9 +187,9 @@ export function AppShell({
     return menuItems.map(menuItemToNavLink);
   }, [menuItems]);
 
-  // Render custom header zone (collapses to 0 when null)
+  // Render custom header zone (collapses to 0 when null or hidden)
   const renderCustomHeader = (): ReactNode => {
-    if (!customHeader) return null;
+    if (hideCustomHeader || !customHeader) return null;
     return (
       <div className="ds-custom-header-zone">
         {customHeader}
@@ -192,8 +197,8 @@ export function AppShell({
     );
   };
 
-  // Render footer (custom or default DS Footer)
-  const renderFooter = (): ReactNode => {
+  // Render footer content (custom or default DS Footer)
+  const renderFooterContent = (): ReactNode => {
     if (customFooter) {
       return customFooter;
     }
@@ -216,31 +221,33 @@ export function AppShell({
       {/* Custom Header Zone (collapsible) */}
       {renderCustomHeader()}
 
-      {/* DS Header (logo, session, switcher, nav) */}
-      <header 
-        className="ds-container-margins bg-white dark:bg-gray-800"
-        style={{ 
-          borderBottomLeftRadius: 'var(--ds-container-radius, 8px)', 
-          borderBottomRightRadius: 'var(--ds-container-radius, 8px)' 
-        }}
-      >
-        <DSHeader
-          appName={appName}
-          currentAppId={currentAppId}
-          logoUrl={logoUrl}
-          logoAlt={logoAlt}
-          auth={auth}
-          theme={theme}
-          navLinks={navLinks}
-          apps={apps}
-          appsApiUrl={appsApiUrl}
-          showAppSwitcher={showAppSwitcher}
-          showThemeToggle={showThemeToggle}
-          showUserMenu={showUserMenu}
-          showPreferences={showPreferences}
-          showTenantSwitcher={showTenantSwitcher}
-        />
-      </header>
+      {/* DS Header (logo, session, switcher, nav) - hideable via hideHeader */}
+      {!hideHeader && (
+        <header 
+          className="ds-container-margins bg-white dark:bg-gray-800"
+          style={{ 
+            borderBottomLeftRadius: 'var(--ds-container-radius, 8px)', 
+            borderBottomRightRadius: 'var(--ds-container-radius, 8px)' 
+          }}
+        >
+          <DSHeader
+            appName={appName}
+            currentAppId={currentAppId}
+            logoUrl={logoUrl}
+            logoAlt={logoAlt}
+            auth={auth}
+            theme={theme}
+            navLinks={hideNavigation ? [] : navLinks}
+            apps={apps}
+            appsApiUrl={appsApiUrl}
+            showAppSwitcher={showAppSwitcher}
+            showThemeToggle={showThemeToggle}
+            showUserMenu={showUserMenu}
+            showPreferences={showPreferences}
+            showTenantSwitcher={showTenantSwitcher}
+          />
+        </header>
+      )}
 
       {/* Content Container */}
       <main 
@@ -252,16 +259,18 @@ export function AppShell({
         </div>
       </main>
 
-      {/* DS Footer (or custom footer) */}
-      <footer 
-        className="ds-container-margins bg-white dark:bg-gray-800"
-        style={{ 
-          borderTopLeftRadius: 'var(--ds-container-radius, 8px)', 
-          borderTopRightRadius: 'var(--ds-container-radius, 8px)' 
-        }}
-      >
-        {renderFooter()}
-      </footer>
+      {/* DS Footer (or custom footer) - hideable via hideFooter */}
+      {!hideFooter && (
+        <footer 
+          className="ds-container-margins bg-white dark:bg-gray-800"
+          style={{ 
+            borderTopLeftRadius: 'var(--ds-container-radius, 8px)', 
+            borderTopRightRadius: 'var(--ds-container-radius, 8px)' 
+          }}
+        >
+          {renderFooterContent()}
+        </footer>
+      )}
     </div>
   );
 }

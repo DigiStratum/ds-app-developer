@@ -43,14 +43,33 @@ export interface MenuItem {
 }
 
 /**
+ * Zone visibility configuration for AppShell
+ * 
+ * All zones are visible by default. Set to true to hide a zone.
+ */
+export interface AppShellZoneVisibility {
+  /** Hide the custom header zone (default: false) */
+  hideCustomHeader?: boolean;
+  
+  /** Hide the DS Header zone entirely (default: false) */
+  hideHeader?: boolean;
+  
+  /** Hide the navigation menu within the header (default: false) */
+  hideNavigation?: boolean;
+  
+  /** Hide the DS Footer zone (default: false) */
+  hideFooter?: boolean;
+}
+
+/**
  * AppShell Props
  * 
  * A simplified layout container that orchestrates all layout zones:
- * - Custom Header Zone (collapsible when null)
- * - DS Header (logo, session, switcher)
- * - Navigation Menu
+ * - Custom Header Zone (collapsible when null or hideCustomHeader=true)
+ * - DS Header (logo, session, switcher) - hideable via hideHeader
+ * - Navigation Menu - hideable via hideNavigation
  * - Content Container (children)
- * - DS Footer
+ * - DS Footer - hideable via hideFooter
  * 
  * @example
  * ```tsx
@@ -63,8 +82,15 @@ export interface MenuItem {
  *   <YourAppContent />
  * </AppShell>
  * ```
+ * 
+ * @example Hide footer for fullscreen mode
+ * ```tsx
+ * <AppShell hideFooter hideNavigation>
+ *   <FullscreenContent />
+ * </AppShell>
+ * ```
  */
-export interface AppShellProps {
+export interface AppShellProps extends AppShellZoneVisibility {
   /** Optional custom header content (collapses to 0 height when null/undefined) */
   customHeader?: ReactNode;
   
