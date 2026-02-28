@@ -3,18 +3,16 @@ import { useLocation } from 'react-router-dom';
 import { AppShell, CustomHeaderZone, type MenuItem, type Tenant } from '@digistratum/layout';
 import type { AuthContext, ThemeContext, User } from '@digistratum/layout';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '@digistratum/ds-core';
-import { useTranslation } from 'react-i18next';
-import { DeveloperFooter } from './DeveloperFooter';
-import { AdSlot } from './AdSlot';
+import { useTheme } from '../hooks/useTheme';
+// import { useTranslation } from 'react-i18next'; // Uncomment when i18n is configured
 
-interface DeveloperAppShellProps {
+interface MyAppShellProps {
   children: ReactNode;
-  /** App display name (default: 'DS Developer') */
+  /** App display name (default: '{{APP_NAME}}') */
   appName?: string;
   /** App logo URL */
   appLogo?: string;
-  /** Current app ID for app-switcher highlighting (default: 'dsdeveloper') */
+  /** Current app ID for app-switcher highlighting (default: '{{APP_ID}}') */
   currentAppId?: string;
   /** Show app switcher in header (default: true) */
   showAppSwitcher?: boolean;
@@ -29,45 +27,45 @@ interface DeveloperAppShellProps {
 }
 
 /**
- * DeveloperAppShell - Reference implementation of AppShell for DS Developer Portal
+ * MyAppShell - Reference implementation of AppShell for {{APP_NAME}}
  * 
- * This is the reference implementation showing how to integrate AppShell (#587-592)
- * in a DS app. Other apps can follow this pattern:
+ * This is based on the ds-app-developer DeveloperAppShell pattern.
+ * Customize this component for your app's specific needs:
  * 
- * 1. Wrap AppShell with app-specific defaults
- * 2. Implement getMenuItems callback for app-specific navigation
- * 3. Integrate auth/theme contexts
- * 4. Use custom footer if needed (or let AppShell use DSFooter)
- * 5. Optionally use CustomHeaderZone for app-specific branding above the header
+ * 1. Update default appName and currentAppId
+ * 2. Implement getMenuItems for your app's navigation
+ * 3. Integrate auth/theme contexts from your hooks
+ * 4. Optionally use CustomHeaderZone for branding
+ * 5. Use custom footer if needed
  * 
  * @example
  * ```tsx
- * import { DeveloperAppShell } from './components/DeveloperAppShell';
+ * import { MyAppShell } from './components/MyAppShell';
  * 
  * function DashboardPage() {
  *   return (
- *     <DeveloperAppShell>
+ *     <MyAppShell>
  *       <h1>Dashboard</h1>
  *       <p>Your dashboard content here</p>
- *     </DeveloperAppShell>
+ *     </MyAppShell>
  *   );
  * }
  * ```
  */
-export function DeveloperAppShell({
+export function MyAppShell({
   children,
-  appName = 'DS Developer',
+  appName = '{{APP_NAME}}',
   appLogo,
-  currentAppId = 'dsdeveloper',
+  currentAppId = '{{APP_ID}}',
   showAppSwitcher = true,
-  showThemeToggle = false,
+  showThemeToggle = true,
   showUserMenu = true,
   showGdprBanner = true,
   customHeaderContent,
-}: DeveloperAppShellProps) {
+}: MyAppShellProps) {
   const { user, isAuthenticated, login, logout, currentTenant, switchTenant } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // Uncomment when i18n is configured
   const location = useLocation();
 
   // Build auth context for AppShell
@@ -93,13 +91,15 @@ export function DeveloperAppShell({
   };
 
   /**
-   * Get Developer-specific menu items based on user and tenant context
+   * Get app-specific menu items based on user and tenant context
    * 
-   * This callback defines the navigation structure for the Developer Portal.
+   * This callback defines the navigation structure for your app.
    * Menu items can be conditionally included based on:
    * - Authentication state (user present or null)
    * - Current tenant context
    * - User roles/permissions
+   * 
+   * TODO: Customize these menu items for your app's needs
    */
   const getMenuItems = (authUser: User | null, _tenant: Tenant | null): MenuItem[] => {
     const items: MenuItem[] = [];
@@ -107,7 +107,7 @@ export function DeveloperAppShell({
     // Public navigation items (available to all users)
     items.push({
       id: 'home',
-      label: t('nav.home', 'Home'),
+      label: 'Home', // Replace with t('nav.home', 'Home') when i18n is configured
       path: '/',
       icon: '🏠',
       active: location.pathname === '/',
@@ -117,31 +117,24 @@ export function DeveloperAppShell({
     if (authUser) {
       items.push({
         id: 'dashboard',
-        label: t('nav.dashboard', 'Dashboard'),
+        label: 'Dashboard', // Replace with t('nav.dashboard', 'Dashboard')
         path: '/dashboard',
         icon: '📊',
         active: location.pathname === '/dashboard',
       });
 
-      items.push({
-        id: 'settings',
-        label: t('nav.settings', 'Settings'),
-        path: '/settings',
-        icon: '⚙️',
-        active: location.pathname === '/settings',
-      });
+      // TODO: Add more authenticated-only routes here
+      // items.push({
+      //   id: 'settings',
+      //   label: 'Settings',
+      //   path: '/settings',
+      //   icon: '⚙️',
+      //   active: location.pathname === '/settings',
+      // });
     }
 
     return items;
   };
-
-  // Custom footer using DeveloperFooter component
-  const customFooter = (
-    <DeveloperFooter
-      appName={appName}
-      showGdprBanner={showGdprBanner}
-    />
-  );
 
   // Custom header zone for app-specific branding (collapses when empty)
   // This demonstrates how to use CustomHeaderZone for announcements, branding, etc.
@@ -152,26 +145,21 @@ export function DeveloperAppShell({
   ) : undefined;
 
   return (
-    <>
-      <AppShell
-        appName={appName}
-        currentAppId={currentAppId}
-        logoUrl={appLogo}
-        auth={auth}
-        theme={themeContext}
-        getMenuItems={getMenuItems}
-        customHeader={customHeader}
-        customFooter={customFooter}
-        showAppSwitcher={showAppSwitcher}
-        showThemeToggle={showThemeToggle}
-        showUserMenu={showUserMenu}
-        showGdprBanner={false} // Using custom footer with GDPR banner
-        appsApiUrl="/api/apps" // Fetch apps from DSAccount registry
-      >
-        <AdSlot position="header" />
-        {children}
-        <AdSlot position="footer" />
-      </AppShell>
-    </>
+    <AppShell
+      appName={appName}
+      currentAppId={currentAppId}
+      logoUrl={appLogo}
+      auth={auth}
+      theme={themeContext}
+      getMenuItems={getMenuItems}
+      customHeader={customHeader}
+      showAppSwitcher={showAppSwitcher}
+      showThemeToggle={showThemeToggle}
+      showUserMenu={showUserMenu}
+      showGdprBanner={showGdprBanner}
+      appsApiUrl="/api/apps" // Fetch apps from DSAccount registry
+    >
+      {children}
+    </AppShell>
   );
 }

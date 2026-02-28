@@ -15,6 +15,37 @@
 
 This app uses DSAccount for authentication. See [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) for the canonical `pkg/dsauth` implementation.
 
+### AppShell Integration
+
+This app uses `AppShell` from `@digistratum/layout` for consistent UI layout across all DigiStratum apps.
+
+**Key Components:**
+- `MyAppShell` - App-specific wrapper around AppShell (customize navigation, branding)
+- `CustomHeaderZone` - Optional zone above the header for announcements/branding
+- `DSHeader` - Standard header with logo, nav, app switcher, user menu
+- `DSFooter` - Standard footer with links and GDPR banner
+
+**Usage:**
+```tsx
+import { MyAppShell } from './components/MyAppShell';
+
+function DashboardPage() {
+  return (
+    <MyAppShell>
+      <h1>Dashboard</h1>
+      <p>Your dashboard content here</p>
+    </MyAppShell>
+  );
+}
+
+// With custom header branding
+<MyAppShell customHeaderContent={<YourBrandingComponent />}>
+  <Content />
+</MyAppShell>
+```
+
+See `frontend/src/components/MyAppShell.tsx` for customization options.
+
 ## Development
 
 ### Prerequisites

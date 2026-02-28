@@ -4,6 +4,9 @@ import { api } from '../api/client';
 
 interface AuthContextType {
   user: User | null;
+  /** Current tenant ID (for multi-tenant apps) */
+  currentTenant: string | null;
+  /** @deprecated Use currentTenant instead */
   tenantId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -16,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [currentTenant, setCurrentTenant] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,17 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (tenantId) {
-      api.setTenant(tenantId);
+    if (currentTenant) {
+      api.setTenant(currentTenant);
     }
-  }, [tenantId]);
+  }, [currentTenant]);
 
   async function checkSession() {
     try {
       const session: Session = await api.getSession();
       if (session.authenticated && session.user) {
         setUser(session.user);
-        setTenantId(session.tenantId || session.user.tenants[0] || null);
+        setCurrentTenant(session.tenantId || session.user.tenants[0] || null);
       }
     } catch (error) {
       console.error('Session check failed:', error);
@@ -51,18 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     await api.logout();
     setUser(null);
-    setTenantId(null);
+    setCurrentTenant(null);
   }
 
   function switchTenant(newTenantId: string) {
-    setTenantId(newTenantId);
+    setCurrentTenant(newTenantId);
   }
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        tenantId,
+        currentTenant,
+        tenantId: currentTenant, // Backward compatibility
         isAuthenticated: !!user,
         isLoading,
         login,

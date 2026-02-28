@@ -65,6 +65,43 @@ See: https://github.com/DigiStratum/ds-app-developer/blob/main/AGENTS.md
 - Tailwind CSS for styling
 - Internationalized strings
 - TypeScript for type safety
+- **AppShell pattern** for consistent layout (see below)
+
+---
+
+## AppShell Integration Pattern
+
+This app uses AppShell from `@digistratum/layout` for consistent layout across DigiStratum apps.
+
+### Key Files
+- `src/components/MyAppShell.tsx` - App-specific shell wrapper
+- `src/App.tsx` - Route definitions with shell integration
+
+### Pattern Overview
+
+```tsx
+// 1. Wrap your routes with MyAppShell
+<MyAppShell>
+  <YourPageContent />
+</MyAppShell>
+
+// 2. Protected routes combine ProtectedRoute + MyAppShell
+<ProtectedRoute>
+  <MyAppShell>
+    <ProtectedPageContent />
+  </MyAppShell>
+</ProtectedRoute>
+```
+
+### Customization Points
+
+1. **Navigation Items**: Edit `getMenuItems()` in `MyAppShell.tsx`
+2. **App Branding**: Pass `customHeaderContent` prop for CustomHeaderZone
+3. **Feature Toggles**: Control visibility via props (showAppSwitcher, showThemeToggle, etc.)
+4. **Custom Footer**: Replace default DSFooter if needed
+
+### Reference Implementation
+See `ds-app-developer/frontend/src/components/DeveloperAppShell.tsx` for the canonical pattern.
 
 ---
 
