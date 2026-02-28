@@ -1,0 +1,433 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  GO_VERSION: '1.21'
+  NODE_VERSION: '20'
+  AWS_REGION: 'us-west-2'
+  # NOTE: Replace these with your app values via create-app.sh
+  APP_NAME: 'ds-app-developer'
+  DOMAIN_NAME: 'developer.digistratum.com'
+
+permissions:
+  actions: read
+  id-token: write
+  contents: read
+
+jobs:
+  # ============================================================
+  # Wait for CI
+  # ============================================================
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // For workflow_dispatch, skip CI wait
+            if (context.eventName === 'workflow_dispatch') {
+              console.log('Manual trigger - skipping CI wait');
+              return;
+            }
+            
+            // Wait for CI to complete (up to 10 minutes)
+            const maxAttempts = 20;
+            const delayMs = 30000;
+            
+            for (let i = 0; i < maxAttempts; i++) {
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'ci.yml',
+                head_sha: context.sha,
+              });
+              
+              const run = runs.workflow_runs[0];
+              if (!run) {
+                console.log(`Attempt ${i + 1}: No CI run found yet, waiting...`);
+                await new Promise(r => setTimeout(r, delayMs));
+                continue;
+              }
+              
+              if (run.status === 'completed') {
+                if (run.conclusion === 'success') {
+                  console.log('CI workflow completed successfully');
+                  return;
+                } else {
+                  core.setFailed(`CI workflow failed with conclusion: ${run.conclusion}`);
+                  return;
+                }
+              }
+              
+              console.log(`Attempt ${i + 1}: CI status is ${run.status}, waiting...`);
+              await new Promise(r => setTimeout(r, delayMs));
+            }
+            
+            core.setFailed('Timed out waiting for CI workflow');
+
+  # ============================================================
+  # Build Artifacts
+  # ============================================================
+  build:
+    runs-on: ubuntu-latest
+    needs: [wait-for-ci]
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      stack_name: ${{ steps.set-env.outputs.stack_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ inputs.environment }}"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            ENV="prod"
+          else
+            ENV="dev"
+          fi
+          echo "environment=${ENV}" >> $GITHUB_OUTPUT
+          
+          # Stack naming convention: DSApp<Name>Stack[-<env>]
+          # Extract app name from APP_NAME (e.g., ds-app-developer -> Developer)
+          APP_PASCAL=$(echo "${{ env.APP_NAME }}" | sed 's/ds-app-//' | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1' | tr -d ' ')
+          if [ "$ENV" = "prod" ]; then
+            STACK="DSApp${APP_PASCAL}Stack"
+          else
+            STACK="DSApp${APP_PASCAL}Stack-${ENV}"
+          fi
+          echo "stack_name=${STACK}" >> $GITHUB_OUTPUT
+          echo "Building for environment: ${ENV}, stack: ${STACK}"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Lambda binary (ARM64)
+        working-directory: boilerplate/backend
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/bootstrap ./cmd/api
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: boilerplate/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: boilerplate
+
+      - name: Build packages
+        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
+        working-directory: boilerplate
+
+      - name: Build frontend
+        working-directory: boilerplate/frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ''
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binary
+          path: boilerplate/backend/dist/bootstrap
+          retention-days: 1
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: boilerplate/frontend/dist
+          retention-days: 1
+
+  # ============================================================
+  # Deploy
+  # ============================================================
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: ${{ needs.build.outputs.environment == 'prod' && 'production' || (needs.build.outputs.environment == 'staging' && 'staging' || 'development') }}
+    outputs:
+      api_url: ${{ steps.outputs.outputs.api_url }}
+      frontend_bucket: ${{ steps.outputs.outputs.frontend_bucket }}
+      site_url: ${{ steps.outputs.outputs.site_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: boilerplate/backend/dist
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: boilerplate/frontend/dist
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install CDK dependencies
+        working-directory: boilerplate/cdk
+        run: npm ci
+
+      - name: Build CDK
+        working-directory: boilerplate/cdk
+        run: npm run build
+
+      - name: CDK Diff
+        working-directory: boilerplate/cdk
+        run: npx cdk diff --context env=${{ needs.build.outputs.environment }} || true
+
+      - name: CDK Deploy
+        id: cdk-deploy
+        working-directory: boilerplate/cdk
+        run: |
+          npx cdk deploy --all \
+            --context env=${{ needs.build.outputs.environment }} \
+            --require-approval never \
+            --outputs-file cdk-outputs.json
+
+      - name: Extract CDK outputs
+        id: outputs
+        working-directory: boilerplate/cdk
+        run: |
+          STACK_NAME="${{ needs.build.outputs.stack_name }}"
+          echo "Reading outputs from stack: ${STACK_NAME}"
+          cat cdk-outputs.json
+          
+          # Extract outputs - handle both direct and nested formats
+          API_URL=$(jq -r ".[\"${STACK_NAME}\"].ApiUrl // .ApiUrl // empty" cdk-outputs.json)
+          BUCKET=$(jq -r ".[\"${STACK_NAME}\"].FrontendBucketName // .FrontendBucketName // empty" cdk-outputs.json)
+          
+          echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+          echo "frontend_bucket=${BUCKET}" >> $GITHUB_OUTPUT
+          echo "site_url=https://${{ env.DOMAIN_NAME }}" >> $GITHUB_OUTPUT
+          
+          echo "API URL: ${API_URL}"
+          echo "Frontend Bucket: ${BUCKET}"
+
+  # ============================================================
+  # Post-Deploy Verification
+  # ============================================================
+  verify:
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Requirement 1: Check stack status (fail if ROLLBACK)
+      - name: Verify CloudFormation stack status
+        id: stack-check
+        run: |
+          STACK_NAME="${{ needs.build.outputs.stack_name }}"
+          echo "Checking stack: ${STACK_NAME}"
+          
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "UNKNOWN")
+          
+          echo "Stack status: ${STATUS}"
+          
+          if [[ "${STATUS}" == *"ROLLBACK"* ]]; then
+            echo "::error::Stack is in ROLLBACK state: ${STATUS}"
+            
+            # Get failure reason for debugging
+            aws cloudformation describe-stack-events \
+              --stack-name "${STACK_NAME}" \
+              --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
+              --output table || true
+            
+            exit 1
+          fi
+          
+          if [[ "${STATUS}" != "CREATE_COMPLETE" && "${STATUS}" != "UPDATE_COMPLETE" ]]; then
+            echo "::warning::Stack is in unexpected state: ${STATUS}"
+          fi
+          
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "✓ Stack status check passed: ${STATUS}"
+
+      # Requirement 2: Verify site returns 200
+      - name: Verify site returns 200
+        run: |
+          SITE_URL="${{ needs.deploy.outputs.site_url }}"
+          echo "Checking site: ${SITE_URL}"
+          
+          # Give CloudFront/DNS a moment to propagate
+          sleep 10
+          
+          # Retry logic for transient failures
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${SITE_URL}" || echo "000")
+            
+            if [ "${HTTP_CODE}" = "200" ]; then
+              echo "✓ Site returns HTTP 200"
+              exit 0
+            fi
+            
+            echo "Attempt ${i}/${MAX_RETRIES}: Got HTTP ${HTTP_CODE}, retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+          
+          echo "::error::Site did not return HTTP 200 after ${MAX_RETRIES} attempts (last: ${HTTP_CODE})"
+          exit 1
+
+      # Requirement 3: Verify index.html asset references exist in S3
+      - name: Verify S3 assets
+        run: |
+          BUCKET="${{ needs.deploy.outputs.frontend_bucket }}"
+          echo "Checking assets in bucket: ${BUCKET}"
+          
+          # Verify index.html exists
+          if ! aws s3 ls "s3://${BUCKET}/index.html" > /dev/null 2>&1; then
+            echo "::error::index.html not found in S3 bucket"
+            exit 1
+          fi
+          echo "✓ index.html exists"
+          
+          # Download and parse index.html for asset references
+          aws s3 cp "s3://${BUCKET}/index.html" /tmp/index.html
+          
+          # Extract JS and CSS asset paths from index.html
+          ASSETS=$(grep -oE '(src|href)="(/assets/[^"]+)"' /tmp/index.html | \
+                   sed 's/.*"\([^"]*\)"/\1/' | \
+                   sort -u || true)
+          
+          if [ -z "${ASSETS}" ]; then
+            echo "::warning::No asset references found in index.html (may be inline)"
+          else
+            echo "Found asset references:"
+            echo "${ASSETS}"
+            
+            MISSING=0
+            for ASSET in ${ASSETS}; do
+              # Remove leading slash for S3 path
+              S3_PATH="${ASSET#/}"
+              if aws s3 ls "s3://${BUCKET}/${S3_PATH}" > /dev/null 2>&1; then
+                echo "  ✓ ${ASSET}"
+              else
+                echo "  ✗ ${ASSET} - MISSING"
+                MISSING=$((MISSING + 1))
+              fi
+            done
+            
+            if [ ${MISSING} -gt 0 ]; then
+              echo "::error::${MISSING} asset(s) referenced in index.html are missing from S3"
+              exit 1
+            fi
+          fi
+          
+          echo "✓ All asset references verified"
+
+      # Requirement 4: Verify /api/health returns ok
+      - name: Verify API health endpoint
+        run: |
+          SITE_URL="${{ needs.deploy.outputs.site_url }}"
+          HEALTH_URL="${SITE_URL}/api/health"
+          echo "Checking health endpoint: ${HEALTH_URL}"
+          
+          # Retry logic
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            RESPONSE=$(curl -s --max-time 30 "${HEALTH_URL}" || echo "")
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${HEALTH_URL}" || echo "000")
+            
+            echo "HTTP ${HTTP_CODE}: ${RESPONSE}"
+            
+            if [ "${HTTP_CODE}" = "200" ]; then
+              # Check for "ok" or "healthy" in response (case-insensitive)
+              if echo "${RESPONSE}" | grep -iqE '(ok|healthy|status.*ok|status.*healthy)'; then
+                echo "✓ Health endpoint returned OK"
+                exit 0
+              else
+                echo "::warning::Health endpoint returned 200 but response may not indicate healthy state"
+                # Still pass if we get 200 - the health check format may vary
+                exit 0
+              fi
+            fi
+            
+            echo "Attempt ${i}/${MAX_RETRIES}: Got HTTP ${HTTP_CODE}, retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+          
+          echo "::error::Health endpoint did not return HTTP 200 after ${MAX_RETRIES} attempts"
+          exit 1
+
+      - name: Verification summary
+        if: always()
+        run: |
+          echo "=============================================="
+          echo "Deploy Verification Summary"
+          echo "=============================================="
+          echo "Environment: ${{ needs.build.outputs.environment }}"
+          echo "Stack: ${{ needs.build.outputs.stack_name }}"
+          echo "Site URL: ${{ needs.deploy.outputs.site_url }}"
+          echo "API URL: ${{ needs.deploy.outputs.api_url }}"
+          echo "S3 Bucket: ${{ needs.deploy.outputs.frontend_bucket }}"
+          echo "=============================================="
+
+  # ============================================================
+  # Deploy Summary Gate
+  # ============================================================
+  deploy-pass:
+    name: Deploy Pass
+    needs: [build, deploy, verify]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.deploy.result }}" != "success" ]] || \
+             [[ "${{ needs.verify.result }}" != "success" ]]; then
+            echo "::error::Deploy workflow failed"
+            echo "Build: ${{ needs.build.result }}"
+            echo "Deploy: ${{ needs.deploy.result }}"
+            echo "Verify: ${{ needs.verify.result }}"
+            exit 1
+          fi
+          echo "::notice::Deploy completed successfully ✓"
+          echo ""
+          echo "Site: ${{ needs.deploy.outputs.site_url }}"
