@@ -461,9 +461,8 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
             --output text)
           
-          # Copy canary to production root
-          aws s3 sync s3://$BUCKET/canary/ s3://$BUCKET/ --delete \
-            --exclude "canary/*"
+          # Copy canary to production root (no --delete to preserve canary folder)
+          aws s3 cp s3://$BUCKET/canary/ s3://$BUCKET/ --recursive
           
           echo "Frontend promoted from canary/"
 
