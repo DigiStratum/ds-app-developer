@@ -26,6 +26,10 @@ export type { AppShellProps, AppShellExtendedProps, AppShellZoneVisibility, Menu
 export { NavigationMenu } from './components/NavigationMenu';
 export type { GetMenuItemsCallback, NavigationMenuProps } from './components/NavigationMenu';
 
+// User session components
+export { UserSession, UserSessionMenu } from './components/UserSession';
+export type { UserSessionProps, UserSessionMenuProps, UserSessionVariant } from './components/UserSession';
+
 // Content components
 export { ContentContainer } from './components/ContentContainer';
 export type { ContentContainerProps, LoadingConfig, ErrorConfig } from './components/ContentContainer';
