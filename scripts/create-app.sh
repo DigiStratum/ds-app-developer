@@ -85,28 +85,24 @@ cp -r "$BOILERPLATE_DIR"/* "$DEST_PATH/"
 # Create docs directory
 mkdir -p "$DEST_PATH/docs"
 
-# Placeholders to replace
+# Replace placeholders in all files
 echo "Replacing placeholders..."
 
-# Define replacements
-declare -A REPLACEMENTS=(
-    ["{{APP_NAME}}"]="$APP_NAME"
-    ["{{DOMAIN}}"]="$DOMAIN"
-    ["{{APP_DESCRIPTION}}"]="Description for $APP_NAME. Update this with your app's purpose."
-)
+APP_DESCRIPTION="Description for $APP_NAME. Update this with your app's purpose."
 
-# Find and replace in all files
-find "$DEST_PATH" -type f \( -name "*.md" -o -name "*.go" -o -name "*.tsx" -o -name "*.ts" -o -name "*.json" -o -name "*.html" -o -name "*.css" \) | while read -r file; do
-    for placeholder in "${!REPLACEMENTS[@]}"; do
-        value="${REPLACEMENTS[$placeholder]}"
-        # Use different sed syntax for macOS vs Linux
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|$placeholder|$value|g" "$file"
-        else
-            sed -i "s|$placeholder|$value|g" "$file"
-        fi
-    done
-done
+# Find all relevant files and replace placeholders
+# Uses explicit sed calls to avoid bash associative array quirks with special characters
+while read -r file; do
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|{{APP_NAME}}|$APP_NAME|g" "$file"
+        sed -i '' "s|{{DOMAIN}}|$DOMAIN|g" "$file"
+        sed -i '' "s|{{APP_DESCRIPTION}}|$APP_DESCRIPTION|g" "$file"
+    else
+        sed -i "s|{{APP_NAME}}|$APP_NAME|g" "$file"
+        sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$file"
+        sed -i "s|{{APP_DESCRIPTION}}|$APP_DESCRIPTION|g" "$file"
+    fi
+done < <(find "$DEST_PATH" -type f \( -name "*.md" -o -name "*.go" -o -name "*.tsx" -o -name "*.ts" -o -name "*.json" -o -name "*.html" -o -name "*.css" \))
 
 # Update go.mod module path
 GO_MOD="$DEST_PATH/backend/go.mod"
