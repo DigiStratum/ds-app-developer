@@ -1,0 +1,10 @@
+# CodeQL Configuration
+# Exclude scaffold template directories that contain placeholder syntax
+# These files are templates processed by ds-scaffold, not valid source code
+
+name: "DS App Developer CodeQL Config"
+
+paths-ignore:
+  - packages/ds-scaffold/template
+  - apps/helloworld  # Nested app template with placeholder syntax
+  - boilerplate
