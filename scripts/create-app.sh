@@ -125,10 +125,9 @@ echo ""
 # Create destination directory
 mkdir -p "$DEST_PATH"
 
-# Step 1: Copy boilerplate
+# Step 1: Copy boilerplate (excluding node_modules)
 echo -e "${BLUE}[1/6] Copying boilerplate...${NC}"
-cp -r "$BOILERPLATE_DIR"/* "$DEST_PATH/"
-cp -r "$BOILERPLATE_DIR"/.[!.]* "$DEST_PATH/" 2>/dev/null || true
+rsync -a --exclude='node_modules' --exclude='.git' "$BOILERPLATE_DIR"/ "$DEST_PATH/"
 
 # Step 2: Replace "developer" with new app name throughout
 echo -e "${BLUE}[2/6] Replacing developer → $APP_SLUG...${NC}"
