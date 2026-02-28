@@ -142,7 +142,7 @@ jobs:
         id: current
         run: |
           CURRENT_VERSION=$(aws lambda get-alias \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --name live \
             --query 'FunctionVersion' \
             --output text 2>/dev/null || echo "")
@@ -164,13 +164,13 @@ jobs:
         run: |
           # Get secret from AWS Secrets Manager
           APP_SECRET=$(aws secretsmanager get-secret-value \
-            --secret-id {{APP_NAME}}/dsaccount-app-secret \
+            --secret-id ds-app-developer/dsaccount-app-secret \
             --query SecretString \
             --output text)
           
           # Get current env vars (CDK sets these)
           CURRENT_ENV=$(aws lambda get-function-configuration \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --query 'Environment.Variables' \
             --output json)
           
@@ -179,14 +179,14 @@ jobs:
           
           # Update Lambda with merged env vars
           aws lambda update-function-configuration \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --environment "{\"Variables\": $UPDATED_ENV}"
           
           echo "::notice::Secrets injected to Lambda"
           
           # Wait for Lambda update to complete
           echo "Waiting for Lambda update to complete..."
-          aws lambda wait function-updated --function-name {{APP_NAME}}-api
+          aws lambda wait function-updated --function-name ds-app-developer-api
           echo "Lambda update complete"
 
       - name: Publish new Lambda version
@@ -194,7 +194,7 @@ jobs:
         run: |
           # Publish new version
           NEW_VERSION=$(aws lambda publish-version \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --description "Canary deploy ${{ needs.preflight.outputs.commit_sha }}" \
             --query 'Version' \
             --output text)
@@ -204,7 +204,7 @@ jobs:
           
           # Get CloudFront distribution ID
           DIST_ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Items[?contains(@,'{{DOMAIN}}')]].Id" \
+            --query "DistributionList.Items[?Aliases.Items[?contains(@,'developer.digistratum.com')]].Id" \
             --output text)
           echo "distribution_id=$DIST_ID" >> $GITHUB_OUTPUT
 
@@ -217,12 +217,12 @@ jobs:
             # Initial deployment: 100% to new version
             echo "Initial deployment - routing 100% to version $CANARY_VERSION"
             aws lambda update-alias \
-              --function-name {{APP_NAME}}-api \
+              --function-name ds-app-developer-api \
               --name live \
               --function-version $CANARY_VERSION \
               2>/dev/null || \
             aws lambda create-alias \
-              --function-name {{APP_NAME}}-api \
+              --function-name ds-app-developer-api \
               --name live \
               --function-version $CANARY_VERSION
           else
@@ -230,7 +230,7 @@ jobs:
             CANARY_WEIGHT_DECIMAL=$(echo "scale=2; ${{ env.CANARY_WEIGHT }} / 100" | bc)
             echo "Canary deployment - routing ${CANARY_WEIGHT}% to version $CANARY_VERSION"
             aws lambda update-alias \
-              --function-name {{APP_NAME}}-api \
+              --function-name ds-app-developer-api \
               --name live \
               --function-version $CURRENT_VERSION \
               --routing-config "AdditionalVersionWeights={$CANARY_VERSION=$CANARY_WEIGHT_DECIMAL}"
@@ -239,7 +239,7 @@ jobs:
       - name: Deploy frontend to canary path
         run: |
           BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name {{CDK_STACK_NAME}} \
+            --stack-name DSAppDeveloperStack \
             --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
             --output text)
           
@@ -287,7 +287,7 @@ jobs:
             # Health check with timing - uses /health endpoint
             RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
               -o /tmp/health_response.txt \
-              https://{{DOMAIN}}/health 2>/dev/null || echo "")
+              https://developer.digistratum.com/health 2>/dev/null || echo "")
             
             HTTP_CODE=$(echo "$RESPONSE" | tail -2 | head -1)
             LATENCY_SEC=$(echo "$RESPONSE" | tail -1)
@@ -349,7 +349,7 @@ jobs:
           ERROR_COUNT=$(aws cloudwatch get-metric-statistics \
             --namespace AWS/Lambda \
             --metric-name Errors \
-            --dimensions Name=FunctionName,Value={{APP_NAME}}-api \
+            --dimensions Name=FunctionName,Value=ds-app-developer-api \
             --start-time "$START_TIME" \
             --end-time "$END_TIME" \
             --period 300 \
@@ -361,7 +361,7 @@ jobs:
           INVOCATION_COUNT=$(aws cloudwatch get-metric-statistics \
             --namespace AWS/Lambda \
             --metric-name Invocations \
-            --dimensions Name=FunctionName,Value={{APP_NAME}}-api \
+            --dimensions Name=FunctionName,Value=ds-app-developer-api \
             --start-time "$START_TIME" \
             --end-time "$END_TIME" \
             --period 300 \
@@ -386,7 +386,7 @@ jobs:
           echo "Running E2E smoke tests..."
           
           # Test health endpoint
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{DOMAIN}}/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/health)
           if [ "$HEALTH_STATUS" != "200" ]; then
             echo "::error::Health endpoint returned $HEALTH_STATUS"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
@@ -395,7 +395,7 @@ jobs:
           echo "✓ Health endpoint OK"
           
           # Test API endpoint (unauthenticated should return 401)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{DOMAIN}}/api/v1/status)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/api/v1/status)
           if [ "$API_STATUS" != "200" ] && [ "$API_STATUS" != "401" ]; then
             echo "::error::API endpoint returned unexpected status $API_STATUS"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
@@ -404,7 +404,7 @@ jobs:
           echo "✓ API endpoint OK (status: $API_STATUS)"
           
           # Test frontend loads
-          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{DOMAIN}}/)
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://developer.digistratum.com/)
           if [ "$FRONTEND_STATUS" != "200" ]; then
             echo "::error::Frontend returned $FRONTEND_STATUS"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
@@ -413,7 +413,7 @@ jobs:
           echo "✓ Frontend OK"
           
           # Test frontend contains expected content
-          FRONTEND_CONTENT=$(curl -s https://{{DOMAIN}}/)
+          FRONTEND_CONTENT=$(curl -s https://developer.digistratum.com/)
           if ! echo "$FRONTEND_CONTENT" | grep -q "<div id=\"root\">" 2>/dev/null; then
             echo "::warning::Frontend may not have loaded correctly"
           fi
@@ -444,7 +444,7 @@ jobs:
           echo "Promoting canary version $CANARY_VERSION to 100% traffic"
           
           aws lambda update-alias \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --name live \
             --function-version $CANARY_VERSION \
             --routing-config 'AdditionalVersionWeights={}'
@@ -454,7 +454,7 @@ jobs:
       - name: Promote frontend
         run: |
           BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name {{CDK_STACK_NAME}} \
+            --stack-name DSAppDeveloperStack \
             --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
             --output text)
           
@@ -485,7 +485,7 @@ jobs:
         run: |
           # Get app secret from Secrets Manager
           APP_SECRET=$(aws secretsmanager get-secret-value \
-            --secret-id {{APP_NAME}}/dsaccount-app-secret \
+            --secret-id ds-app-developer/dsaccount-app-secret \
             --query SecretString \
             --output text)
           
@@ -497,10 +497,10 @@ jobs:
           ./scripts/register-manifest.sh
         env:
           DSACCOUNT_URL: https://account.digistratum.com
-          DSACCOUNT_APP_ID: ${{ secrets.DSACCOUNT_APP_ID || '{{APP_SLUG}}' }}
-          DSACCOUNT_APP_SECRET_ARN: {{APP_NAME}}/dsaccount-app-secret
-          HEALTH_CHECK_URL: https://{{DOMAIN}}/health
-          CDK_STACK_NAME: {{CDK_STACK_NAME}}
+          DSACCOUNT_APP_ID: ${{ secrets.DSACCOUNT_APP_ID || 'developer' }}
+          DSACCOUNT_APP_SECRET_ARN: ds-app-developer/dsaccount-app-secret
+          HEALTH_CHECK_URL: https://developer.digistratum.com/health
+          CDK_STACK_NAME: DSAppDeveloperStack
 
   rollback:
     name: Rollback
@@ -527,7 +527,7 @@ jobs:
           echo "Rolling back to version $CURRENT_VERSION"
           
           aws lambda update-alias \
-            --function-name {{APP_NAME}}-api \
+            --function-name ds-app-developer-api \
             --name live \
             --function-version $CURRENT_VERSION \
             --routing-config 'AdditionalVersionWeights={}'
@@ -537,7 +537,7 @@ jobs:
       - name: Clean up canary frontend
         run: |
           BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name {{CDK_STACK_NAME}} \
+            --stack-name DSAppDeveloperStack \
             --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
             --output text)
           
