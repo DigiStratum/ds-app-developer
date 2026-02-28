@@ -9,13 +9,16 @@
 #
 # This script does EVERYTHING:
 #   1. Copies boilerplate/ with developer → newname substitution
-#   2. Creates GitHub repo
-#   3. Pushes code
-#   4. Creates AWS secret placeholder
-#   5. Waits for deploy
-#   6. Registers app in DSAccount (if DSACCOUNT_ADMIN_TOKEN available)
-#   7. Stores app_secret in AWS Secrets Manager
+#   2. Replaces placeholders
+#   3. Creates GitHub repo
+#   4. Pushes code
+#   5. Creates AWS secret placeholder
+#   6. Registers app in DSAccount (BEFORE CI wait - SSO is independent of deploy)
+#   7. Waits for deploy
 #   8. Confirms site is live
+#
+# SSO registration is done early (step 6) so the script can be killed during
+# the CI wait without losing the SSO setup.
 #
 # Environment variables:
 #   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration (optional)
@@ -133,11 +136,11 @@ echo ""
 mkdir -p "$DEST_PATH"
 
 # Step 1: Copy boilerplate (excluding node_modules)
-echo -e "${BLUE}[1/7] Copying boilerplate...${NC}"
+echo -e "${BLUE}[1/8] Copying boilerplate...${NC}"
 rsync -a --exclude='node_modules' --exclude='.git' "$BOILERPLATE_DIR"/ "$DEST_PATH/"
 
 # Step 2: Replace "developer" with new app name throughout
-echo -e "${BLUE}[2/7] Replacing developer → $APP_SLUG...${NC}"
+echo -e "${BLUE}[2/8] Replacing developer → $APP_SLUG...${NC}"
 
 # CDK_STACK_NAME: e.g., "testlaunch" -> "DSAppTestlaunchStack"
 CDK_STACK_NAME="DSApp$(echo "$APP_SLUG" | sed -r 's/(^|-)([a-z])/\U\2/g')Stack"
@@ -173,7 +176,7 @@ fi
 # For now, keep them - they're layout components that work for any app
 
 # Step 3: Create GitHub repo (if needed)
-echo -e "${BLUE}[3/7] Setting up GitHub repo...${NC}"
+echo -e "${BLUE}[3/8] Setting up GitHub repo...${NC}"
 cd "$DEST_PATH"
 git init -q
 
@@ -186,7 +189,7 @@ else
 fi
 
 # Step 4: Commit and push
-echo -e "${BLUE}[4/7] Committing and pushing...${NC}"
+echo -e "${BLUE}[4/8] Committing and pushing...${NC}"
 git add -A
 git commit -q -m "Initial commit from ds-app-developer boilerplate
 
@@ -199,7 +202,7 @@ git push -u origin main --force
 echo "  Pushed to GitHub"
 
 # Step 5: Create AWS secret (if needed)
-echo -e "${BLUE}[5/7] Setting up AWS secret...${NC}"
+echo -e "${BLUE}[5/8] Setting up AWS secret...${NC}"
 SECRET_NAME="$APP_NAME/dsaccount-app-secret"
 
 if aws secretsmanager describe-secret --secret-id "$SECRET_NAME" &> /dev/null; then
@@ -214,48 +217,10 @@ else
     echo "  Secret created (placeholder value - update after DSAccount registration)"
 fi
 
-# Step 6: Wait for CI/Deploy
-echo -e "${BLUE}[6/7] Waiting for CI/Deploy...${NC}"
-echo "  Monitoring GitHub Actions..."
-
-# Wait for CI to start (give it a moment)
-sleep 10
-
-# Poll for completion (max 30 minutes)
-MAX_WAIT=1800
-ELAPSED=0
-INTERVAL=30
-
-while [ $ELAPSED -lt $MAX_WAIT ]; do
-    # Get latest workflow runs
-    CI_STATUS=$(gh run list --repo "$GITHUB_ORG/$APP_NAME" --limit 1 --json name,status,conclusion 2>/dev/null | jq -r '.[0] | "\(.name):\(.status):\(.conclusion)"' 2>/dev/null || echo "none")
-    
-    echo "  [$((ELAPSED/60))m] $CI_STATUS"
-    
-    # Check if deploy succeeded
-    DEPLOY_STATUS=$(gh run list --repo "$GITHUB_ORG/$APP_NAME" --workflow "deploy.yml" --limit 1 --json status,conclusion 2>/dev/null | jq -r '.[0] | "\(.status):\(.conclusion)"' 2>/dev/null || echo "none")
-    
-    if [[ "$DEPLOY_STATUS" == "completed:success" ]]; then
-        echo ""
-        echo -e "${GREEN}Deploy succeeded!${NC}"
-        break
-    elif [[ "$DEPLOY_STATUS" == "completed:failure" ]]; then
-        echo ""
-        echo -e "${RED}Deploy failed. Check: https://github.com/$GITHUB_ORG/$APP_NAME/actions${NC}"
-        exit 1
-    fi
-    
-    sleep $INTERVAL
-    ELAPSED=$((ELAPSED + INTERVAL))
-done
-
-if [ $ELAPSED -ge $MAX_WAIT ]; then
-    echo -e "${YELLOW}Timeout waiting for deploy. Check manually: https://github.com/$GITHUB_ORG/$APP_NAME/actions${NC}"
-fi
-
-# Step 7: Register with DSAccount (optional)
+# Step 6: Register with DSAccount (BEFORE CI wait - SSO is independent of deploy)
+# Moved early so script can be killed during CI wait without losing SSO setup
 echo ""
-echo -e "${BLUE}[7/7] Registering with DSAccount...${NC}"
+echo -e "${BLUE}[6/8] Registering with DSAccount...${NC}"
 
 DSACCOUNT_REGISTERED=false
 DSACCOUNT_CREDENTIALS_FILE="$HOME/.openclaw/workspace/dsaccount-admin-credentials.env"
@@ -335,9 +300,48 @@ EOF
     fi
 fi
 
-# Final check
+# Step 7: Wait for CI/Deploy
+echo -e "${BLUE}[7/8] Waiting for CI/Deploy...${NC}"
+echo "  Monitoring GitHub Actions..."
+
+# Wait for CI to start (give it a moment)
+sleep 10
+
+# Poll for completion (max 30 minutes)
+MAX_WAIT=1800
+ELAPSED=0
+INTERVAL=30
+
+while [ $ELAPSED -lt $MAX_WAIT ]; do
+    # Get latest workflow runs
+    CI_STATUS=$(gh run list --repo "$GITHUB_ORG/$APP_NAME" --limit 1 --json name,status,conclusion 2>/dev/null | jq -r '.[0] | "\(.name):\(.status):\(.conclusion)"' 2>/dev/null || echo "none")
+    
+    echo "  [$((ELAPSED/60))m] $CI_STATUS"
+    
+    # Check if deploy succeeded
+    DEPLOY_STATUS=$(gh run list --repo "$GITHUB_ORG/$APP_NAME" --workflow "deploy.yml" --limit 1 --json status,conclusion 2>/dev/null | jq -r '.[0] | "\(.status):\(.conclusion)"' 2>/dev/null || echo "none")
+    
+    if [[ "$DEPLOY_STATUS" == "completed:success" ]]; then
+        echo ""
+        echo -e "${GREEN}Deploy succeeded!${NC}"
+        break
+    elif [[ "$DEPLOY_STATUS" == "completed:failure" ]]; then
+        echo ""
+        echo -e "${RED}Deploy failed. Check: https://github.com/$GITHUB_ORG/$APP_NAME/actions${NC}"
+        exit 1
+    fi
+    
+    sleep $INTERVAL
+    ELAPSED=$((ELAPSED + INTERVAL))
+done
+
+if [ $ELAPSED -ge $MAX_WAIT ]; then
+    echo -e "${YELLOW}Timeout waiting for deploy. Check manually: https://github.com/$GITHUB_ORG/$APP_NAME/actions${NC}"
+fi
+
+# Step 8: Final check
 echo ""
-echo -e "${BLUE}Checking site...${NC}"
+echo -e "${BLUE}[8/8] Checking site...${NC}"
 sleep 5
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "https://$DOMAIN" 2>/dev/null || echo "000")
 
