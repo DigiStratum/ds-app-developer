@@ -15,7 +15,8 @@
     "e2e:debug": "playwright test --debug",
     "e2e:report": "playwright show-report",
     "e2e:codegen": "playwright codegen",
-    "e2e:ci": "playwright test --reporter=list,junit"
+    "e2e:ci": "playwright test --reporter=list,junit",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@digistratum/ds-core": "file:../packages/ds-core",
