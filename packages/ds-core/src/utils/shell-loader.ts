@@ -15,9 +15,9 @@ import type { ShellLoaderConfig, ShellModuleExports } from '../types/shell-loade
 
 /**
  * Default CDN URL pattern for shell module.
- * Version is interpolated: https://cdn.digistratum.com/shell/{version}/index.mjs
+ * Version is interpolated: https://apps.digistratum.com/shell/{version}/index.mjs
  */
-const DEFAULT_CDN_BASE = 'https://cdn.digistratum.com/shell';
+const DEFAULT_CDN_BASE = 'https://apps.digistratum.com/shell';
 const DEFAULT_VERSION = 'v1';
 const DEFAULT_ENTRY = 'index.mjs';
 const DEFAULT_TIMEOUT = 10000; // 10 seconds

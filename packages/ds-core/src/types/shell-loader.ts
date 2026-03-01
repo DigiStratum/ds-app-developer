@@ -193,7 +193,7 @@ export interface ShellLoaderConfig {
    * URL to the shell module on CDN.
    * Can be set via VITE_SHELL_URL environment variable.
    * 
-   * @example 'https://cdn.digistratum.com/shell/v1/index.mjs'
+   * @example 'https://apps.digistratum.com/shell/v1/index.mjs'
    */
   shellUrl?: string;
 

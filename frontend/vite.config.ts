@@ -11,7 +11,7 @@ export default defineConfig({
     exclude: ['e2e/**/*'],
   },
   // Environment variables for shell loading
-  // VITE_SHELL_CDN_URL - CDN base URL (default: https://cdn.digistratum.com/shell)
+  // VITE_SHELL_CDN_URL - CDN base URL (default: https://apps.digistratum.com/shell)
   // VITE_SHELL_VERSION - Shell version to load (default: v1)
   define: {
     // Expose env vars to the app

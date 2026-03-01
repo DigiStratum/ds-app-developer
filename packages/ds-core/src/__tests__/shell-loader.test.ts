@@ -47,7 +47,7 @@ describe('Shell Loader Utilities', () => {
         version: 'v2',
       });
 
-      expect(getResolvedShellUrl()).toBe('https://cdn.digistratum.com/shell/v2/index.mjs');
+      expect(getResolvedShellUrl()).toBe('https://apps.digistratum.com/shell/v2/index.mjs');
     });
 
     it('should merge configurations', () => {
@@ -63,7 +63,7 @@ describe('Shell Loader Utilities', () => {
   describe('getResolvedShellUrl', () => {
     it('should return default URL when no config', () => {
       const url = getResolvedShellUrl();
-      expect(url).toBe('https://cdn.digistratum.com/shell/v1/index.mjs');
+      expect(url).toBe('https://apps.digistratum.com/shell/v1/index.mjs');
     });
 
     it('should prioritize explicit shellUrl over version', () => {
