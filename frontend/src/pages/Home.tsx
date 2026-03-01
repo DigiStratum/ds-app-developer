@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
-import { Layout } from '../components/Layout';
+import { ShellLayout } from '../components/RemoteShellWrapper';
 
 // Landing page - accessible without authentication (guest session pattern)
 // Shows different content for guest vs authenticated users
@@ -14,7 +14,7 @@ export function HomePage() {
   const isPersonalContext = !currentTenant || currentTenant === 'personal';
 
   return (
-    <Layout appName="DS App Developer">
+    <ShellLayout appName="DS App Developer">
       <div className="text-center py-12">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
           DS App Developer
@@ -110,6 +110,6 @@ export function HomePage() {
           </div>
         </div>
       </div>
-    </Layout>
+    </ShellLayout>
   );
 }

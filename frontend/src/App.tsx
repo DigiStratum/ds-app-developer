@@ -1,7 +1,8 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
-import { CookieConsent, DeveloperAppShell } from './components';
+import { CookieConsent } from './components';
+import { RemoteShellWrapper, ShellLayout } from './components/RemoteShellWrapper';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
 import { SettingsPage } from './pages/Settings';
@@ -67,9 +68,9 @@ function AppRoutes() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <DeveloperAppShell>
+                <ShellLayout appName="DS App Developer">
                   <SettingsPage />
-                </DeveloperAppShell>
+                </ShellLayout>
               </ProtectedRoute>
             }
           />
@@ -77,9 +78,9 @@ function AppRoutes() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DeveloperAppShell>
+                <ShellLayout appName="DS App Developer">
                   <DashboardPage />
-                </DeveloperAppShell>
+                </ShellLayout>
               </ProtectedRoute>
             }
           />
@@ -96,7 +97,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppRoutes />
+        <RemoteShellWrapper>
+          <AppRoutes />
+        </RemoteShellWrapper>
         <CookieConsent />
       </AuthProvider>
     </ThemeProvider>
