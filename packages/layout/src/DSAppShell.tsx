@@ -161,7 +161,7 @@ export function DSAppShell({
 
       {/* Main header */}
       <header 
-        className="ds-container-margins bg-white dark:bg-gray-800"
+        className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
         style={{ 
           borderBottomLeftRadius: 'var(--ds-container-radius, 8px)', 
           borderBottomRightRadius: 'var(--ds-container-radius, 8px)' 
