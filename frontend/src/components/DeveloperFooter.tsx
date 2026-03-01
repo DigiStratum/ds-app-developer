@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useConsent } from '@digistratum/ds-core';
+import { AdDemoToggle } from './AdDemoToggle';
 
 /**
  * Link configuration for footer navigation
@@ -176,24 +177,30 @@ export function DeveloperFooter({
               </p>
             )}
 
-            {/* Links */}
-            {allLinks.length > 0 && (
-              <nav className="flex flex-wrap justify-center sm:justify-end space-x-4 mt-2 sm:mt-0" aria-label={t('footer.navigation', 'Footer navigation')}>
-                {allLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                    {...(link.url.startsWith('http') && !link.url.includes('digistratum.com') 
-                      ? { target: '_blank', rel: 'noopener noreferrer' } 
-                      : {}
-                    )}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            )}
+            {/* Links and Dev Tools */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 mt-2 sm:mt-0">
+              {/* Ad Demo Toggle (Developer Tool) */}
+              <AdDemoToggle />
+              
+              {/* Links */}
+              {allLinks.length > 0 && (
+                <nav className="flex flex-wrap space-x-4" aria-label={t('footer.navigation', 'Footer navigation')}>
+                  {allLinks.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                      {...(link.url.startsWith('http') && !link.url.includes('digistratum.com') 
+                        ? { target: '_blank', rel: 'noopener noreferrer' } 
+                        : {}
+                      )}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              )}
+            </div>
           </div>
         </div>
       </footer>

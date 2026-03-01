@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AdDemoProvider } from './hooks/useAdDemo';
 import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
 import { CookieConsent } from './components';
 import { RemoteShellWrapper, ShellLayout } from './components/RemoteShellWrapper';
@@ -97,10 +98,12 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <RemoteShellWrapper>
-          <AppRoutes />
-        </RemoteShellWrapper>
-        <CookieConsent />
+        <AdDemoProvider>
+          <RemoteShellWrapper>
+            <AppRoutes />
+          </RemoteShellWrapper>
+          <CookieConsent />
+        </AdDemoProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -7,6 +7,8 @@ import { useTheme } from '@digistratum/ds-core';
 import { useTranslation } from 'react-i18next';
 import { DeveloperFooter } from './DeveloperFooter';
 import { AdSlot } from './AdSlot';
+import { PlaceholderAd } from './PlaceholderAd';
+import { useAdDemoSafe } from '../hooks/useAdDemo';
 
 interface DeveloperAppShellProps {
   children: ReactNode;
@@ -69,6 +71,7 @@ export function DeveloperAppShell({
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { t } = useTranslation();
   const location = useLocation();
+  const { showAdDemo } = useAdDemoSafe();
 
   // Build auth context for AppShell
   const auth: AuthContext = {
@@ -168,9 +171,13 @@ export function DeveloperAppShell({
         showGdprBanner={false} // Using custom footer with GDPR banner
         appsApiUrl="/api/apps" // Fetch apps from DSAccount registry
       >
-        <AdSlot position="header" />
+        <AdSlot position="header">
+          {showAdDemo && <PlaceholderAd position="header" />}
+        </AdSlot>
         {children}
-        <AdSlot position="footer" />
+        <AdSlot position="footer">
+          {showAdDemo && <PlaceholderAd position="footer" />}
+        </AdSlot>
       </AppShell>
     </>
   );

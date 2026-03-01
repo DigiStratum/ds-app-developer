@@ -1,4 +1,6 @@
 export { AdSlot } from './AdSlot';
+export { AdDemoToggle } from './AdDemoToggle';
+export { PlaceholderAd } from './PlaceholderAd';
 export { CookieConsent } from './CookieConsent';
 export { DSNav } from './DSNav';
 export { Footer } from './Footer';
