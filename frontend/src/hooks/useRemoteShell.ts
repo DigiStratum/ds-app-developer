@@ -67,7 +67,7 @@ export interface ShellLoaderConfig {
 }
 
 // Default CDN configuration
-const DEFAULT_CDN_URL = 'https://cdn.digistratum.com/shell';
+const DEFAULT_CDN_URL = 'https://apps.digistratum.com/shell';
 const DEFAULT_VERSION = 'v1';
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 
