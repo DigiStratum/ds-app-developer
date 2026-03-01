@@ -64,15 +64,10 @@ test.describe('Accessibility', () => {
       
       for (let i = 0; i < count; i++) {
         const link = links.nth(i);
-        const ariaLabel = await link.getAttribute('aria-label');
-        const innerText = await link.innerText();
-        const href = await link.getAttribute('href');
-        const name = ariaLabel || innerText;
+        const name = await link.getAttribute('aria-label') 
+          || await link.innerText();
         
-        if (!name?.trim().length) {
-          console.log(`Link ${i} without accessible name:`, { href, ariaLabel, innerText });
-        }
-        expect(name?.trim().length, `Link ${href} should have accessible name`).toBeGreaterThan(0);
+        expect(name?.trim().length).toBeGreaterThan(0);
       }
     });
 
@@ -102,7 +97,11 @@ test.describe('Accessibility', () => {
   });
 
   test.describe('Focus Management', () => {
-    test('focus is visible on interactive elements', async ({ page }) => {
+    // Skip on mobile - Tab navigation doesn't work the same way on mobile devices
+    test('focus is visible on interactive elements', async ({ page, browserName }) => {
+      // Mobile browsers don't support keyboard Tab navigation in the same way
+      test.skip(browserName === 'webkit' && page.viewportSize()?.width! < 768, 'Tab navigation not applicable on mobile');
+      
       await page.goto('/');
       
       // Click on body to ensure page has focus before tabbing
