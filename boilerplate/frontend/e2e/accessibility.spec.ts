@@ -11,8 +11,11 @@ import { test, expect } from './fixtures';
  */
 test.describe('Accessibility', () => {
   test.describe('Semantic HTML', () => {
-    test.fixme('page has proper heading hierarchy', async ({ page }) => {
+    test('page has proper heading hierarchy', async ({ page }) => {
       await page.goto('/');
+      
+      // Wait for main content to be visible
+      await page.waitForSelector('main');
       
       // Should have an h1
       const h1Count = await page.getByRole('heading', { level: 1 }).count();
@@ -53,7 +56,7 @@ test.describe('Accessibility', () => {
       }
     });
 
-    test.fixme('links have accessible names', async ({ page }) => {
+    test('links have accessible names', async ({ page }) => {
       await page.goto('/');
       
       const links = page.getByRole('link');
@@ -61,10 +64,15 @@ test.describe('Accessibility', () => {
       
       for (let i = 0; i < count; i++) {
         const link = links.nth(i);
-        const name = await link.getAttribute('aria-label') 
-          || await link.innerText();
+        const ariaLabel = await link.getAttribute('aria-label');
+        const innerText = await link.innerText();
+        const href = await link.getAttribute('href');
+        const name = ariaLabel || innerText;
         
-        expect(name?.trim().length).toBeGreaterThan(0);
+        if (!name?.trim().length) {
+          console.log(`Link ${i} without accessible name:`, { href, ariaLabel, innerText });
+        }
+        expect(name?.trim().length, `Link ${href} should have accessible name`).toBeGreaterThan(0);
       }
     });
 
@@ -94,8 +102,11 @@ test.describe('Accessibility', () => {
   });
 
   test.describe('Focus Management', () => {
-    test.fixme('focus is visible on interactive elements', async ({ page }) => {
+    test('focus is visible on interactive elements', async ({ page }) => {
       await page.goto('/');
+      
+      // Click on body to ensure page has focus before tabbing
+      await page.locator('body').click();
       
       // Tab to first focusable element
       await page.keyboard.press('Tab');

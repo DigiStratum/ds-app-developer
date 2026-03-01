@@ -204,10 +204,14 @@ export function DSHeader({
         <div className="flex justify-between h-16">
           {/* Logo and nav links */}
           <div className="flex items-center">
-            <a href={logoLinkUrl} className="flex items-center">
+            <a 
+              href={logoLinkUrl} 
+              className="flex items-center"
+              aria-label={t('nav.home', 'Go to homepage')}
+            >
               <img 
                 src={logoUrl} 
-                alt={logoAlt || appName}
+                alt=""
                 className="h-10"
               />
             </a>

@@ -227,7 +227,7 @@ if [ -z "$DSACCOUNT_ADMIN_TOKEN" ]; then
     echo "  App will work but without SSO. Set token and re-run to enable SSO."
 else
     # Prepare registration payload
-    REDIRECT_URI="https://$DOMAIN/api/auth/sso/callback"
+    REDIRECT_URI="https://$DOMAIN/api/auth/callback"
     DISPLAY_NAME="$(echo "$APP_SLUG" | sed 's/-/ /g' | sed 's/\b\w/\u&/g') App"
     
     REGISTER_PAYLOAD=$(cat <<EOF
