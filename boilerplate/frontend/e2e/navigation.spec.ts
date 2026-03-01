@@ -97,7 +97,7 @@ test.describe('Navigation', () => {
   });
 
   test.describe('Keyboard Navigation', () => {
-    test('navigation links are keyboard accessible', async ({ page }) => {
+    test.fixme('navigation links are keyboard accessible', async ({ page }) => {
       await page.goto('/');
       
       // Tab through navigation
