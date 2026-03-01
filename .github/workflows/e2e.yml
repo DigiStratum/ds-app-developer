@@ -28,11 +28,18 @@ jobs:
       - name: Install root dependencies (workspaces)
         run: npm ci
 
+      - name: Rebuild native modules for Linux
+        run: npm rebuild
+
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
 
       - name: Install frontend dependencies
         run: npm ci
+        working-directory: frontend
+
+      - name: Rebuild frontend native modules
+        run: npm rebuild
         working-directory: frontend
 
       - name: Install Playwright browsers
@@ -86,11 +93,18 @@ jobs:
       - name: Install root dependencies (workspaces)
         run: npm ci
 
+      - name: Rebuild native modules for Linux
+        run: npm rebuild
+
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
 
       - name: Install frontend dependencies
         run: npm ci
+        working-directory: frontend
+
+      - name: Rebuild frontend native modules
+        run: npm rebuild
         working-directory: frontend
 
       - name: Install Playwright browsers (WebKit for Safari)
