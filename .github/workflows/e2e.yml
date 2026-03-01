@@ -28,8 +28,8 @@ jobs:
       - name: Install root dependencies (workspaces)
         run: npm ci
 
-      - name: Rebuild native modules for Linux
-        run: npm rebuild
+      - name: Install Rollup Linux native binary
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save
 
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
@@ -38,8 +38,8 @@ jobs:
         run: npm ci
         working-directory: frontend
 
-      - name: Rebuild frontend native modules
-        run: npm rebuild
+      - name: Install Rollup Linux native binary (frontend)
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save
         working-directory: frontend
 
       - name: Install Playwright browsers
@@ -93,8 +93,8 @@ jobs:
       - name: Install root dependencies (workspaces)
         run: npm ci
 
-      - name: Rebuild native modules for Linux
-        run: npm rebuild
+      - name: Install Rollup Linux native binary
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save
 
       - name: Build workspace packages
         run: npm run build -w @digistratum/ds-core -w @digistratum/layout
@@ -103,8 +103,8 @@ jobs:
         run: npm ci
         working-directory: frontend
 
-      - name: Rebuild frontend native modules
-        run: npm rebuild
+      - name: Install Rollup Linux native binary (frontend)
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save
         working-directory: frontend
 
       - name: Install Playwright browsers (WebKit for Safari)
