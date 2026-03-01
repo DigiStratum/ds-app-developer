@@ -42,6 +42,25 @@ export type {
   UseDiscoveryState,
 } from './types/discovery';
 
+export type {
+  // Shell Loader
+  ShellModuleExports,
+  DSAppShellProps,
+  DSHeaderProps,
+  DSFooterProps,
+  ShellSlotConfig,
+  ShellNavLink,
+  ShellApp,
+  ShellFooterLink,
+  ShellUser,
+  ShellAuthContext,
+  ShellThemeContext,
+  ShellLoaderConfig,
+  ShellLoadStatus,
+  UseShellLoaderState,
+  UseShellLoaderOptions,
+} from './types/shell-loader';
+
 // =============================================================================
 // Hooks
 // =============================================================================
@@ -72,6 +91,9 @@ export type { TenantThemeState, UseTenantThemeOptions } from './hooks/useTenantT
 // Discovery
 export { useDiscovery, useDiscoveryPrefetch } from './hooks/useDiscovery';
 
+// Shell loader
+export { useShellLoader, prefetchShell } from './hooks/useShellLoader';
+
 // =============================================================================
 // Components
 // =============================================================================
@@ -91,6 +113,18 @@ export type { AdSlotProps } from './components/AdSlot';
 // Loading states
 export { Loading, Skeleton } from './components/Loading';
 export type { LoadingProps, SkeletonProps } from './components/Loading';
+
+// Shell fallbacks
+export { 
+  ShellSkeleton, 
+  ShellErrorFallback, 
+  ShellErrorBoundary,
+} from './components/ShellFallback';
+export type { 
+  ShellSkeletonProps, 
+  ShellErrorFallbackProps,
+  ShellErrorBoundaryProps,
+} from './components/ShellFallback';
 
 // =============================================================================
 // Utilities
@@ -113,3 +147,16 @@ export {
   prefetchResources,
   invalidateDiscoveryCache,
 } from './utils/discovery';
+
+// Shell loader utilities
+export {
+  configureShellLoader,
+  getShellLoaderConfig,
+  getResolvedShellUrl,
+  addPreloadHint,
+  loadShellModule,
+  resetShellLoader,
+  isShellLoaded,
+  getShellLoadError,
+  getShellRetryCount,
+} from './utils/shell-loader';

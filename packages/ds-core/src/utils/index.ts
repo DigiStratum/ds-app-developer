@@ -21,3 +21,16 @@ export {
   prefetchResources,
   invalidateDiscoveryCache,
 } from './discovery';
+
+// Shell loader
+export {
+  configureShellLoader,
+  getShellLoaderConfig,
+  getResolvedShellUrl,
+  addPreloadHint,
+  loadShellModule,
+  resetShellLoader,
+  isShellLoaded,
+  getShellLoadError,
+  getShellRetryCount,
+} from './shell-loader';

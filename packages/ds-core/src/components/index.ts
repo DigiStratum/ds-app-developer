@@ -19,3 +19,15 @@ export type { AdSlotProps } from './AdSlot';
 // Loading states
 export { Loading, Skeleton } from './Loading';
 export type { LoadingProps, SkeletonProps } from './Loading';
+
+// Shell fallbacks
+export { 
+  ShellSkeleton, 
+  ShellErrorFallback, 
+  ShellErrorBoundary,
+} from './ShellFallback';
+export type { 
+  ShellSkeletonProps, 
+  ShellErrorFallbackProps,
+  ShellErrorBoundaryProps,
+} from './ShellFallback';
