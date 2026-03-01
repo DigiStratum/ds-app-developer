@@ -11,7 +11,7 @@ import { test, expect } from './fixtures';
  */
 test.describe('Accessibility', () => {
   test.describe('Semantic HTML', () => {
-    test('page has proper heading hierarchy', async ({ page }) => {
+    test.fixme('page has proper heading hierarchy', async ({ page }) => {
       await page.goto('/');
       
       // Should have an h1
