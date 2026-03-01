@@ -29,14 +29,23 @@ export default defineConfig({
       fileName: () => 'shell.js',
     },
     rollupOptions: {
-      // Externalize React - consumers must provide their own React
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-i18next', 'i18next'],
+      // Externalize React and other peer dependencies
+      // Consumers must provide their own React
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@digistratum/ds-core',
+        'react-i18next',
+        'i18next',
+      ],
       output: {
         // Global variable names for external deps (for non-ESM contexts)
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'ReactJSXRuntime',
+          '@digistratum/ds-core': 'DSCore',
           'react-i18next': 'reactI18next',
           i18next: 'i18next',
         },
@@ -44,8 +53,12 @@ export default defineConfig({
         inlineDynamicImports: true,
         // Preserve export names
         preserveModules: false,
+        // Add banner comment
+        banner: '/* @digistratum/layout - CDN Build */\n',
       },
     },
+    // Target modern browsers for CDN usage
+    target: 'es2020',
     // Enable minification for production CDN
     minify: 'terser',
     terserOptions: {

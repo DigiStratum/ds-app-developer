@@ -20,6 +20,7 @@
   "scripts": {
     "build": "tsup",
     "build:cdn": "vite build --config vite.config.cdn.ts",
+    "build:all": "npm run build && npm run build:cdn",
     "dev": "tsup --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest",
