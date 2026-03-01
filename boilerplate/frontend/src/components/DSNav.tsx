@@ -71,7 +71,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
           <div className="flex justify-between h-16">
             {/* Logo [FR-NAV-001] - leftmost element, supports tenant branding */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center">
+              <a href="/" className="flex items-center" aria-label={t('nav.home', 'Go to homepage')}>
                 {/* Subtle placeholder while theme loads */}
                 <div 
                   className={`h-10 transition-opacity duration-200 ${
@@ -81,7 +81,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 >
                   <img 
                     src={logoUrl || '/lk_logo.svg'} 
-                    alt="LeapKick" 
+                    alt="" 
                     className="h-10"
                     onLoad={() => setLogoLoaded(true)}
                     onError={() => setLogoLoaded(true)}
