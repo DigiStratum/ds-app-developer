@@ -234,6 +234,7 @@ else
 {
   "app_id": "$APP_SLUG",
   "name": "$DISPLAY_NAME",
+  "url": "https://$DOMAIN",
   "redirect_uris": ["$REDIRECT_URI"]
 }
 EOF
