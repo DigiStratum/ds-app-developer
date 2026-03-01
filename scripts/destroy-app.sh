@@ -324,6 +324,12 @@ fi
 echo ""
 echo -e "${BLUE}[5/6] DSAccount App Registration: $APP_SLUG${NC}"
 
+# Auto-source credentials if available
+DSACCOUNT_CREDENTIALS_FILE="$HOME/.openclaw/workspace/dsaccount-admin-credentials.env"
+if [ -f "$DSACCOUNT_CREDENTIALS_FILE" ] && [ -z "$DSACCOUNT_ADMIN_TOKEN" ]; then
+    source "$DSACCOUNT_CREDENTIALS_FILE"
+fi
+
 # Check if DSAccount API endpoint exists and has DELETE support
 DSACCOUNT_API_URL="${DSACCOUNT_API_URL:-https://account.digistratum.com}"
 
