@@ -22,8 +22,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          # Note: npm cache disabled due to Rollup native binary issues
+          # See: https://github.com/npm/cli/issues/4828
 
       - name: Install root dependencies (workspaces)
         run: npm ci
@@ -80,8 +80,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          # Note: npm cache disabled due to Rollup native binary issues
+          # See: https://github.com/npm/cli/issues/4828
 
       - name: Install root dependencies (workspaces)
         run: npm ci

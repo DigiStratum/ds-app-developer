@@ -10,15 +10,16 @@
 # This script does EVERYTHING:
 #   1. Copies boilerplate/ with developer → newname substitution
 #   2. Replaces placeholders
-#   3. Creates GitHub repo
-#   4. Pushes code
-#   5. Creates AWS secret placeholder
-#   6. Registers app in DSAccount (BEFORE CI wait - SSO is independent of deploy)
+#   3. Creates GitHub repo (no push yet)
+#   4. Creates AWS secret placeholder
+#   5. Registers app with DSAccount and stores secret in AWS
+#   6. Commits and pushes code (triggers CI with E2E tests)
 #   7. Waits for deploy
 #   8. Confirms site is live
 #
-# SSO registration is done early (step 6) so the script can be killed during
-# the CI wait without losing the SSO setup.
+# IMPORTANT: SSO registration (step 5) happens BEFORE push (step 6) so that
+# when CI runs E2E tests, the app is already registered with DSAccount and
+# the SSO tests will pass.
 #
 # Environment variables:
 #   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration (optional)
@@ -175,34 +176,24 @@ fi
 # Rename DeveloperHeader/Footer to generic names (or keep as-is since they're reusable)
 # For now, keep them - they're layout components that work for any app
 
-# Step 3: Create GitHub repo (if needed)
+# Step 3: Create GitHub repo (if needed) - NO PUSH YET
+# We need to register SSO before pushing so CI E2E tests pass
 echo -e "${BLUE}[3/8] Setting up GitHub repo...${NC}"
 cd "$DEST_PATH"
 git init -q
 
 if [ "$REPO_EXISTS" = false ]; then
     echo "  Creating repo: $GITHUB_ORG/$APP_NAME"
-    gh repo create "$GITHUB_ORG/$APP_NAME" --private --source=. --remote=origin
+    # Create repo but don't push yet - we need to register SSO first
+    gh repo create "$GITHUB_ORG/$APP_NAME" --private
+    git remote add origin "https://github.com/$GITHUB_ORG/$APP_NAME.git"
 else
     echo "  Using existing repo: $GITHUB_ORG/$APP_NAME"
     git remote add origin "https://github.com/$GITHUB_ORG/$APP_NAME.git" 2>/dev/null || true
 fi
 
-# Step 4: Commit and push
-echo -e "${BLUE}[4/8] Committing and pushing...${NC}"
-git add -A
-git commit -q -m "Initial commit from ds-app-developer boilerplate
-
-App: $APP_NAME
-Domain: $DOMAIN
-Stack: $CDK_STACK_NAME"
-git branch -M main
-git push -u origin main --force
-
-echo "  Pushed to GitHub"
-
-# Step 5: Create AWS secret (if needed)
-echo -e "${BLUE}[5/8] Setting up AWS secret...${NC}"
+# Step 4: Create AWS secret (if needed)
+echo -e "${BLUE}[4/8] Setting up AWS secret...${NC}"
 SECRET_NAME="$APP_NAME/dsaccount-app-secret"
 
 if aws secretsmanager describe-secret --secret-id "$SECRET_NAME" &> /dev/null; then
@@ -217,10 +208,10 @@ else
     echo "  Secret created (placeholder value - update after DSAccount registration)"
 fi
 
-# Step 6: Register with DSAccount (BEFORE CI wait - SSO is independent of deploy)
-# Moved early so script can be killed during CI wait without losing SSO setup
+# Step 5: Register with DSAccount BEFORE push
+# This ensures CI E2E tests have SSO available when they run
 echo ""
-echo -e "${BLUE}[6/8] Registering with DSAccount...${NC}"
+echo -e "${BLUE}[5/8] Registering with DSAccount...${NC}"
 
 DSACCOUNT_REGISTERED=false
 DSACCOUNT_CREDENTIALS_FILE="$HOME/.openclaw/workspace/dsaccount-admin-credentials.env"
@@ -299,6 +290,20 @@ EOF
         echo "  App will work but without SSO. Register manually if needed."
     fi
 fi
+
+# Step 6: Commit and push (triggers CI/deploy)
+# SSO is already registered, so E2E tests will have access
+echo -e "${BLUE}[6/8] Committing and pushing...${NC}"
+git add -A
+git commit -q -m "Initial commit from ds-app-developer boilerplate
+
+App: $APP_NAME
+Domain: $DOMAIN
+Stack: $CDK_STACK_NAME"
+git branch -M main
+git push -u origin main --force
+
+echo "  Pushed to GitHub"
 
 # Step 7: Wait for CI/Deploy
 echo -e "${BLUE}[7/8] Waiting for CI/Deploy...${NC}"
