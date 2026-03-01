@@ -1,0 +1,135 @@
+name: Deploy Shell to CDN
+
+on:
+  push:
+    tags:
+      - 'shell-v*'  # Trigger on tags like shell-v1.0.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Shell version (e.g., v1.0.0)'
+        required: true
+        default: 'v1'
+        type: string
+      update_latest:
+        description: 'Also update /shell/latest/'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: 'us-west-2'
+  # SharedRuntime bucket name (from DSSharedRuntimeStack)
+  SHARED_RUNTIME_BUCKET: 'ds-shared-runtime-171949636152'
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.SHARED_RUNTIME_DISTRIBUTION_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Extract version from tag (shell-v1.0.0 -> v1.0.0)
+            VERSION="${GITHUB_REF#refs/tags/shell-}"
+            UPDATE_LATEST="true"
+          else
+            VERSION="${{ inputs.version }}"
+            UPDATE_LATEST="${{ inputs.update_latest }}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "update_latest=${UPDATE_LATEST}" >> $GITHUB_OUTPUT
+          echo "Shell version: ${VERSION}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shell for CDN
+        working-directory: packages/layout
+        run: |
+          npm run build:cdn
+          echo "Build output:"
+          ls -la dist/cdn/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to versioned path
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Deploying shell to /shell/${VERSION}/"
+          
+          aws s3 cp packages/layout/dist/cdn/shell.js \
+            "s3://${SHARED_RUNTIME_BUCKET}/shell/${VERSION}/shell.js" \
+            --content-type "application/javascript" \
+            --cache-control "public, max-age=31536000, immutable"
+          
+          aws s3 cp packages/layout/dist/cdn/shell.js.map \
+            "s3://${SHARED_RUNTIME_BUCKET}/shell/${VERSION}/shell.js.map" \
+            --content-type "application/json" \
+            --cache-control "public, max-age=31536000, immutable"
+          
+          echo "✅ Deployed to: https://apps.digistratum.com/shell/${VERSION}/shell.js"
+
+      - name: Deploy to latest
+        if: steps.version.outputs.update_latest == 'true'
+        run: |
+          echo "Deploying shell to /shell/latest/"
+          
+          aws s3 cp packages/layout/dist/cdn/shell.js \
+            "s3://${SHARED_RUNTIME_BUCKET}/shell/latest/shell.js" \
+            --content-type "application/javascript" \
+            --cache-control "public, max-age=300"
+          
+          aws s3 cp packages/layout/dist/cdn/shell.js.map \
+            "s3://${SHARED_RUNTIME_BUCKET}/shell/latest/shell.js.map" \
+            --content-type "application/json" \
+            --cache-control "public, max-age=300"
+          
+          echo "✅ Deployed to: https://apps.digistratum.com/shell/latest/shell.js"
+
+      - name: Invalidate CloudFront cache
+        if: steps.version.outputs.update_latest == 'true'
+        run: |
+          if [ -n "${CLOUDFRONT_DISTRIBUTION_ID}" ]; then
+            echo "Invalidating CloudFront cache for /shell/latest/*"
+            aws cloudfront create-invalidation \
+              --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
+              --paths "/shell/latest/*"
+          else
+            echo "⚠️ CLOUDFRONT_DISTRIBUTION_ID not set, skipping invalidation"
+          fi
+
+      - name: Output URLs
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "## Shell CDN URLs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Versioned (immutable, 1 year cache)" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "https://apps.digistratum.com/shell/${VERSION}/shell.js" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.version.outputs.update_latest }}" = "true" ]; then
+            echo "### Latest (5 minute cache)" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "https://apps.digistratum.com/shell/latest/shell.js" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
