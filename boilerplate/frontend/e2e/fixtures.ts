@@ -1,4 +1,4 @@
-import { test as base, expect as baseExpect, Page } from '@playwright/test';
+import { test as base, expect as baseExpect, Page, BrowserContext } from '@playwright/test';
 
 /**
  * Test users for authentication testing
@@ -12,6 +12,16 @@ export const TEST_USERS = {
   invalid: {
     email: 'invalid@test.com',
     password: 'wrongpassword',
+  },
+  multiTenant: {
+    email: 'multitenant@digistratum.com',
+    name: 'Multi Tenant User',
+    tenants: ['tenant-1', 'tenant-2'],
+  },
+  noTenant: {
+    email: 'notenant@digistratum.com',
+    name: 'No Tenant User',
+    tenants: [],
   },
 };
 
@@ -39,11 +49,20 @@ export async function expectLoginRedirect(page: Page) {
   await page.waitForURL(/\/login|account\.digistratum\.com/);
 }
 
+interface TestUser {
+  email: string;
+  name?: string;
+  password?: string;
+  tenants?: string[];
+}
+
 /**
  * Extended test fixture with API mocking and authenticated page
  */
 export const test = base.extend<{
   authenticatedPage: Page;
+  testUser: TestUser;
+  mockAuth: (user: TestUser) => Promise<void>;
 }>({
   page: async ({ page }, use) => {
     // In CI, mock all /api/* calls to prevent ECONNREFUSED
@@ -51,7 +70,6 @@ export const test = base.extend<{
       await page.route('**/api/**', async route => {
         const url = route.request().url();
         
-        // Mock /api/session - return unauthenticated
         if (url.includes('/api/session')) {
           await route.fulfill({
             status: 200,
@@ -61,7 +79,6 @@ export const test = base.extend<{
           return;
         }
         
-        // Mock /api/health
         if (url.includes('/api/health')) {
           await route.fulfill({
             status: 200,
@@ -71,7 +88,6 @@ export const test = base.extend<{
           return;
         }
         
-        // Default: return empty success for other API calls
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -84,7 +100,6 @@ export const test = base.extend<{
   },
   
   authenticatedPage: async ({ page }, use) => {
-    // Mock authentication state
     await page.route('**/api/session', async route => {
       await route.fulfill({
         status: 200,
@@ -100,11 +115,8 @@ export const test = base.extend<{
       });
     });
     
-    // Mock all other API calls
     await page.route('**/api/**', async route => {
-      if (route.request().url().includes('/api/session')) {
-        return; // Already handled above
-      }
+      if (route.request().url().includes('/api/session')) return;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -113,6 +125,31 @@ export const test = base.extend<{
     });
     
     await use(page);
+  },
+  
+  testUser: async ({}, use) => {
+    await use(TEST_USERS.valid);
+  },
+  
+  mockAuth: async ({ page }, use) => {
+    const mockAuth = async (user: TestUser) => {
+      await page.route('**/api/session', async route => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            authenticated: true,
+            user: {
+              id: `user-${user.email}`,
+              email: user.email,
+              name: user.name || 'Test User',
+              tenants: user.tenants || [],
+            },
+          }),
+        });
+      });
+    };
+    await use(mockAuth);
   },
 });
 
