@@ -78,7 +78,6 @@ export function GdprBanner() {
               id="cookie-consent-title"
               className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center sm:justify-start gap-2"
             >
-              <span aria-hidden="true">🍪</span>
               {t('cookies.title', 'We use cookies to improve your experience')}
             </h2>
             <p

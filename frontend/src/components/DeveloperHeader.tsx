@@ -170,15 +170,15 @@ export function DeveloperHeader({
             <div className="flex items-center">
               <a href="/" className="flex items-center">
                 <div 
-                  className={`h-10 transition-opacity duration-200 ${
+                  className={`h-[35px] transition-opacity duration-200 ${
                     themeLoading && !logoLoaded ? 'opacity-0' : 'opacity-100'
                   }`}
-                  style={{ minWidth: '40px' }}
+                  style={{ minWidth: '35px' }}
                 >
                   <img 
                     src={displayLogo} 
                     alt={appName}
-                    className="h-10"
+                    className="h-[35px]"
                     onLoad={() => setLogoLoaded(true)}
                     onError={() => setLogoLoaded(true)}
                   />

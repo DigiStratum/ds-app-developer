@@ -3,88 +3,46 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 /**
- * Vite configuration for building the shell as a CDN-hosted IIFE bundle.
+ * Vite configuration for CDN bundle output.
  * 
- * This builds the @digistratum/layout package as a browser-compatible IIFE bundle
- * that derived apps can load at runtime via a standard script tag.
+ * Builds @digistratum/layout as an IIFE bundle suitable for CDN distribution.
+ * React and peer dependencies are externalized - consumers must provide them.
  * 
  * Usage:
- *   npm run build:cdn
+ *   npx vite build --config vite.config.cdn.ts
  * 
  * Output:
- *   dist/shell.js      - Main IIFE bundle
- *   dist/shell.js.map  - Source maps
- * 
- * Consumer usage:
- *   <!-- Load React and ReactDOM first -->
- *   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
- *   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
- *   
- *   <!-- Load the shell -->
- *   <script src="https://apps.digistratum.com/shell/v1/shell.js"></script>
- *   
- *   <!-- Use the components -->
- *   <script>
- *     const { DSAppShell, DSHeader, DSFooter } = window.DSLayout;
- *   </script>
+ *   dist/cdn/ds-layout.iife.js      - Minified bundle
+ *   dist/cdn/ds-layout.iife.js.map  - Source map
  */
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist',
+    outDir: 'dist/cdn',
+    emptyDirOnBuild: true,
+    sourcemap: true,
+    minify: 'esbuild',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'DSLayout',  // Global variable name: window.DSLayout
+      name: 'DSLayout',
+      fileName: 'ds-layout',
       formats: ['iife'],
-      fileName: () => 'shell.js',
     },
     rollupOptions: {
-      // Externalize React and other peer dependencies
-      // Consumers must provide their own React via script tags
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-      ],
+      // Externalize peer dependencies - consumers provide these
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-i18next', 'i18next'],
       output: {
-        // Global variable names for external deps (required for IIFE)
+        // Global variable names for externalized dependencies
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          'react/jsx-runtime': 'React',  // JSX runtime uses React global
+          'react/jsx-runtime': 'ReactJSXRuntime',
+          'react-i18next': 'ReactI18next',
+          i18next: 'i18next',
         },
-        // Don't chunk - single file for CDN simplicity
-        inlineDynamicImports: true,
-        // Preserve export names
-        preserveModules: false,
-        // Add banner comment
-        banner: '/* @digistratum/layout v0.2.0 - CDN Build (IIFE) */\n',
-        // Extend window.DSLayout instead of replacing
-        extend: true,
+        // Add banner comment for CDN usage
+        banner: '/* @digistratum/layout - CDN Bundle - Requires React as global */',
       },
     },
-    // Target modern browsers for CDN usage
-    target: 'es2020',
-    // Enable minification for production CDN
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
-    // Generate source maps for debugging
-    sourcemap: true,
-    // Don't empty output dir - tsup also outputs here
-    emptyOutDir: false,
-  },
-  // Ensure we resolve TypeScript and React properly
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-    },
-  },
-  // Define for React JSX
-  define: {
-    'process.env.NODE_ENV': '"production"',
   },
 });
