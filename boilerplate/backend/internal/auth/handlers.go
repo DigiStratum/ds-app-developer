@@ -20,8 +20,12 @@ type tokenResponse struct {
 }
 
 // CallbackHandler handles SSO callback [FR-AUTH-001]
-// This exchanges the authorization code with DSAccount for a session token,
-// then sets the ds_session cookie to use across *.digistratum.com
+// This exchanges the authorization code with DSAccount to validate the authentication.
+//
+// IMPORTANT: This handler does NOT set the ds_session cookie.
+// DSAccount owns session management and has already set the ds_session cookie
+// during the SSO flow (with Domain=.digistratum.com for cross-subdomain access).
+// Consumer apps must NOT overwrite this cookie.
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
@@ -32,6 +36,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("SSO callback received", "code_length", len(code))
 
 	// Exchange code for token with DSAccount
+	// This validates the authentication and "uses" the one-time code
+	// The session cookie was already set by DSAccount during the auth flow
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
 	if ssoURL == "" {
 		ssoURL = "https://account.digistratum.com"
@@ -72,19 +78,10 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("token exchange successful", "token_type", tokenResp.TokenType, "expires_in", tokenResp.ExpiresIn)
 
-	// Set the DSAccount session cookie (shared across *.digistratum.com)
-	// This is the ONLY session cookie we need - DSAccount owns sessions
-	cookie := &http.Cookie{
-		Name:     "ds_session",
-		Value:    tokenResp.AccessToken,
-		Path:     "/",
-		Domain:   ".digistratum.com",
-		MaxAge:   tokenResp.ExpiresIn,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, cookie)
+	// NOTE: We do NOT set any cookies here.
+	// DSAccount has already set the ds_session cookie during the SSO flow.
+	// Setting a cookie here would overwrite DSAccount's session with a JWT,
+	// breaking session validation for all apps that share the session.
 
 	// Get redirect URL from state param (how OAuth returns our original redirect)
 	redirectURL := r.URL.Query().Get("state")
@@ -102,22 +99,17 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // LogoutHandler handles logout [FR-AUTH-004]
-// Clears the session cookie and redirects to DSAccount logout
+// Redirects to DSAccount logout - DSAccount will clear the session cookie
+//
+// IMPORTANT: This handler does NOT clear the ds_session cookie directly.
+// DSAccount owns session management and will clear the cookie during logout.
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	// Clear the ds_session cookie
-	cookie := &http.Cookie{
-		Name:     "ds_session",
-		Value:    "",
-		Path:     "/",
-		Domain:   ".digistratum.com",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, cookie)
+	slog.Info("logout initiated, redirecting to DSAccount")
 
-	slog.Info("session cookie cleared on logout")
+	// NOTE: We do NOT clear the ds_session cookie here.
+	// DSAccount will clear it as part of the logout flow.
+	// Attempting to clear it here could cause race conditions or
+	// leave stale cookies if the domain/path doesn't match exactly.
 
 	// Redirect to DSAccount logout (with return URL)
 	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
@@ -146,7 +138,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Preserve the user's intended destination through the auth flow (passed as state)
+	// Check both "redirect" and "return_url" params for compatibility
 	redirectPath := r.URL.Query().Get("redirect")
+	if redirectPath == "" {
+		redirectPath = r.URL.Query().Get("return_url")
+	}
 	if redirectPath == "" {
 		redirectPath = "/"
 	}

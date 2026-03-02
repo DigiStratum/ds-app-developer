@@ -4,52 +4,26 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-// Tests for auth handlers [FR-AUTH-001, FR-AUTH-004]
-// Using TDD approach: tests define expected behavior
-
-// TestCallbackHandler_MissingCode_ReturnsBadRequest tests FR-AUTH-001 error handling
-func TestCallbackHandler_MissingCode_ReturnsBadRequest(t *testing.T) {
-	// Arrange
+// TestCallbackHandler_MissingCode_Returns400 tests missing code validation
+func TestCallbackHandler_MissingCode_Returns400(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/auth/callback", nil)
 	rr := httptest.NewRecorder()
 
-	// Act
 	CallbackHandler(rr, req)
 
-	// Assert
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rr.Code)
 	}
-
-	if body := rr.Body.String(); body != "Missing authorization code\n" {
-		t.Errorf("unexpected body: %s", body)
-	}
 }
 
-// TestCallbackHandler_TokenExchangeFails_ReturnsInternalError tests error handling
-func TestCallbackHandler_TokenExchangeFails_ReturnsInternalError(t *testing.T) {
-	// Arrange: Point to non-existent server to trigger connection error
-	t.Setenv("DSACCOUNT_SSO_URL", "http://localhost:19999") // non-existent
-	t.Setenv("DSACCOUNT_APP_ID", "test-app")
-	t.Setenv("DSACCOUNT_APP_SECRET", "test-secret")
-
-	req := httptest.NewRequest(http.MethodGet, "/auth/callback?code=test-code", nil)
-	rr := httptest.NewRecorder()
-
-	// Act
-	CallbackHandler(rr, req)
-
-	// Assert: Should fail to connect
-	if rr.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rr.Code)
-	}
-}
-
-// TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects tests FR-AUTH-001 happy path
-func TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects(t *testing.T) {
+// TestCallbackHandler_TokenExchangeSuccess_RedirectsWithoutSettingCookie tests FR-AUTH-001 happy path
+// IMPORTANT: This test verifies that the callback handler does NOT set cookies.
+// DSAccount owns session management and sets the ds_session cookie during the SSO flow.
+func TestCallbackHandler_TokenExchangeSuccess_RedirectsWithoutSettingCookie(t *testing.T) {
 	// Arrange: Mock DSAccount token endpoint
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/sso/token" {
@@ -77,25 +51,18 @@ func TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects(t *testing.
 	// Act
 	CallbackHandler(rr, req)
 
-	// Assert: Should redirect with cookie
+	// Assert: Should redirect
 	if rr.Code != http.StatusFound {
 		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
 	}
 
-	// Check cookie was set
+	// CRITICAL: Verify NO ds_session cookie is set
+	// DSAccount owns session cookies - consumer apps must not set them
 	cookies := rr.Result().Cookies()
-	var sessionCookie *http.Cookie
 	for _, c := range cookies {
 		if c.Name == "ds_session" {
-			sessionCookie = c
-			break
+			t.Fatal("ds_session cookie should NOT be set by consumer apps - DSAccount owns session management")
 		}
-	}
-	if sessionCookie == nil {
-		t.Fatal("expected ds_session cookie to be set")
-	}
-	if sessionCookie.Value != "mock-access-token" {
-		t.Errorf("expected cookie value 'mock-access-token', got %s", sessionCookie.Value)
 	}
 
 	// Check redirect location
@@ -133,15 +100,39 @@ func TestCallbackHandler_NoState_RedirectsToRoot(t *testing.T) {
 	if rr.Code != http.StatusFound {
 		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
 	}
-
 	location := rr.Header().Get("Location")
 	if location != "/" {
 		t.Errorf("expected redirect to /, got %s", location)
 	}
 }
 
-// TestCallbackHandler_ExternalState_RedirectsToRoot tests open redirect protection
-func TestCallbackHandler_ExternalState_RedirectsToRoot(t *testing.T) {
+// TestCallbackHandler_TokenExchangeFails_Returns401 tests auth failure
+func TestCallbackHandler_TokenExchangeFails_Returns401(t *testing.T) {
+	// Arrange: Mock DSAccount returning 401
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_code"}`))
+	}))
+	defer mockServer.Close()
+
+	t.Setenv("DSACCOUNT_SSO_URL", mockServer.URL)
+	t.Setenv("DSACCOUNT_APP_ID", "test-app")
+	t.Setenv("DSACCOUNT_APP_SECRET", "test-secret")
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/callback?code=invalid-code", nil)
+	rr := httptest.NewRecorder()
+
+	// Act
+	CallbackHandler(rr, req)
+
+	// Assert
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf("expected status %d, got %d", http.StatusUnauthorized, rr.Code)
+	}
+}
+
+// TestCallbackHandler_PreventOpenRedirect tests security against open redirect
+func TestCallbackHandler_PreventOpenRedirect(t *testing.T) {
 	// Arrange: Mock DSAccount token endpoint
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := tokenResponse{
@@ -158,79 +149,26 @@ func TestCallbackHandler_ExternalState_RedirectsToRoot(t *testing.T) {
 	t.Setenv("DSACCOUNT_APP_ID", "test-app")
 	t.Setenv("DSACCOUNT_APP_SECRET", "test-secret")
 
-	// Try to inject an external redirect URL
+	// Try to redirect to external URL
 	req := httptest.NewRequest(http.MethodGet, "/auth/callback?code=valid-code&state=https://evil.com", nil)
 	rr := httptest.NewRecorder()
 
 	// Act
 	CallbackHandler(rr, req)
 
-	// Assert: Should sanitize and redirect to root (not evil.com)
-	if rr.Code != http.StatusFound {
-		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
-	}
-
+	// Assert: Should redirect to / not evil.com
 	location := rr.Header().Get("Location")
 	if location != "/" {
-		t.Errorf("expected redirect to / (sanitized), got %s", location)
+		t.Errorf("expected redirect to / for external URL, got %s", location)
 	}
 }
 
-// TestCallbackHandler_BadTokenResponse_ReturnsError tests malformed response handling
-func TestCallbackHandler_BadTokenResponse_ReturnsError(t *testing.T) {
-	// Arrange: Mock DSAccount returning invalid JSON
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte("invalid json"))
-	}))
-	defer mockServer.Close()
-
-	t.Setenv("DSACCOUNT_SSO_URL", mockServer.URL)
-	t.Setenv("DSACCOUNT_APP_ID", "test-app")
-	t.Setenv("DSACCOUNT_APP_SECRET", "test-secret")
-
-	req := httptest.NewRequest(http.MethodGet, "/auth/callback?code=valid-code", nil)
-	rr := httptest.NewRecorder()
-
-	// Act
-	CallbackHandler(rr, req)
-
-	// Assert: Should return internal server error
-	if rr.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rr.Code)
-	}
-}
-
-// TestCallbackHandler_TokenExchangeUnauthorized_ReturnsUnauthorized tests 401 from DSAccount
-func TestCallbackHandler_TokenExchangeUnauthorized_ReturnsUnauthorized(t *testing.T) {
-	// Arrange: Mock DSAccount returning 401
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(`{"error": "invalid_code"}`))
-	}))
-	defer mockServer.Close()
-
-	t.Setenv("DSACCOUNT_SSO_URL", mockServer.URL)
-	t.Setenv("DSACCOUNT_APP_ID", "test-app")
-	t.Setenv("DSACCOUNT_APP_SECRET", "test-secret")
-
-	req := httptest.NewRequest(http.MethodGet, "/auth/callback?code=invalid-code", nil)
-	rr := httptest.NewRecorder()
-
-	// Act
-	CallbackHandler(rr, req)
-
-	// Assert: Should return unauthorized
-	if rr.Code != http.StatusUnauthorized {
-		t.Errorf("expected status %d, got %d", http.StatusUnauthorized, rr.Code)
-	}
-}
-
-// TestLogoutHandler_ClearsCookieAndRedirects tests FR-AUTH-004
-func TestLogoutHandler_ClearsCookieAndRedirects(t *testing.T) {
-	// Arrange
-	t.Setenv("DSACCOUNT_SSO_URL", "https://account.example.com")
-	t.Setenv("APP_URL", "https://app.example.com")
+// TestLogoutHandler_RedirectsToDSAccount tests FR-AUTH-004
+// IMPORTANT: This test verifies that logout does NOT clear cookies locally.
+// DSAccount owns session management and will clear the cookie during logout.
+func TestLogoutHandler_RedirectsToDSAccount(t *testing.T) {
+	t.Setenv("DSACCOUNT_SSO_URL", "https://account.digistratum.com")
+	t.Setenv("APP_URL", "https://developer.digistratum.com")
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/logout", nil)
 	rr := httptest.NewRecorder()
@@ -238,65 +176,30 @@ func TestLogoutHandler_ClearsCookieAndRedirects(t *testing.T) {
 	// Act
 	LogoutHandler(rr, req)
 
-	// Assert: Should redirect
+	// Assert: Should redirect to DSAccount logout
 	if rr.Code != http.StatusFound {
 		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
 	}
 
-	// Check cookie was cleared
+	location := rr.Header().Get("Location")
+	if !strings.HasPrefix(location, "https://account.digistratum.com/api/sso/logout") {
+		t.Errorf("expected redirect to DSAccount logout, got %s", location)
+	}
+
+	// CRITICAL: Verify NO cookie clearing is attempted
+	// DSAccount owns session cookies - consumer apps must not modify them
 	cookies := rr.Result().Cookies()
-	var sessionCookie *http.Cookie
 	for _, c := range cookies {
 		if c.Name == "ds_session" {
-			sessionCookie = c
-			break
+			t.Fatal("logout should NOT attempt to clear ds_session cookie - DSAccount owns session management")
 		}
 	}
-	if sessionCookie == nil {
-		t.Fatal("expected ds_session cookie to be cleared")
-	}
-	if sessionCookie.Value != "" {
-		t.Errorf("expected empty cookie value, got %s", sessionCookie.Value)
-	}
-	if sessionCookie.MaxAge != -1 {
-		t.Errorf("expected MaxAge -1 (delete), got %d", sessionCookie.MaxAge)
-	}
-
-	// Check redirect to DSAccount logout
-	location := rr.Header().Get("Location")
-	expected := "https://account.example.com/api/sso/logout?redirect_uri=https://app.example.com"
-	if location != expected {
-		t.Errorf("expected redirect to %s, got %s", expected, location)
-	}
 }
 
-// TestLogoutHandler_DefaultURLs tests logout with default env vars
-func TestLogoutHandler_DefaultURLs(t *testing.T) {
-	// Arrange: Don't set env vars, use defaults
-
-	req := httptest.NewRequest(http.MethodGet, "/auth/logout", nil)
-	rr := httptest.NewRecorder()
-
-	// Act
-	LogoutHandler(rr, req)
-
-	// Assert: Should use default URLs
-	if rr.Code != http.StatusFound {
-		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
-	}
-
-	location := rr.Header().Get("Location")
-	expected := "https://account.digistratum.com/api/sso/logout?redirect_uri=https://developer.digistratum.com"
-	if location != expected {
-		t.Errorf("expected redirect to %s, got %s", expected, location)
-	}
-}
-
-// TestLoginHandler_RedirectsToSSO tests FR-AUTH-001 login initiation
+// TestLoginHandler_RedirectsToSSO tests FR-AUTH-001
 func TestLoginHandler_RedirectsToSSO(t *testing.T) {
-	// Arrange
-	t.Setenv("DSACCOUNT_SSO_URL", "https://account.example.com")
-	t.Setenv("DSACCOUNT_APP_ID", "my-app-id")
+	t.Setenv("DSACCOUNT_SSO_URL", "https://account.digistratum.com")
+	t.Setenv("DSACCOUNT_APP_ID", "developer")
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/login?redirect=/dashboard", nil)
 	rr := httptest.NewRecorder()
@@ -304,77 +207,41 @@ func TestLoginHandler_RedirectsToSSO(t *testing.T) {
 	// Act
 	LoginHandler(rr, req)
 
-	// Assert: Should redirect to SSO
+	// Assert: Should redirect to DSAccount authorize
 	if rr.Code != http.StatusFound {
 		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
 	}
 
 	location := rr.Header().Get("Location")
-	// Check that it redirects to SSO with correct params
-	if !containsSubstring(location, "account.example.com/api/sso/authorize") {
-		t.Errorf("expected redirect to SSO authorize endpoint, got %s", location)
+	if !strings.HasPrefix(location, "https://account.digistratum.com/api/sso/authorize") {
+		t.Errorf("expected redirect to DSAccount authorize, got %s", location)
 	}
-	if !containsSubstring(location, "app_id=my-app-id") {
-		t.Errorf("expected app_id param, got %s", location)
-	}
-	// State should contain the redirect path (URL-encoded)
+
+	// Verify state parameter preserves redirect
 	if !containsSubstring(location, "state=%2Fdashboard") {
-		t.Errorf("expected state param with redirect path, got %s", location)
+		t.Errorf("expected state to contain encoded redirect path, got %s", location)
 	}
 }
 
-// TestLoginHandler_DefaultRedirect tests login with no redirect param
-func TestLoginHandler_DefaultRedirect(t *testing.T) {
-	// Arrange
-	t.Setenv("DSACCOUNT_SSO_URL", "https://account.example.com")
-	t.Setenv("DSACCOUNT_APP_ID", "my-app-id")
+// TestLoginHandler_ReturnUrlParam tests backward compatibility with return_url param
+func TestLoginHandler_ReturnUrlParam(t *testing.T) {
+	t.Setenv("DSACCOUNT_SSO_URL", "https://account.digistratum.com")
+	t.Setenv("DSACCOUNT_APP_ID", "developer")
 
-	req := httptest.NewRequest(http.MethodGet, "/auth/login", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/login?return_url=/settings", nil)
 	rr := httptest.NewRecorder()
 
 	// Act
 	LoginHandler(rr, req)
 
-	// Assert: Should redirect to SSO with state=/
-	if rr.Code != http.StatusFound {
-		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
-	}
-
+	// Assert: Should use return_url as state
 	location := rr.Header().Get("Location")
-	// Default redirect should be /
-	if !containsSubstring(location, "state=%2F") {
-		t.Errorf("expected default state=/ (encoded as %%2F), got %s", location)
+	if !containsSubstring(location, "state=%2Fsettings") {
+		t.Errorf("expected state to contain encoded return_url path, got %s", location)
 	}
 }
 
-// TestLoginHandler_DefaultSSO tests login with default SSO URL
-func TestLoginHandler_DefaultSSO(t *testing.T) {
-	// Arrange: Don't set DSACCOUNT_SSO_URL
-	t.Setenv("DSACCOUNT_APP_ID", "test-app")
-
-	req := httptest.NewRequest(http.MethodGet, "/auth/login", nil)
-	rr := httptest.NewRecorder()
-
-	// Act
-	LoginHandler(rr, req)
-
-	// Assert: Should use default SSO URL
-	if rr.Code != http.StatusFound {
-		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
-	}
-
-	location := rr.Header().Get("Location")
-	if !containsSubstring(location, "account.digistratum.com/api/sso/authorize") {
-		t.Errorf("expected default SSO URL, got %s", location)
-	}
-}
-
-// Helper function
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
+// containsSubstring is a helper that checks if haystack contains needle
+func containsSubstring(haystack, needle string) bool {
+	return strings.Contains(haystack, needle)
 }

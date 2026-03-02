@@ -1,134 +1,173 @@
-# Agentic Development Guidelines - ds-app-developer
+# AGENTS.md - App Boilerplate Development Guidelines
 
-> Guidelines for AI agents working on this codebase.
-> For comprehensive patterns and workflows, refer to the [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) repository.
+## Overview
 
----
+This boilerplate creates DS ecosystem apps with pre-integrated SSO authentication, 
+theme support, and the AppShell layout. Apps inherit these capabilities automatically
+when scaffolded via `create-app.sh`.
 
-## Quick Start for Agents
+## Critical Architecture Rules
 
-Before making any changes:
+### Session Management (DO NOT VIOLATE)
 
-1. **Read [REQUIREMENTS.md](./REQUIREMENTS.md)** — Source of truth for what the app must do
-2. **Read this file** — How to work on the code
-3. **Check `docs/ARCHITECTURE.md`** — Understand the patterns (if exists)
-4. **Review recent commits** — `git log --oneline -20`
+**DSAccount owns all session management.** Consumer apps MUST NOT:
 
----
+1. ❌ Set the `ds_session` cookie
+2. ❌ Clear the `ds_session` cookie  
+3. ❌ Modify the `ds_session` cookie in any way
+4. ❌ Create local sessions using the `ds_session` cookie name
 
-## Reference Documentation
+Consumer apps MUST:
 
-This app follows patterns established in **ds-app-developer**. For detailed guidance on:
+1. ✅ Read `ds_session` cookie to get session ID
+2. ✅ Validate sessions by calling DSAccount `/api/auth/me` with `Authorization: Bearer <session_id>`
+3. ✅ Redirect to DSAccount for login/logout (don't implement local auth)
 
-- **TDD Workflow**: Red → Green → Refactor cycle
-- **Requirements Traceability**: FR-XXX-NNN and NFR-XXX-NNN format
-- **Multi-Tenant Patterns**: Tenant-scoped queries, context propagation
-- **SSO Integration**: DSAccount authentication flow
-- **Error Handling**: Standard error response format
-- **Git Commits**: `type(scope): description [REQ-ID] (#issue)`
+### Why This Matters
 
-See: https://github.com/DigiStratum/ds-app-developer/blob/main/AGENTS.md
+The `ds_session` cookie is shared across `*.digistratum.com` via `Domain=.digistratum.com`.
+If a consumer app writes to this cookie, it will:
+- Overwrite DSAccount's session with invalid data
+- Break SSO for all other apps
+- Cause authentication loops and failures
 
----
+### Auth Handler Contract
 
-## Project Structure
+The `internal/auth/handlers.go` file provides three handlers:
 
-```
-ds-app-developer/
-├── REQUIREMENTS.md      # What the app must do (source of truth)
-├── AGENTS.md           # This file
-├── README.md           # Setup and overview
-│
-├── backend/            # Go Lambda handlers
-│   ├── cmd/api/        # Entry point
-│   ├── internal/       # Private packages
-│   └── pkg/            # Shared packages (copy from ds-app-developer)
-│
-├── frontend/           # React + TypeScript + Vite
-│   └── src/
-│
-└── docs/               # Detailed documentation
-```
+| Handler | Purpose | Cookie Behavior |
+|---------|---------|-----------------|
+| `LoginHandler` | Redirect to DSAccount `/api/sso/authorize` | None - just redirects |
+| `CallbackHandler` | Exchange auth code, redirect to app | None - just validates & redirects |
+| `LogoutHandler` | Redirect to DSAccount `/api/sso/logout` | None - DSAccount clears cookie |
 
----
+**If you need to modify these handlers: DO NOT add any `http.SetCookie` calls.**
 
-## Coding Standards
+### Session Validation Pattern
 
-### Go Backend
-- Error wrapping with context: `fmt.Errorf("...: %w", err)`
-- Structured logging: `slog.Info()`
-- Table-driven tests
-- Tenant-scoped queries
+```go
+// Correct: Read cookie, validate with DSAccount
+cookie, err := r.Cookie("ds_session")
+if err != nil {
+    // No session - treat as guest
+    return
+}
 
-### React Frontend
-- Functional components with hooks
-- Tailwind CSS for styling
-- Internationalized strings
-- TypeScript for type safety
-- **AppShell pattern** for consistent layout (see below)
+req, _ := http.NewRequest("GET", dsAccountURL+"/api/auth/me", nil)
+req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
----
-
-## AppShell Integration Pattern
-
-This app uses AppShell from `@digistratum/layout` for consistent layout across DigiStratum apps.
-
-### Key Files
-- `src/components/MyAppShell.tsx` - App-specific shell wrapper
-- `src/App.tsx` - Route definitions with shell integration
-
-### Pattern Overview
-
-```tsx
-// 1. Wrap your routes with MyAppShell
-<MyAppShell>
-  <YourPageContent />
-</MyAppShell>
-
-// 2. Protected routes combine ProtectedRoute + MyAppShell
-<ProtectedRoute>
-  <MyAppShell>
-    <ProtectedPageContent />
-  </MyAppShell>
-</ProtectedRoute>
+resp, err := client.Do(req)
+if err != nil || resp.StatusCode != 200 {
+    // Invalid session - treat as guest
+    return
+}
+// Parse user from response...
 ```
 
-### Customization Points
+### App-Specific Data
 
-1. **Navigation Items**: Edit `getMenuItems()` in `MyAppShell.tsx`
-2. **App Branding**: Pass `customHeaderContent` prop for CustomHeaderZone
-3. **Feature Toggles**: Control visibility via props (showAppSwitcher, showThemeToggle, etc.)
-4. **Custom Footer**: Replace default DSFooter if needed
+If your app needs to store session-specific data:
 
-### Reference Implementation
-See `ds-app-developer/frontend/src/components/DeveloperAppShell.tsx` for the canonical pattern.
+1. Use a **different cookie name** (e.g., `{app_name}_prefs`)
+2. Or store in **localStorage/sessionStorage** on the frontend
+3. Or use **DynamoDB** with the session ID as a key (read-only from cookie)
 
----
+Never overload `ds_session` with app-specific data.
 
-## Common Commands
+## Extending the Boilerplate
+
+### Adding API Endpoints
+
+1. Add handlers to `internal/api/handlers.go` or create new packages
+2. Wire routes in `cmd/lambda/main.go`
+3. Protected routes should use `session.RequireAuth(mux)` middleware
+
+### Adding Frontend Pages
+
+1. Add components to `frontend/src/pages/`
+2. Add routes in `frontend/src/App.tsx`
+3. Use `useAuth()` hook to check authentication state
+
+### Environment Variables
+
+Required for SSO (set by CDK or deploy workflow):
+
+| Variable | Description |
+|----------|-------------|
+| `DSACCOUNT_SSO_URL` | DSAccount base URL (e.g., `https://account.digistratum.com`) |
+| `DSACCOUNT_APP_ID` | App ID registered in DSAccount |
+| `DSACCOUNT_APP_SECRET` | App secret from Secrets Manager |
+| `APP_URL` | This app's public URL (for redirects) |
+
+### Testing Locally
 
 ```bash
 # Backend
-cd backend && go run ./cmd/api
 cd backend && go test ./...
 
-# Frontend
-cd frontend && npm run dev
+# Frontend  
 cd frontend && npm test
 
-# Build
-make build  # If Makefile exists
+# E2E (requires running backend)
+cd frontend && npm run e2e
 ```
 
----
+## Common Mistakes
 
-## When Stuck
+### ❌ Wrong: Setting session cookie in callback
 
-1. Re-read REQUIREMENTS.md
-2. Check existing patterns in ds-app-developer
-3. Run tests to understand expected behavior
-4. Trace the flow from entry point
+```go
+// DON'T DO THIS
+func CallbackHandler(w http.ResponseWriter, r *http.Request) {
+    // ... exchange code ...
+    http.SetCookie(w, &http.Cookie{
+        Name:  "ds_session",
+        Value: tokenResp.AccessToken,  // WRONG!
+    })
+}
+```
 
----
+### ✅ Correct: Just redirect after validation
 
-*This document is AI-friendly by design. Agents: load this file at the start of every session.*
+```go
+func CallbackHandler(w http.ResponseWriter, r *http.Request) {
+    // ... exchange code (validates auth) ...
+    // DSAccount already set the cookie - just redirect
+    http.Redirect(w, r, redirectURL, http.StatusFound)
+}
+```
+
+### ❌ Wrong: Clearing cookie on logout
+
+```go
+// DON'T DO THIS
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    http.SetCookie(w, &http.Cookie{
+        Name:   "ds_session",
+        MaxAge: -1,  // WRONG!
+    })
+    http.Redirect(w, r, dsAccountLogout, http.StatusFound)
+}
+```
+
+### ✅ Correct: Let DSAccount handle cookie
+
+```go
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // Redirect to DSAccount - it will clear the cookie
+    http.Redirect(w, r, dsAccountLogout+"?redirect_uri="+appURL, http.StatusFound)
+}
+```
+
+## Deployment Checklist
+
+1. [ ] App registered in DSAccount with correct `redirect_uri`
+2. [ ] `DSACCOUNT_APP_SECRET` in Secrets Manager
+3. [ ] Deploy workflow injects secret into Lambda env
+4. [ ] CloudFront routes `/api/*` to API Gateway origin
+5. [ ] Test full SSO flow: login → callback → app → logout → return
+
+## Questions?
+
+If unsure about SSO integration, check DSAccount's API documentation or 
+consult the ds-app-developer reference implementation.

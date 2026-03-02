@@ -64,7 +64,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 // This is the primary endpoint for the frontend to check session status.
 // Calls DSAccount to validate sessions and get user info (including tenants).
 func GetSessionHandler(w http.ResponseWriter, r *http.Request) {
-	// Read ds_session cookie (contains JWT from SSO flow)
+	// Read ds_session cookie (contains session ID from DSAccount)
 	cookie, err := r.Cookie("ds_session")
 	if err != nil || cookie.Value == "" {
 		// No session - return guest state
