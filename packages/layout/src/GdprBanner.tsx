@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { DS_URLS } from '@digistratum/ds-core';
 
 const COOKIE_CONSENT_KEY = 'ds-cookie-consent';
+// Cookie domain for cross-subdomain sharing (e.g., developer.digistratum.com, account.digistratum.com)
+const COOKIE_DOMAIN = '.digistratum.com';
+// Consent cookie expires in 1 year
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
 export type ConsentLevel = 'all' | 'essential' | null;
 
@@ -14,9 +18,35 @@ function subscribe(callback: () => void): () => void {
   return () => listeners.delete(callback);
 }
 
+/**
+ * Read consent level from cookie
+ */
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Set consent cookie with cross-subdomain domain
+ */
+function setCookie(name: string, value: string, maxAge: number): void {
+  if (typeof document === 'undefined') return;
+  // Use root domain for cross-subdomain sharing
+  // SameSite=Lax allows the cookie to be sent on navigation from external sites
+  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+}
+
+/**
+ * Delete consent cookie
+ */
+function deleteCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; domain=${COOKIE_DOMAIN}; path=/; max-age=0`;
+}
+
 function getSnapshot(): ConsentLevel {
-  if (typeof window === 'undefined') return null;
-  const value = localStorage.getItem(COOKIE_CONSENT_KEY);
+  const value = getCookie(COOKIE_CONSENT_KEY);
   if (value === 'all' || value === 'essential') {
     return value;
   }
@@ -34,12 +64,12 @@ export function useConsent() {
   const consentLevel = useSyncExternalStore(subscribe, getSnapshot, () => null);
 
   const setConsent = useCallback((level: 'all' | 'essential') => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, level);
+    setCookie(COOKIE_CONSENT_KEY, level, COOKIE_MAX_AGE);
     notifyListeners();
   }, []);
 
   const clearConsent = useCallback(() => {
-    localStorage.removeItem(COOKIE_CONSENT_KEY);
+    deleteCookie(COOKIE_CONSENT_KEY);
     notifyListeners();
   }, []);
 
