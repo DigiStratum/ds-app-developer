@@ -41,6 +41,8 @@ export interface DeveloperFooterProps {
   showDefaultLinks?: boolean;
   /** Additional links to show in footer */
   extraLinks?: FooterLink[];
+  /** Show ad demo toggle in footer (default: true - set false if in header menu) */
+  showAdToggle?: boolean;
   /** Additional class names for the footer element */
   className?: string;
 }
@@ -139,6 +141,7 @@ export function DeveloperFooter({
   showCopyright = true,
   showDefaultLinks = true,
   extraLinks = [],
+  showAdToggle = true,
   className = '',
 }: DeveloperFooterProps) {
   const { t } = useTranslation();
@@ -178,8 +181,8 @@ export function DeveloperFooter({
 
             {/* Links and Dev Tools */}
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 mt-2 sm:mt-0">
-              {/* Ad Demo Toggle (Developer Tool) */}
-              <AdDemoToggle />
+              {/* Ad Demo Toggle (Developer Tool) - only if not moved to header */}
+              {showAdToggle && <AdDemoToggle />}
               
               {/* Links */}
               {allLinks.length > 0 && (

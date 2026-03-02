@@ -5,6 +5,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@digistratum/ds-core';
 import { DeveloperFooter, FooterLink } from './DeveloperFooter';
 import { AdSlot } from './AdSlot';
+import { AdDemoToggle } from './AdDemoToggle';
+import { PlaceholderAd } from './PlaceholderAd';
+import { useAdDemoSafe } from '../hooks/useAdDemo';
 
 interface LayoutProps {
   children: ReactNode;
@@ -53,6 +56,7 @@ export function Layout({
 }: LayoutProps) {
   const { user, isAuthenticated, login, logout, currentTenant, switchTenant } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { showAdDemo } = useAdDemoSafe();
 
   // Build auth context for DSHeader
   const auth: AuthContext = {
@@ -76,11 +80,21 @@ export function Layout({
     setTheme,
   };
 
+  // App-specific menu content for hamburger menu
+  const menuContent = (
+    <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+        Developer Tools
+      </p>
+      <AdDemoToggle />
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--ds-bg-margin)' }}>
       {/* Header - white bg, bottom corners radiused */}
       <header 
-        className="ds-container-margins bg-white dark:bg-gray-800"
+        className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
         style={{ borderBottomLeftRadius: 'var(--ds-container-radius)', borderBottomRightRadius: 'var(--ds-container-radius)' }}
       >
         <DSHeader 
@@ -94,10 +108,14 @@ export function Layout({
           showUserMenu={showUserMenu}
           showPreferences={false}
           showTenantSwitcher={true}
+          menuContent={menuContent}
         />
       </header>
       
-      <AdSlot position="header" />
+      {/* Ad slot between header and content */}
+      <AdSlot position="header">
+        {showAdDemo && <PlaceholderAd position="header" />}
+      </AdSlot>
       
       {/* Main Content - white bg, all four corners radiused */}
       <main 
@@ -109,17 +127,21 @@ export function Layout({
         </div>
       </main>
       
-      <AdSlot position="footer" />
+      {/* Ad slot between content and footer */}
+      <AdSlot position="footer">
+        {showAdDemo && <PlaceholderAd position="footer" />}
+      </AdSlot>
       
       {/* Footer - white bg, top corners radiused */}
       <footer 
-        className="ds-container-margins bg-white dark:bg-gray-800"
+        className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
         style={{ borderTopLeftRadius: 'var(--ds-container-radius)', borderTopRightRadius: 'var(--ds-container-radius)' }}
       >
         <DeveloperFooter 
           appName={appName}
           showGdprBanner={showGdprBanner}
           extraLinks={extraFooterLinks}
+          showAdToggle={false}
         />
       </footer>
     </div>
