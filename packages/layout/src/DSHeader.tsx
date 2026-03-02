@@ -215,7 +215,7 @@ export function DSHeader({
               <img 
                 src={logoUrl} 
                 alt=""
-                className="h-[35px]"
+                className="h-[25px]"
               />
             </a>
 
