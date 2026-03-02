@@ -2,7 +2,6 @@
   "name": "ds-app-developer",
   "private": true,
   "workspaces": [
-    "packages/*",
     "frontend"
   ]
 }

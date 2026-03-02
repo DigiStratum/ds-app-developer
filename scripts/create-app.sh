@@ -25,6 +25,8 @@
 #   DSACCOUNT_ADMIN_TOKEN - Super-admin session token for auto-registration (optional)
 #                           Auto-sourced from ~/.openclaw/workspace/dsaccount-admin-credentials.env
 #   DSACCOUNT_API_URL     - DSAccount API URL (default: https://account.digistratum.com)
+#   NPM_TOKEN             - GitHub PAT with read:packages scope for @digistratum packages
+#                           Auto-sourced from ~/.openclaw/workspace/github-credentials.env
 
 set -e
 
