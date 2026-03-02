@@ -25,3 +25,6 @@ export type { TenantThemeState, UseTenantThemeOptions } from './useTenantTheme';
 
 // Discovery
 export { useDiscovery, useDiscoveryPrefetch } from './useDiscovery';
+
+// Shell loader
+export { useShellLoader, prefetchShell } from './useShellLoader';

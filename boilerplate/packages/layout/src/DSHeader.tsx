@@ -47,6 +47,8 @@ export interface DSHeaderProps {
   showPreferences?: boolean;
   showTenantSwitcher?: boolean;
   className?: string;
+  /** App-specific menu content injected into the hamburger menu */
+  menuContent?: React.ReactNode;
 }
 
 /**
@@ -78,6 +80,7 @@ export function DSHeader({
   showPreferences = true,
   showTenantSwitcher = true,
   className = '',
+  menuContent,
 }: DSHeaderProps) {
   const { t } = useTranslation();
   const [showUserMenuDropdown, setShowUserMenuDropdown] = useState(false);
@@ -199,7 +202,7 @@ export function DSHeader({
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and nav links */}
@@ -212,33 +215,14 @@ export function DSHeader({
               <img 
                 src={logoUrl} 
                 alt=""
-                className="h-8 w-auto"
+                className="h-[25px]"
               />
             </a>
 
-            {/* Desktop nav links */}
-            {navLinks.length > 0 && (
-              <nav className="hidden md:flex items-center ml-8 space-x-4">
-                {navLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.path}
-                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      link.active 
-                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                        : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    {link.icon && <span className="mr-2">{link.icon}</span>}
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
+          {/* Hamburger menu button - always visible */}
+          <div className="flex items-center">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -256,8 +240,8 @@ export function DSHeader({
             </button>
           </div>
 
-          {/* Desktop controls */}
-          <div className="hidden sm:flex items-center space-x-2">
+          {/* Desktop controls - hidden, all controls in hamburger menu */}
+          <div className="hidden items-center space-x-2">
             {/* App Switcher */}
             {showAppSwitcher && (
               <div className="relative" ref={appSwitcherRef}>
@@ -450,93 +434,224 @@ export function DSHeader({
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Sectioned menu - visible on all screen sizes when open */}
       {showMobileMenu && (
-        <div className="sm:hidden border-t border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-3 space-y-3">
-            {/* Nav links */}
-            {navLinks.length > 0 && (
-              <div className="pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="border-t border-gray-200 dark:border-gray-700">
+          {/* Nav links - always full width at top if present */}
+          {navLinks.length > 0 && (
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex flex-wrap gap-2">
                 {navLinks.map((link, index) => (
                   <a
                     key={index}
                     href={link.path}
-                    className={`flex items-center px-4 py-2 text-sm rounded-md ${
+                    className={`inline-flex items-center px-4 py-2 text-sm rounded-md w-full sm:w-auto ${
                       link.active 
                         ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                     onClick={() => setShowMobileMenu(false)}
                   >
-                    {link.icon && <span className="mr-3">{link.icon}</span>}
+                    {link.icon && <span className="mr-2">{link.icon}</span>}
                     {link.label}
                   </a>
                 ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* App Switcher - mobile */}
-            {showAppSwitcher && (
-              <div className="pb-3 border-b border-gray-200 dark:border-gray-700">
-                <p className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  {t('nav.dsApps', 'DigiStratum Apps')}
+          {/* Sectioned grid container - sections float side-by-side on wide, stack on narrow */}
+          <div className="px-4 py-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              {/* Section 1: Account */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                  {t('nav.account', 'Account')}
                 </p>
-                {apps.map((app) => {
-                  const isCurrent = currentAppId === app.id;
-                  if (isCurrent) {
-                    return (
-                      <div
-                        key={app.id}
-                        className="flex items-center px-4 py-2 text-sm rounded-md bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
-                      >
-                        <span className="text-lg mr-3">{app.icon}</span>
-                        <span className="font-medium">{app.name}</span>
-                        <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
-                          {t('nav.current', 'Current')}
-                        </span>
-                      </div>
-                    );
-                  }
-                  return (
-                    <a
-                      key={app.id}
-                      href={app.url}
-                      className="flex items-center px-4 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => setShowMobileMenu(false)}
+                <div className="space-y-1">
+                  {/* Guest: Sign In */}
+                  {!isAuthenticated && showUserMenu && auth && (
+                    <button
+                      onClick={() => { auth.login(); setShowMobileMenu(false); }}
+                      className="flex items-center w-full md:w-48 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
                     >
-                      <span className="text-lg mr-3">{app.icon}</span>
-                      <span className="font-medium">{app.name}</span>
-                    </a>
-                  );
-                })}
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
+                      {t('auth.signIn', 'Sign In')}
+                    </button>
+                  )}
+
+                  {/* Authenticated user */}
+                  {isAuthenticated && user && showUserMenu && (
+                    <>
+                      {/* User identity */}
+                      <a 
+                        href={DS_URLS.ACCOUNT}
+                        className="flex items-center w-full md:w-48 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        {user.avatarUrl ? (
+                          <img src={user.avatarUrl} alt={userName} className="w-8 h-8 rounded-full" />
+                        ) : (
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                            {(userName || '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="ml-2 min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userName || user.email}</p>
+                          <p className="text-xs text-blue-500 dark:text-blue-400">{t('nav.myAccount', 'My Account')} →</p>
+                        </div>
+                      </a>
+
+                      {/* Tenant Switcher */}
+                      {showTenantSwitcher && user.tenants && user.tenants.length > 0 && auth && (
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                          <p className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400">
+                            {t('nav.workspace', 'Workspace')}
+                          </p>
+                          <button
+                            onClick={() => { auth.switchTenant(null); setShowMobileMenu(false); }}
+                            className={`flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md ${
+                              !currentTenant 
+                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
+                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            {t('nav.personal', 'Personal')}
+                          </button>
+                          {user.tenants.map((tenant) => (
+                            <button
+                              key={tenant.id}
+                              onClick={() => { auth.switchTenant(tenant.id); setShowMobileMenu(false); }}
+                              className={`flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md ${
+                                currentTenant === tenant.id 
+                                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
+                                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                              }`}
+                            >
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                              <span className="truncate">{tenant.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Theme toggle */}
+                      {showThemeToggle && theme && (
+                        <button
+                          onClick={cycleTheme}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <ThemeIcon />
+                          <span className="ml-2">
+                            {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
+                          </span>
+                        </button>
+                      )}
+
+                      {/* Settings link */}
+                      {showPreferences && (
+                        <a 
+                          href="/settings" 
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => setShowMobileMenu(false)}
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {t('common.settings', 'Settings')}
+                        </a>
+                      )}
+
+                      {/* Logout */}
+                      {auth && (
+                        <button
+                          onClick={() => { auth.logout(); setShowMobileMenu(false); }}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          {t('common.logout', 'Sign Out')}
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Theme toggle for guests */}
+                  {!isAuthenticated && showThemeToggle && theme && (
+                    <button
+                      onClick={cycleTheme}
+                      className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <ThemeIcon />
+                      <span className="ml-2">
+                        {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
 
-            {/* Theme toggle - mobile */}
-            {showThemeToggle && theme && (
-              <button
-                onClick={cycleTheme}
-                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <ThemeIcon />
-                <span className="ml-3">
-                  {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
-                </span>
-              </button>
-            )}
+              {/* Section 2: App Switcher */}
+              {showAppSwitcher && (
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                  <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                    {t('nav.dsApps', 'DigiStratum Apps')}
+                  </p>
+                  <div className="space-y-1">
+                    {apps.map((app) => {
+                      const isCurrent = currentAppId === app.id;
+                      if (isCurrent) {
+                        return (
+                          <div
+                            key={app.id}
+                            className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
+                          >
+                            <span className="text-lg mr-2">{app.icon}</span>
+                            <span className="font-medium truncate">{app.name}</span>
+                            <span className="ml-auto text-xs text-blue-500 dark:text-blue-300 shrink-0">
+                              {t('nav.current', 'Current')}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <a
+                          key={app.id}
+                          href={app.url}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => setShowMobileMenu(false)}
+                        >
+                          <span className="text-lg mr-2">{app.icon}</span>
+                          <span className="font-medium truncate">{app.name}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-            {/* Logout - mobile */}
-            {isAuthenticated && showUserMenu && auth && (
-              <button
-                onClick={() => { auth.logout(); setShowMobileMenu(false); }}
-                className="flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                {t('common.logout', 'Logout')}
-              </button>
-            )}
+              {/* Section 3: App-specific content */}
+              {menuContent && (
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                  <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                    {t('nav.appOptions', 'Options')}
+                  </p>
+                  <div className="space-y-1 [&>*]:w-full [&>*]:md:w-48">
+                    {menuContent}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

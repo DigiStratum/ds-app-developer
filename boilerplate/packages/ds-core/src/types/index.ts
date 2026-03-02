@@ -180,3 +180,28 @@ export type {
   DiscoveryClientOptions,
   UseDiscoveryState,
 } from './discovery';
+
+// =============================================================================
+// Shell Loader Types
+// =============================================================================
+
+export type {
+  ShellModuleExports,
+  DSAppShellProps,
+  DSHeaderProps,
+  DSFooterProps,
+  AdSlotProps,
+  GdprBannerProps,
+  CookiePreferencesModalProps,
+  ShellSlotConfig,
+  ShellNavLink,
+  ShellApp,
+  ShellFooterLink,
+  ShellUser,
+  ShellAuthContext,
+  ShellThemeContext,
+  ShellLoaderConfig,
+  ShellLoadStatus,
+  UseShellLoaderState,
+  UseShellLoaderOptions,
+} from './shell-loader';

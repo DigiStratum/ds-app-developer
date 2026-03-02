@@ -15,7 +15,7 @@ export default defineConfig([
     splitting: false,
     sourcemap: true,
     clean: true,
-    external: ['react'],
+    external: ['react', '@digistratum/layout'],
   },
   // UMD bundle for CDN distribution
   {
@@ -27,9 +27,13 @@ export default defineConfig([
     splitting: false,
     sourcemap: true,
     minify: true,
-    external: ['react'],
+    external: ['react', '@digistratum/layout'],
+    // Skip module resolution for externals during IIFE build
+    noExternal: [],
     esbuildOptions(options) {
       options.globalName = 'DSCore';
+      // Ensure externals are truly external
+      options.external = ['react', 'react-dom', '@digistratum/layout'];
       // React should be loaded separately for UMD usage
       options.footer = {
         js: '// @digistratum/ds-core UMD bundle - requires React as global',
