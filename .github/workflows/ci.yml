@@ -102,14 +102,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: boilerplate/frontend/package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@digistratum'
+
+      - name: Configure npm for GitHub Packages (public, no auth required)
+        run: |
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
         run: npm install
         working-directory: boilerplate/frontend
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run ESLint
         run: npm run lint
@@ -131,14 +131,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: boilerplate/frontend/package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@digistratum'
+
+      - name: Configure npm for GitHub Packages (public, no auth required)
+        run: |
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
         run: npm install
         working-directory: boilerplate/frontend
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -286,14 +286,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: boilerplate/frontend/package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@digistratum'
+
+      - name: Configure npm for GitHub Packages (public, no auth required)
+        run: |
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Install dependencies
         run: npm install
         working-directory: boilerplate/frontend
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build frontend
         working-directory: boilerplate/frontend
