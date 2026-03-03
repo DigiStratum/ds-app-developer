@@ -11,6 +11,7 @@ env:
   NODE_VERSION: '20'
 
 permissions:
+  packages: read          # For reading @digistratum packages from GitHub Packages
   contents: read
   actions: read           # For CodeQL to read workflow runs
   security-events: write  # For CodeQL to upload results

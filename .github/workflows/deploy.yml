@@ -24,6 +24,7 @@ env:
   DOMAIN_NAME: 'developer.digistratum.com'
 
 permissions:
+  packages: read          # For reading @digistratum packages from GitHub Packages
   actions: read
   id-token: write
   contents: read
