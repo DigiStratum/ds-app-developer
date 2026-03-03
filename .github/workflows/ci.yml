@@ -100,12 +100,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: boilerplate/frontend/package-lock.json
+          # Disable npm cache to avoid auth issues
+          cache: ''
 
-      - name: Configure npm for GitHub Packages (public, no auth required)
+      - name: Configure npm for GitHub Packages
         run: |
-          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          # Configure scoped registry for @digistratum packages
+          npm config set @digistratum:registry https://npm.pkg.github.com
+          # Verify no auth tokens are configured
+          cat ~/.npmrc || true
+          echo "npm config list:"
+          npm config list
 
       - name: Install dependencies
         run: npm install
@@ -129,12 +134,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: boilerplate/frontend/package-lock.json
+          cache: ''
 
-      - name: Configure npm for GitHub Packages (public, no auth required)
+      - name: Configure npm for GitHub Packages
         run: |
-          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          npm config set @digistratum:registry https://npm.pkg.github.com
+          cat ~/.npmrc || true
 
       - name: Install dependencies
         run: npm install
@@ -284,12 +289,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: boilerplate/frontend/package-lock.json
+          cache: ''
 
-      - name: Configure npm for GitHub Packages (public, no auth required)
-        run: |
-          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+      - name: Configure npm for GitHub Packages
+        run: npm config set @digistratum:registry https://npm.pkg.github.com
 
       - name: Install dependencies
         run: npm install
