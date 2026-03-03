@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { DSHeader } from '@digistratum/layout';
+import { useLocation } from 'react-router-dom';
+import { AppShell, type MenuItem, type Tenant, type User } from '@digistratum/layout';
 import type { AuthContext, ThemeContext } from '@digistratum/layout';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@digistratum/ds-core';
@@ -27,21 +28,21 @@ interface LayoutProps {
 }
 
 /**
- * Standard layout wrapper [FR-NAV-001, FR-NAV-003, FR-NAV-004]
+ * Standard layout wrapper using AppShell [FR-NAV-001, FR-NAV-003, FR-NAV-004]
  * 
- * Layout structure:
+ * This is the reference implementation - Developer app eats its own dog food
+ * by using AppShell from @digistratum/layout. Changes to AppShell are validated
+ * here before being pushed to other DS apps.
+ * 
+ * Layout structure (provided by AppShell):
  * - Header: white bg, bottom corners radiused
- * - AdSlot (optional)
  * - Main Content: white bg, all four corners radiused
- * - AdSlot (optional)  
  * - Footer: white bg, top corners radiused
  * 
- * Page background is the margin color (medium gray in light, dark gray in dark).
- * Containers float as distinct rounded elements with side margins.
- * Side margins: 5px on desktop, 0 on mobile (#291)
- *
- * Uses DSHeader from @digistratum/layout for standardized navigation.
- * App-specific content is inserted into the main content container via {children}.
+ * App-specific additions:
+ * - AdSlots between header/content and content/footer
+ * - Developer Tools menu section with AdDemoToggle
+ * - Custom DeveloperFooter
  */
 export function Layout({ 
   children, 
@@ -57,8 +58,9 @@ export function Layout({
   const { user, isAuthenticated, login, logout, currentTenant, switchTenant } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { showAdDemo } = useAdDemoSafe();
+  const location = useLocation();
 
-  // Build auth context for DSHeader
+  // Build auth context for AppShell
   const auth: AuthContext = {
     user: user ? {
       id: user.id || user.email || 'unknown',
@@ -73,77 +75,103 @@ export function Layout({
     switchTenant,
   };
 
-  // Build theme context for DSHeader
+  // Build theme context for AppShell
   const themeContext: ThemeContext = {
     theme,
     resolvedTheme,
     setTheme,
   };
 
-  // App-specific menu content for hamburger menu
+  /**
+   * Get Developer app menu items based on user context
+   * 
+   * This callback defines navigation for the Developer app.
+   * Items can be conditionally included based on auth state.
+   */
+  const getMenuItems = (authUser: User | null, _tenant: Tenant | null): MenuItem[] => {
+    const items: MenuItem[] = [];
+    
+    // Public navigation
+    items.push({
+      id: 'home',
+      label: 'Home',
+      path: '/',
+      icon: '🏠',
+      active: location.pathname === '/',
+    });
+
+    // Authenticated user navigation
+    if (authUser) {
+      items.push({
+        id: 'dashboard',
+        label: 'Dashboard',
+        path: '/dashboard',
+        icon: '📊',
+        active: location.pathname === '/dashboard',
+      });
+
+      items.push({
+        id: 'settings',
+        label: 'Settings',
+        path: '/settings',
+        icon: '⚙️',
+        active: location.pathname === '/settings',
+      });
+    }
+
+    return items;
+  };
+
+  // Custom footer with Developer-specific options
+  const customFooter = (
+    <DeveloperFooter 
+      appName={appName}
+      showGdprBanner={showGdprBanner}
+      extraLinks={extraFooterLinks}
+      showAdToggle={false}
+    />
+  );
+
+  // Developer Tools menu content (AdDemoToggle)
   const menuContent = (
-    <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+    <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+      <p className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400">
         Developer Tools
       </p>
-      <AdDemoToggle />
+      <div className="px-3 py-2">
+        <AdDemoToggle />
+      </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--ds-bg-margin)' }}>
-      {/* Header - white bg, bottom corners radiused */}
-      <header 
-        className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
-        style={{ borderBottomLeftRadius: 'var(--ds-container-radius)', borderBottomRightRadius: 'var(--ds-container-radius)' }}
-      >
-        <DSHeader 
-          appName={appName}
-          logoUrl={appLogo}
-          currentAppId={currentAppId}
-          auth={auth}
-          theme={themeContext}
-          showAppSwitcher={showAppSwitcher}
-          showThemeToggle={showThemeToggle}
-          showUserMenu={showUserMenu}
-          showPreferences={false}
-          showTenantSwitcher={true}
-          menuContent={menuContent}
-        />
-      </header>
-      
+    <AppShell
+      appName={appName}
+      currentAppId={currentAppId}
+      logoUrl={appLogo}
+      auth={auth}
+      theme={themeContext}
+      getMenuItems={getMenuItems}
+      customFooter={customFooter}
+      showAppSwitcher={showAppSwitcher}
+      showThemeToggle={showThemeToggle}
+      showUserMenu={showUserMenu}
+      showPreferences={false}
+      showGdprBanner={false}
+      appsApiUrl="/api/apps"
+      menuContent={menuContent}
+    >
       {/* Ad slot between header and content */}
       <AdSlot position="header">
         {showAdDemo && <PlaceholderAd position="header" />}
       </AdSlot>
       
-      {/* Main Content - white bg, all four corners radiused */}
-      <main 
-        className="ds-container-margins flex-1 bg-white dark:bg-gray-800 my-2"
-        style={{ borderRadius: 'var(--ds-container-radius)' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          {children}
-        </div>
-      </main>
+      {children}
       
       {/* Ad slot between content and footer */}
       <AdSlot position="footer">
         {showAdDemo && <PlaceholderAd position="footer" />}
       </AdSlot>
-      
-      {/* Footer - white bg, top corners radiused */}
-      <footer 
-        className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
-        style={{ borderTopLeftRadius: 'var(--ds-container-radius)', borderTopRightRadius: 'var(--ds-container-radius)' }}
-      >
-        <DeveloperFooter 
-          appName={appName}
-          showGdprBanner={showGdprBanner}
-          extraLinks={extraFooterLinks}
-          showAdToggle={false}
-        />
-      </footer>
-    </div>
+    </AppShell>
   );
 }
