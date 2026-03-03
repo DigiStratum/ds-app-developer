@@ -230,14 +230,14 @@ export async function loadShellModule(
       try {
         console.info('[ShellLoader] Attempting local fallback import...');
         // Dynamic import of local package - marked as external by bundler config
-        // The @vite-ignore comment prevents Vite from analyzing this import
-        // Using a variable for the module path prevents TypeScript from trying to
-        // resolve the types during declaration emit (avoids circular dependency)
-        const layoutModulePath = '@digistratum/layout';
-        const localModule = await import(
-          /* @vite-ignore */
-          layoutModulePath
-        ) as ShellModuleExports;
+        // Using Function constructor to create a truly dynamic import that TypeScript
+        // cannot analyze during declaration emit (avoids TS2307 circular dependency error).
+        // The @digistratum/layout package must be available at runtime for fallback to work.
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        const dynamicImport = new Function('specifier', 'return import(specifier)') as (
+          specifier: string
+        ) => Promise<unknown>;
+        const localModule = (await dynamicImport('@digistratum/layout')) as ShellModuleExports;
         state.module = localModule;
         state.error = null;
         return localModule;
