@@ -102,11 +102,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build local packages (ds-core, layout)
+        run: |
+          # Build ds-core first (layout depends on it)
+          cd packages/ds-core && npm install && npm run build && cd ../..
+          # Build layout 
+          cd packages/layout && npm install && npm run build && cd ../..
+
+      - name: Install frontend with local packages
         working-directory: boilerplate/frontend
-        env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Update package.json to use local packages
+          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
+          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
+          npm install
 
       - name: Run ESLint
         run: npm run lint
@@ -128,11 +137,17 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build local packages (ds-core, layout)
+        run: |
+          cd packages/ds-core && npm install && npm run build && cd ../..
+          cd packages/layout && npm install && npm run build && cd ../..
+
+      - name: Install frontend with local packages
         working-directory: boilerplate/frontend
-        env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
+          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
+          npm install
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -280,11 +295,17 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build local packages (ds-core, layout)
+        run: |
+          cd packages/ds-core && npm install && npm run build && cd ../..
+          cd packages/layout && npm install && npm run build && cd ../..
+
+      - name: Install frontend with local packages
         working-directory: boilerplate/frontend
-        env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
+          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
+          npm install
 
       - name: Build frontend
         working-directory: boilerplate/frontend
