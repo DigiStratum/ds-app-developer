@@ -1,6 +1,6 @@
 import { useMemo, ReactNode } from 'react';
 import type { AppShellProps, MenuItem, Tenant } from './types';
-import type { AuthContext, ThemeContext, NavLink, DSApp, FooterLink } from '../../types';
+import type { AuthContext, ThemeContext, DSApp, FooterLink } from '../../types';
 import { DSHeader } from '../../DSHeader';
 import { DSFooter } from '../../DSFooter';
 
@@ -69,18 +69,6 @@ export interface AppShellExtendedProps extends AppShellProps {
   
   /** Custom menu content for hamburger menu (in addition to app nav items) */
   menuContent?: ReactNode;
-}
-
-/**
- * Convert MenuItem to NavLink for DSHeader compatibility
- */
-function menuItemToNavLink(item: MenuItem): NavLink {
-  return {
-    label: item.label,
-    path: item.path ?? '#',
-    icon: item.icon,
-    active: item.active,
-  };
 }
 
 /**
@@ -208,17 +196,12 @@ export function AppShell({
   
   // Generate menu items using the callback
   const menuItems = useMemo(() => {
-    if (!getMenuItems) return [];
+    if (hideNavigation || !getMenuItems) return [];
     return getMenuItems(user, tenant);
-  }, [getMenuItems, user, tenant]);
-  
-  // Convert menu items to nav links for DSHeader (for inline nav if shown)
-  const navLinks = useMemo(() => {
-    return menuItems.map(menuItemToNavLink);
-  }, [menuItems]);
+  }, [getMenuItems, user, tenant, hideNavigation]);
 
   // Generate hamburger menu content from menu items
-  // This renders app nav items in the "Options" section of the hamburger menu
+  // Menu items appear ONLY in the "Options" section - NOT as navLinks
   const hamburgerMenuContent = useMemo(() => {
     const itemLinks = renderMenuItemsAsLinks(menuItems);
     
@@ -286,7 +269,7 @@ export function AppShell({
             logoAlt={logoAlt}
             auth={auth}
             theme={theme}
-            navLinks={hideNavigation ? [] : navLinks}
+            navLinks={[]}  // Don't pass navLinks - items go in menuContent only
             apps={apps}
             appsApiUrl={appsApiUrl}
             showAppSwitcher={showAppSwitcher}
