@@ -109,7 +109,7 @@ jobs:
         run: npm install
         working-directory: boilerplate/frontend
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Run ESLint
         run: npm run lint
@@ -138,7 +138,7 @@ jobs:
         run: npm install
         working-directory: boilerplate/frontend
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -293,7 +293,7 @@ jobs:
         run: npm install
         working-directory: boilerplate/frontend
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Build frontend
         working-directory: boilerplate/frontend
