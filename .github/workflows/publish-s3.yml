@@ -1,0 +1,239 @@
+name: Publish Packages to S3
+
+# Publish @digistratum packages to S3-based artifact repository
+# Packages are served via CloudFront at https://packages.digistratum.com
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - ds-core
+          - layout
+          - all
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: ds-packages-171949636152-us-east-1
+  CLOUDFRONT_DISTRIBUTION_ID: E4S2Y85I1XAVX
+  IAM_ROLE_ARN: arn:aws:iam::171949636152:role/DSPackagesPublisher
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC authentication
+
+jobs:
+  detect-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      ds-core: ${{ steps.detect.outputs.ds-core }}
+      layout: ${{ steps.detect.outputs.layout }}
+    steps:
+      - name: Detect which packages to publish
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.package }}" in
+              ds-core)
+                echo "ds-core=true" >> $GITHUB_OUTPUT
+                echo "layout=false" >> $GITHUB_OUTPUT
+                ;;
+              layout)
+                echo "ds-core=false" >> $GITHUB_OUTPUT
+                echo "layout=true" >> $GITHUB_OUTPUT
+                ;;
+              all)
+                echo "ds-core=true" >> $GITHUB_OUTPUT
+                echo "layout=true" >> $GITHUB_OUTPUT
+                ;;
+            esac
+          else
+            # Release trigger - publish both packages
+            echo "ds-core=true" >> $GITHUB_OUTPUT
+            echo "layout=true" >> $GITHUB_OUTPUT
+          fi
+
+  publish-ds-core:
+    needs: detect-packages
+    if: needs.detect-packages.outputs.ds-core == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get package info
+        id: pkg
+        working-directory: packages/ds-core
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          # Extract scope-less name (ds-core from @digistratum/ds-core)
+          SHORT_NAME=$(echo "$NAME" | sed 's/@[^/]*\///')
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_name=$SHORT_NAME" >> $GITHUB_OUTPUT
+          echo "Publishing $NAME@$VERSION"
+
+      - name: Check if version exists in S3
+        id: check
+        working-directory: packages/ds-core
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          S3_PATH="@digistratum/${SHORT_NAME}/${SHORT_NAME}-${VERSION}.tgz"
+          
+          if aws s3 ls "s3://${{ env.S3_BUCKET }}/${S3_PATH}" 2>/dev/null; then
+            echo "Version $VERSION already exists in S3, skipping publish"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION not found in S3, will publish"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/ds-core
+        run: npm ci
+
+      - name: Build package
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/ds-core
+        run: npm run build
+
+      - name: Create tarball
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/ds-core
+        run: npm pack
+
+      - name: Upload to S3
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/ds-core
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          TARBALL=$(ls *.tgz | head -1)
+          S3_PATH="@digistratum/${SHORT_NAME}/${SHORT_NAME}-${VERSION}.tgz"
+          
+          echo "Uploading $TARBALL to s3://${{ env.S3_BUCKET }}/${S3_PATH}"
+          aws s3 cp "$TARBALL" "s3://${{ env.S3_BUCKET }}/${S3_PATH}"
+          
+          echo "Package URL: https://packages.digistratum.com/${S3_PATH}"
+
+      - name: Invalidate CloudFront cache
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          INVALIDATION_PATH="/@digistratum/${SHORT_NAME}/*"
+          
+          echo "Invalidating CloudFront cache for $INVALIDATION_PATH"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "$INVALIDATION_PATH"
+
+  publish-layout:
+    needs: detect-packages
+    if: needs.detect-packages.outputs.layout == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get package info
+        id: pkg
+        working-directory: packages/layout
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          # Extract scope-less name (layout from @digistratum/layout)
+          SHORT_NAME=$(echo "$NAME" | sed 's/@[^/]*\///')
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_name=$SHORT_NAME" >> $GITHUB_OUTPUT
+          echo "Publishing $NAME@$VERSION"
+
+      - name: Check if version exists in S3
+        id: check
+        working-directory: packages/layout
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          S3_PATH="@digistratum/${SHORT_NAME}/${SHORT_NAME}-${VERSION}.tgz"
+          
+          if aws s3 ls "s3://${{ env.S3_BUCKET }}/${S3_PATH}" 2>/dev/null; then
+            echo "Version $VERSION already exists in S3, skipping publish"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION not found in S3, will publish"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install root dependencies (for workspace resolution)
+        if: steps.check.outputs.skip != 'true'
+        run: npm ci
+
+      - name: Build ds-core dependency
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/ds-core
+        run: npm run build
+
+      - name: Build package
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/layout
+        run: npm run build
+
+      - name: Create tarball
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/layout
+        run: npm pack
+
+      - name: Upload to S3
+        if: steps.check.outputs.skip != 'true'
+        working-directory: packages/layout
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          TARBALL=$(ls *.tgz | head -1)
+          S3_PATH="@digistratum/${SHORT_NAME}/${SHORT_NAME}-${VERSION}.tgz"
+          
+          echo "Uploading $TARBALL to s3://${{ env.S3_BUCKET }}/${S3_PATH}"
+          aws s3 cp "$TARBALL" "s3://${{ env.S3_BUCKET }}/${S3_PATH}"
+          
+          echo "Package URL: https://packages.digistratum.com/${S3_PATH}"
+
+      - name: Invalidate CloudFront cache
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          SHORT_NAME="${{ steps.pkg.outputs.short_name }}"
+          INVALIDATION_PATH="/@digistratum/${SHORT_NAME}/*"
+          
+          echo "Invalidating CloudFront cache for $INVALIDATION_PATH"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "$INVALIDATION_PATH"
