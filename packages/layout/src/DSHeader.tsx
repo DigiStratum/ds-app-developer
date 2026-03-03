@@ -215,7 +215,7 @@ export function DSHeader({
               <img 
                 src={logoUrl} 
                 alt=""
-                className="h-6"
+                style={{ height: '25px' }}
               />
             </a>
 

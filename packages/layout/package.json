@@ -1,6 +1,6 @@
 {
   "name": "@digistratum/layout",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "DigiStratum app shell and layout components",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
