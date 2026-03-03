@@ -2,16 +2,19 @@
  * @digistratum/ds-core - useConsent Hook
  * 
  * Hook to check and manage cookie consent level.
- * Provides reactive state for GDPR compliance across components.
+ * Uses cookies with domain=.digistratum.com for cross-subdomain sharing.
  * 
- * NOTE: The UI component (GDPR banner) is NOT included here.
- * Use this hook to check consent state; implement UI per app requirements.
- * See issue #358 for the GDPR consent component.
+ * NOTE: The UI component (GDPR banner) is in @digistratum/layout.
  */
 
 import { useCallback, useSyncExternalStore } from 'react';
 import { STORAGE_KEYS } from '../utils/constants';
 import type { ConsentLevel } from '../types';
+
+// Cookie domain for cross-subdomain sharing
+const COOKIE_DOMAIN = '.digistratum.com';
+// Consent cookie expires in 1 year
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
 // External store for cross-component reactivity
 const listeners = new Set<() => void>();
@@ -21,9 +24,33 @@ function subscribe(callback: () => void): () => void {
   return () => listeners.delete(callback);
 }
 
+/**
+ * Read cookie value by name
+ */
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Set cookie with cross-subdomain domain
+ */
+function setCookie(name: string, value: string, maxAge: number): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+}
+
+/**
+ * Delete cookie
+ */
+function deleteCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; domain=${COOKIE_DOMAIN}; path=/; max-age=0`;
+}
+
 function getSnapshot(): ConsentLevel {
-  if (typeof window === 'undefined') return null;
-  const value = localStorage.getItem(STORAGE_KEYS.COOKIE_CONSENT);
+  const value = getCookie(STORAGE_KEYS.COOKIE_CONSENT);
   if (value === 'all' || value === 'essential') {
     return value;
   }
@@ -54,6 +81,9 @@ export interface UseConsentReturn {
 /**
  * Hook to check and manage cookie consent level
  * 
+ * Stores consent in a cookie with domain=.digistratum.com so it's
+ * shared across all DS apps (account, projects, developer, noc, etc.)
+ * 
  * @returns Consent state and utilities
  * 
  * @example
@@ -68,12 +98,12 @@ export function useConsent(): UseConsentReturn {
   const consentLevel = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const setConsent = useCallback((level: 'all' | 'essential') => {
-    localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, level);
+    setCookie(STORAGE_KEYS.COOKIE_CONSENT, level, COOKIE_MAX_AGE);
     notifyListeners();
   }, []);
 
   const clearConsent = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.COOKIE_CONSENT);
+    deleteCookie(STORAGE_KEYS.COOKIE_CONSENT);
     notifyListeners();
   }, []);
 
