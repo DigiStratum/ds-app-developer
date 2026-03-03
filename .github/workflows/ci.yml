@@ -100,17 +100,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          # Disable npm cache to avoid auth issues
           cache: ''
 
       - name: Configure npm for GitHub Packages
         run: |
-          # Configure scoped registry for @digistratum packages
-          npm config set @digistratum:registry https://npm.pkg.github.com
-          # Verify no auth tokens are configured
-          cat ~/.npmrc || true
-          echo "npm config list:"
-          npm config list
+          # GitHub Packages requires authentication even for public packages
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          # Debug: show config (token will be masked)
+          cat ~/.npmrc
 
       - name: Install dependencies
         run: npm install
@@ -138,8 +136,8 @@ jobs:
 
       - name: Configure npm for GitHub Packages
         run: |
-          npm config set @digistratum:registry https://npm.pkg.github.com
-          cat ~/.npmrc || true
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       - name: Install dependencies
         run: npm install
@@ -292,7 +290,9 @@ jobs:
           cache: ''
 
       - name: Configure npm for GitHub Packages
-        run: npm config set @digistratum:registry https://npm.pkg.github.com
+        run: |
+          echo "@digistratum:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       - name: Install dependencies
         run: npm install
