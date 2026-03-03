@@ -256,7 +256,7 @@ export function AppShell({
       {/* DS Header (logo, session, switcher, nav) - hideable via hideHeader */}
       {!hideHeader && (
         <header 
-          className="ds-container-margins bg-white dark:bg-gray-800"
+          className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
           style={{ 
             borderBottomLeftRadius: 'var(--ds-container-radius, 8px)', 
             borderBottomRightRadius: 'var(--ds-container-radius, 8px)' 
@@ -295,7 +295,7 @@ export function AppShell({
       {/* DS Footer (or custom footer) - hideable via hideFooter */}
       {!hideFooter && (
         <footer 
-          className="ds-container-margins bg-white dark:bg-gray-800"
+          className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
           style={{ 
             borderTopLeftRadius: 'var(--ds-container-radius, 8px)', 
             borderTopRightRadius: 'var(--ds-container-radius, 8px)' 
