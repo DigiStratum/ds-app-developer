@@ -104,11 +104,10 @@ jobs:
           cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Run ESLint
         run: npm run lint
@@ -132,11 +131,10 @@ jobs:
           cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -286,11 +284,10 @@ jobs:
           cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Build frontend
         working-directory: boilerplate/frontend
