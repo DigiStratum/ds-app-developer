@@ -66,6 +66,9 @@ export interface AppShellExtendedProps extends AppShellProps {
   
   /** Override the content container className */
   contentClassName?: string;
+  
+  /** Custom menu content for hamburger menu (in addition to app nav items) */
+  menuContent?: ReactNode;
 }
 
 /**
@@ -94,6 +97,32 @@ function getCurrentTenant(auth?: AuthContext): Tenant | null {
     name: tenantInfo.name,
     role: tenantInfo.role,
   };
+}
+
+/**
+ * Render menu items as clickable links for the hamburger menu "Options" section
+ */
+function renderMenuItemsAsLinks(items: MenuItem[]): ReactNode {
+  if (items.length === 0) return null;
+  
+  return (
+    <>
+      {items.map((item) => (
+        <a
+          key={item.id}
+          href={item.path ?? '#'}
+          className={`flex items-center px-3 py-2 text-sm rounded-md ${
+            item.active
+              ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          {item.icon && <span className="mr-2">{item.icon}</span>}
+          <span className="font-medium">{item.label}</span>
+        </a>
+      ))}
+    </>
+  );
 }
 
 /**
@@ -171,6 +200,7 @@ export function AppShell({
   showTenantSwitcher = true,
   className = '',
   contentClassName = '',
+  menuContent,
 }: AppShellExtendedProps) {
   // Extract user and tenant from auth context
   const user = auth?.user ?? null;
@@ -182,10 +212,29 @@ export function AppShell({
     return getMenuItems(user, tenant);
   }, [getMenuItems, user, tenant]);
   
-  // Convert menu items to nav links for DSHeader
+  // Convert menu items to nav links for DSHeader (for inline nav if shown)
   const navLinks = useMemo(() => {
     return menuItems.map(menuItemToNavLink);
   }, [menuItems]);
+
+  // Generate hamburger menu content from menu items
+  // This renders app nav items in the "Options" section of the hamburger menu
+  const hamburgerMenuContent = useMemo(() => {
+    const itemLinks = renderMenuItemsAsLinks(menuItems);
+    
+    // If we have both menu items and custom menuContent, combine them
+    if (itemLinks && menuContent) {
+      return (
+        <>
+          {itemLinks}
+          {menuContent}
+        </>
+      );
+    }
+    
+    // Otherwise return whichever one exists
+    return itemLinks || menuContent || null;
+  }, [menuItems, menuContent]);
 
   // Render custom header zone (collapses to 0 when null or hidden)
   const renderCustomHeader = (): ReactNode => {
@@ -245,6 +294,7 @@ export function AppShell({
             showUserMenu={showUserMenu}
             showPreferences={showPreferences}
             showTenantSwitcher={showTenantSwitcher}
+            menuContent={hamburgerMenuContent}
           />
         </header>
       )}
