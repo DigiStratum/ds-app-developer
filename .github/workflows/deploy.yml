@@ -135,14 +135,11 @@ jobs:
           cache-dependency-path: boilerplate/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: boilerplate
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build packages
-        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-        working-directory: boilerplate
 
       - name: Build frontend
         working-directory: boilerplate/frontend
@@ -203,7 +200,7 @@ jobs:
 
       - name: Install CDK dependencies
         working-directory: boilerplate/cdk
-        run: npm ci
+        run: npm install
 
       - name: Build CDK
         working-directory: boilerplate/cdk

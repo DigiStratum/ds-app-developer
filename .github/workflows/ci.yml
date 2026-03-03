@@ -103,15 +103,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install boilerplate dependencies (workspaces)
-        run: npm ci
+      - name: Install dependencies
+        run: npm install
         working-directory: boilerplate
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build boilerplate packages
-        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-        working-directory: boilerplate
 
       - name: Run ESLint
         run: npm run lint
@@ -134,15 +131,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install boilerplate dependencies (workspaces)
-        run: npm ci
+      - name: Install dependencies
+        run: npm install
         working-directory: boilerplate
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build boilerplate packages
-        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-        working-directory: boilerplate
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
@@ -291,15 +285,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: boilerplate/package-lock.json
 
-      - name: Install boilerplate dependencies (workspaces)
-        run: npm ci
+      - name: Install dependencies
+        run: npm install
         working-directory: boilerplate
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build boilerplate packages
-        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-        working-directory: boilerplate
 
       - name: Build frontend
         working-directory: boilerplate/frontend
