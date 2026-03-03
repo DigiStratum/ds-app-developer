@@ -101,11 +101,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: boilerplate/package-lock.json
+          cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
-        working-directory: boilerplate
+        run: npm ci
+        working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -129,11 +129,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: boilerplate/package-lock.json
+          cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
-        working-directory: boilerplate
+        run: npm ci
+        working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -283,11 +283,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: boilerplate/package-lock.json
+          cache-dependency-path: boilerplate/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
-        working-directory: boilerplate
+        run: npm ci
+        working-directory: boilerplate/frontend
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
