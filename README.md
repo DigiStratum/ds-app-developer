@@ -162,41 +162,38 @@ aws lambda update-function-code --function-name ds-app-developer-api --zip-file 
 | DSACCOUNT_APP_ID | developer | App ID registered in DSAccount |
 | DSACCOUNT_APP_SECRET | (secret) | For token exchange |
 | DYNAMODB_TABLE | ds-app-developer | Main DynamoDB table |
-
 ## Package Publishing
 
-Packages are automatically published to GitHub Package Registry on merge to `main`.
+Packages are hosted on the DigiStratum S3 package registry at **packages.digistratum.com**.
 
-### Installing from GitHub Package Registry
+### Installing Packages
 
-1. Create `.npmrc` in your project:
+Packages are public — no authentication required.
+
+1. Add to your project's `.npmrc`:
    ```
-   @digistratum:registry=https://npm.pkg.github.com
-   //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+   @digistratum:registry=https://packages.digistratum.com
    ```
 
-2. Set `NPM_TOKEN` to a GitHub PAT with `read:packages` scope
-
-3. Install:
+2. Install:
    ```bash
    npm install @digistratum/layout @digistratum/components
    ```
 
-### Current: File Dependencies (Pre-Publishing)
-Apps currently use `file:` dependencies:
-```json
-{
-  "@digistratum/layout": "file:../../ds-app-developer/packages/layout"
-}
-```
-**Note:** Requires ds-app-developer to be checked out at correct relative path.
+That's it! No tokens, no PATs, no auth configuration needed.
+
+### Available Packages
+
+| Package | Latest Version | Install |
+|---------|---------------|---------|
+| `@digistratum/core` | 0.1.3 | `npm install @digistratum/core` |
+| `@digistratum/layout` | 0.2.10 | `npm install @digistratum/layout` |
+
+### Legacy: File Dependencies
+Previously, apps used `file:` dependencies requiring ds-app-developer to be checked out locally. This is no longer needed — use the S3 registry instead.
+
 
 ## Known Issues & Gotchas
-
-### Package path dependency
-**Symptom:** App build fails with "cannot find module @digistratum/layout"  
-**Cause:** Apps use `file:../../ds-app-developer/packages/layout` — relative path  
-**Fix:** Ensure ds-app-developer is cloned at correct relative path
 
 ### /api/session vs /api/auth/me
 **Symptom:** Frontend doesn't recognize authenticated user  
