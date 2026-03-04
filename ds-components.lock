@@ -2,9 +2,9 @@
   "components": [
     {
       "name": "@digistratum/appshell",
-      "version": "1.0.4",
-      "checksum": "50f4fb2ba0cc21360898ffec2903c44c2e5aee4019463366bc05cb8830635aaf"
+      "version": "1.0.6",
+      "checksum": "84d415b97ecbe7a3a2dcde12da8747155decd19cdcf2ba91488d89121981af46"
     }
   ],
-  "updated_at": "2026-03-04T12:19:33.409983-08:00"
+  "updated_at": "2026-03-04T15:10:56.703515-08:00"
 }
