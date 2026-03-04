@@ -20,6 +20,12 @@ interface AppStackProps extends cdk.StackProps {
   dsAccountAppId: string;
   appName: string;  // e.g., "ds-app-developer"
   environment?: string;
+  /**
+   * Name of the component artifacts S3 bucket (from SharedRuntimeStack).
+   * If provided, grants the API handler read/write access for component management.
+   * @default 'ds-component-artifacts'
+   */
+  componentArtifactsBucket?: string;
 }
 
 export class AppStack extends cdk.Stack {
@@ -47,6 +53,9 @@ export class AppStack extends cdk.Stack {
       sortKey: { name: 'GSI1SK', type: dynamodb.AttributeType.STRING },
     });
 
+    // Component artifacts bucket (shared infrastructure)
+    const componentArtifactsBucketName = props.componentArtifactsBucket ?? 'ds-component-artifacts';
+
     // Lambda function for API
     const apiHandler = new lambda.Function(this, 'ApiHandler', {
       functionName: `${appName}-api`,
@@ -61,12 +70,22 @@ export class AppStack extends cdk.Stack {
         DSACCOUNT_SSO_URL: props.dsAccountUrl,
         DSACCOUNT_APP_ID: props.dsAccountAppId,
         APP_URL: `https://${props.domainName}`,
+        COMPONENT_ARTIFACTS_BUCKET: componentArtifactsBucketName,
         // DSACCOUNT_APP_SECRET is injected post-deploy by GitHub Actions
         // This keeps secrets out of CloudFormation templates
       },
     });
 
     table.grantReadWriteData(apiHandler);
+
+    // Grant access to component artifacts bucket (for presigned URL generation)
+    // Import the existing bucket from SharedRuntimeStack
+    const componentArtifactsBucket = s3.Bucket.fromBucketName(
+      this, 
+      'ComponentArtifactsBucket', 
+      componentArtifactsBucketName
+    );
+    componentArtifactsBucket.grantReadWrite(apiHandler);
 
     // HTTP API Gateway
     const httpApi = new apigateway.HttpApi(this, 'HttpApi', {
@@ -187,6 +206,11 @@ export class AppStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'LambdaFunctionName', {
       value: apiHandler.functionName,
+    });
+
+    new cdk.CfnOutput(this, 'ComponentArtifactsBucketName', {
+      value: componentArtifactsBucketName,
+      description: 'S3 bucket for component artifacts (presigned URLs)',
     });
   }
 }
