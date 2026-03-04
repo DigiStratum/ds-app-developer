@@ -160,3 +160,17 @@ export {
   getShellLoadError,
   getShellRetryCount,
 } from './utils/shell-loader';
+
+// Unified preferences
+export { 
+  usePrefs, 
+  getPrefs, 
+  updatePrefs,
+  SUPPORTED_LANGUAGES,
+} from './hooks/usePrefs';
+export type { 
+  UsePrefsReturn, 
+  UserPrefs, 
+  LanguageCode, 
+  ThemeMode,
+} from './hooks/usePrefs';

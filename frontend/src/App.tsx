@@ -6,7 +6,6 @@ import { CookieConsent } from './components';
 import { RemoteShellWrapper, ShellLayout } from './components/RemoteShellWrapper';
 import { HomePage } from './pages/Home';
 import { DashboardPage } from './pages/Dashboard';
-import { SettingsPage } from './pages/Settings';
 import { useTranslation } from 'react-i18next';
 
 // Protected route wrapper [FR-AUTH-002]
@@ -65,16 +64,6 @@ function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           
           {/* Protected routes - require authentication */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <ShellLayout appName="DS App Developer">
-                  <SettingsPage />
-                </ShellLayout>
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/dashboard"
             element={

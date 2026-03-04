@@ -28,3 +28,19 @@ export { useDiscovery, useDiscoveryPrefetch } from './useDiscovery';
 
 // Shell loader
 export { useShellLoader, prefetchShell } from './useShellLoader';
+
+// Unified preferences (language, theme, consent)
+export { 
+  usePrefs, 
+  getPrefs, 
+  updatePrefs,
+  SUPPORTED_LANGUAGES,
+} from './usePrefs';
+export type { 
+  UsePrefsReturn, 
+  UserPrefs, 
+  LanguageCode, 
+  ThemeMode,
+} from './usePrefs';
+// Re-export ConsentLevel from usePrefs for new code
+export type { ConsentLevel } from './usePrefs';

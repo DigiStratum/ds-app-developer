@@ -126,13 +126,6 @@ export function DeveloperAppShell({
         active: location.pathname === '/dashboard',
       });
 
-      items.push({
-        id: 'settings',
-        label: t('nav.settings', 'Settings'),
-        path: '/settings',
-        icon: '⚙️',
-        active: location.pathname === '/settings',
-      });
     }
 
     return items;
