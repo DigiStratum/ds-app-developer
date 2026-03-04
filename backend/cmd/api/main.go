@@ -12,6 +12,8 @@ import (
 
 	"github.com/DigiStratum/ds-app-developer/backend/internal/api"
 	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/components"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/dynamo"
 	"github.com/DigiStratum/ds-app-developer/backend/internal/featureflags"
 	"github.com/DigiStratum/ds-app-developer/backend/internal/health"
 	"github.com/DigiStratum/ds-app-developer/backend/internal/middleware"
@@ -67,6 +69,34 @@ func init() {
 	authedMux.HandleFunc("PUT /api/flags/", featureflags.UpdateHandler)
 	authedMux.HandleFunc("DELETE /api/flags/", featureflags.DeleteHandler)
 
+	// Component registry routes
+	// Create a dedicated mux for components that handles both public and auth routes
+	componentHandler := initComponentHandler()
+	if componentHandler != nil {
+		// Create a components-specific mux
+		componentMux := http.NewServeMux()
+		
+		// GET /api/components - list all components (public, no auth required)
+		componentMux.HandleFunc("GET /api/components", componentHandler.ListComponentsHandler)
+		
+		// POST /api/components - register new component (auth required - checked in handler)
+		componentMux.HandleFunc("POST /api/components", componentHandler.RegisterComponentHandler)
+		
+		// GET /api/components/{name} - get component with versions (public)
+		componentMux.HandleFunc("GET /api/components/", componentHandler.GetComponentHandler)
+		
+		// PUT /api/components/{name}/{version} - publish version (auth required - checked in handler)
+		componentMux.HandleFunc("PUT /api/components/", componentHandler.PublishVersionHandler)
+		
+		// DELETE /api/components/{name}/{version} - deprecate/delete (auth required - checked in handler)
+		componentMux.HandleFunc("DELETE /api/components/", componentHandler.DeleteVersionHandler)
+		
+		// Route all /api/components* to the components mux with session+auth middleware
+		// Note: auth.Middleware enriches context, handlers check GetUser for write ops
+		mux.Handle("/api/components", session.Middleware(auth.Middleware(componentMux)))
+		mux.Handle("/api/components/", session.Middleware(auth.Middleware(componentMux)))
+	}
+
 	// Wrap session routes with session + auth + featureflags middleware
 	// Session middleware creates/loads sessions
 	// Auth middleware enriches context with user data if authenticated
@@ -75,6 +105,7 @@ func init() {
 	mux.HandleFunc("GET /api/session", api.GetSessionHandler)
 	mux.Handle("/api/theme", session.Middleware(auth.Middleware(featureflags.Middleware(sessionMux))))
 	mux.Handle("/api/flags/evaluate", session.Middleware(auth.Middleware(featureflags.Middleware(sessionMux))))
+	
 
 	// Wrap auth-required routes with session + auth + require-auth middleware
 	mux.Handle("/api/", session.Middleware(auth.Middleware(session.RequireAuth(authedMux))))
@@ -89,6 +120,34 @@ func init() {
 	handler = middleware.RecoveryMiddleware(handler)
 
 	httpAdapter = httpadapter.NewV2(handler)
+}
+
+// initComponentHandler creates the component handler with its dependencies.
+// Returns nil if initialization fails (e.g., missing config).
+func initComponentHandler() *components.Handler {
+	// Get S3 bucket name from environment
+	bucketName := os.Getenv("COMPONENT_ARTIFACTS_BUCKET")
+	if bucketName == "" {
+		bucketName = "ds-component-artifacts" // Default bucket name
+	}
+
+	// Initialize DynamoDB repository
+	repo, err := dynamo.NewRepository(os.Getenv("DYNAMODB_TABLE"))
+	if err != nil {
+		slog.Error("failed to initialize DynamoDB repository for components", "error", err)
+		return nil
+	}
+
+	// Initialize S3 service
+	s3Service, err := components.NewS3Service(bucketName)
+	if err != nil {
+		slog.Error("failed to initialize S3 service for components", "error", err)
+		return nil
+	}
+
+	// Create component repository and handler
+	componentRepo := components.NewRepository(repo)
+	return components.NewHandler(componentRepo, s3Service)
 }
 
 func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {

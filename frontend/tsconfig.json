@@ -17,7 +17,11 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@digistratum/appshell": ["../components/appshell/index.ts"],
+      "@digistratum/appshell/*": ["../components/appshell/*"],
+      "@digistratum/layout": ["../components/layout-compat.ts"],
+      "@digistratum/layout/*": ["../components/appshell/*"]
     }
   },
   "include": ["src"],

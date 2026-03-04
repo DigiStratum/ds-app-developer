@@ -1,8 +1,21 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@digistratum/appshell': path.resolve(__dirname, '../components/appshell'),
+      '@digistratum/layout': path.resolve(__dirname, '../components/layout-compat.ts'),
+      // Ensure components find these modules in frontend's node_modules
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'react-i18next': path.resolve(__dirname, 'node_modules/react-i18next'),
+      'i18next': path.resolve(__dirname, 'node_modules/i18next'),
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -10,11 +23,7 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['e2e/**/*'],
   },
-  // Environment variables for shell loading
-  // VITE_SHELL_CDN_URL - CDN base URL (default: https://apps.digistratum.com/shell)
-  // VITE_SHELL_VERSION - Shell version to load (default: v1)
   define: {
-    // Expose env vars to the app
     __SHELL_DEV_MODE__: JSON.stringify(process.env.NODE_ENV === 'development'),
   },
   server: {

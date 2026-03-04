@@ -57,3 +57,6 @@ export type {
   ConsentLevel,
   CookiePreferencesModalProps,
 } from './types';
+
+// Utility components
+export { CustomHeaderZone } from './CustomHeaderZone';

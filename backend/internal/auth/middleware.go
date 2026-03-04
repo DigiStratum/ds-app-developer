@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
@@ -38,6 +39,10 @@ type TenantInfo struct {
 // - Session middleware runs first, ensuring every request has a session
 // - This middleware enriches the context with user data if session is authenticated
 // - Unauthenticated sessions are allowed to pass through (guest mode)
+//
+// API key authentication (M2M/CLI):
+// - Bearer token matching COMPONENTS_API_KEY env var creates system user
+// - Used by ds-components CLI for component registry operations
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess := session.GetSession(r.Context())
@@ -45,8 +50,24 @@ func Middleware(next http.Handler) http.Handler {
 		var user *User
 		var tenantID string
 
+		// Check for API key authentication (M2M/CLI access)
+		authHeader := r.Header.Get("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token := strings.TrimPrefix(authHeader, "Bearer ")
+			apiKey := os.Getenv("COMPONENTS_API_KEY")
+			if apiKey != "" && token == apiKey {
+				// API key auth - create synthetic user for M2M access
+				user = &User{
+					ID:    "system:cli",
+					Email: "cli@digistratum.com",
+					Name:  "DS Components CLI",
+				}
+				slog.Debug("authenticated via API key", "user_id", user.ID)
+			}
+		}
+
 		// If we have an authenticated session, load the user
-		if sess != nil && sess.IsAuthenticated() {
+		if user == nil && sess != nil && sess.IsAuthenticated() {
 			var err error
 			user, err = loadUser(sess.UserID)
 			if err != nil {
