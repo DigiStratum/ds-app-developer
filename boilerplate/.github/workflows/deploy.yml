@@ -63,12 +63,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install root dependencies (workspaces)
-        run: npm ci
-
-      - name: Build workspace packages
-        run: npm run build -w @digistratum/ds-core -w @digistratum/layout
-
       - name: Build backend
         working-directory: backend
         run: |
