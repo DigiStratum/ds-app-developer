@@ -1,6 +1,6 @@
 {
   "components": {
-    "@digistratum/appshell": "1.0.2"
+    "@digistratum/appshell": "1.0.4"
   },
   "outputDir": "./components"
 }

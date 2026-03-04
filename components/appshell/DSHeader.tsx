@@ -41,7 +41,7 @@ function getDefaultIcon(appId: string): string {
 export function DSHeader({
   appName,
   currentAppId,
-  logoUrl = '/ds-logo.svg',
+  logoUrl = '/lk_logo.svg',
   logoAlt,
   logoLinkUrl = DS_URLS.ACCOUNT,
   auth,

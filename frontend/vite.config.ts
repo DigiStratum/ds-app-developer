@@ -1,15 +1,29 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { writeFileSync } from 'fs';
+
+// Generate buildinfo.json at build time
+const buildInfoPlugin = () => ({
+  name: 'build-info',
+  buildStart() {
+    const buildInfo = {
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      commit: process.env.GIT_COMMIT || 'unknown',
+      branch: process.env.GIT_BRANCH || 'unknown',
+    };
+    writeFileSync('public/buildinfo.json', JSON.stringify(buildInfo, null, 2));
+  },
+});
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), buildInfoPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@digistratum/appshell': path.resolve(__dirname, '../components/appshell'),
       '@digistratum/layout': path.resolve(__dirname, '../components/layout-compat.ts'),
-      // Ensure components find these modules in frontend's node_modules
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
       'react-i18next': path.resolve(__dirname, 'node_modules/react-i18next'),

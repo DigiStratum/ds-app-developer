@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run prebuild && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
@@ -16,7 +16,8 @@
     "e2e:report": "playwright show-report",
     "e2e:codegen": "playwright codegen",
     "e2e:ci": "playwright test --reporter=list,junit",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prebuild": "node -e \"const fs = require(\\\"fs\\\"); fs.writeFileSync(\\\"public/buildinfo.json\\\", JSON.stringify({timestamp: new Date().toISOString(), commit: process.env.GIT_COMMIT || \\\"local\\\", branch: process.env.GIT_BRANCH || \\\"unknown\\\"}, null, 2));\""
   },
   "dependencies": {
     "@digistratum/ds-core": "https://packages.digistratum.com/@digistratum/ds-core/ds-core-0.1.3.tgz",
