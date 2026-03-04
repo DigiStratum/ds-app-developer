@@ -1,6 +1,6 @@
 {
   "name": "@digistratum/appshell",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "DigiStratum AppShell - Complete app layout system with header, footer, navigation, and GDPR compliance",
   "author": "DigiStratum LLC",
   "license": "MIT",
