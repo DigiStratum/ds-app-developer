@@ -6,7 +6,7 @@
  * 
  * @example
  * ```typescript
- * import { ApiLambda, SpaHosting, DataTable, Monitoring } from './constructs';
+ * import { ApiLambda, SpaHosting, DataTable, Monitoring, ComponentArtifacts } from './constructs';
  * 
  * const table = new DataTable(this, 'Data', { appName: 'myapp', environment: 'prod' });
  * const api = new ApiLambda(this, 'Api', { appName: 'myapp', environment: 'prod', codePath: '...' });
@@ -18,6 +18,7 @@
  *   apiId: api.api.apiId,
  *   region: this.region,
  * });
+ * const artifacts = new ComponentArtifacts(this, 'Artifacts', { environment: 'prod' });
  * ```
  */
 
@@ -26,3 +27,4 @@ export { SpaHosting, SpaHostingProps } from './spa-hosting';
 export { DataTable, DataTableProps } from './data-table';
 export { Monitoring, MonitoringProps, PerformanceBaselines } from './monitoring';
 export { SharedRuntimeCdn, SharedRuntimeCdnProps } from './shared-runtime-cdn';
+export { ComponentArtifacts, ComponentArtifactsProps } from './component-artifacts';
