@@ -1,0 +1,48 @@
+{
+  "name": "@digistratum/appshell",
+  "version": "1.0.0",
+  "description": "DigiStratum AppShell - Complete app layout system with header, footer, navigation, and GDPR compliance",
+  "author": "DigiStratum LLC",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "layout",
+    "shell",
+    "header",
+    "footer",
+    "navigation",
+    "gdpr",
+    "digistratum"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DigiStratum/ds-app-developer.git",
+    "directory": "components/appshell"
+  },
+  "main": "index.ts",
+  "types": "types.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./AppShell": "./AppShell.tsx",
+    "./DSHeader": "./DSHeader.tsx",
+    "./DSFooter": "./DSFooter.tsx",
+    "./GdprBanner": "./GdprBanner.tsx",
+    "./CookiePreferencesModal": "./CookiePreferencesModal.tsx",
+    "./AdSlot": "./AdSlot.tsx"
+  },
+  "files": [
+    "*.tsx",
+    "*.ts",
+    "assets/**"
+  ],
+  "peer_dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^13.0.0",
+    "i18next": "^23.0.0",
+    "@digistratum/ds-core": "^0.1.0"
+  },
+  "assets": {
+    "logo": "assets/ds-logo.svg"
+  }
+}
