@@ -39,12 +39,31 @@ function setAuthState(newState: Partial<AuthState>): void {
   notify();
 }
 
+/**
+ * Check if ds_session cookie exists
+ * Note: We can't read the value (HttpOnly), but we can check for presence
+ */
+function hasSessionCookie(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.split(';').some((c) => c.trim().startsWith('ds_session='));
+}
+
 let fetchPromise: Promise<void> | null = null;
 
 async function fetchAuthState(): Promise<void> {
   if (fetchPromise) return fetchPromise;
   
   fetchPromise = (async () => {
+    // Skip fetch if no session cookie exists - user is clearly not authenticated
+    if (!hasSessionCookie()) {
+      setAuthState({
+        isLoading: false,
+        isAuthenticated: false,
+        user: null,
+      });
+      return;
+    }
+    
     try {
       // Call DSAccount /api/auth/me directly with credentials (sends ds_session cookie)
       const response = await fetch(`${DS_URLS.ACCOUNT}/api/auth/me`, {
@@ -52,7 +71,7 @@ async function fetchAuthState(): Promise<void> {
       });
       
       if (!response.ok) {
-        // Not authenticated
+        // Not authenticated (session expired, invalid, etc.)
         setAuthState({
           isLoading: false,
           isAuthenticated: false,
