@@ -156,3 +156,20 @@ cd frontend && npm test
 - Layout/shell issues → Check `@digistratum/layout` AGENTS.md
 - Core utilities → Check `@digistratum/ds-core` AGENTS.md
 - SSO issues → Check DSAccount integration docs
+
+---
+
+## Documentation Model
+
+This repo follows the DS three-tier documentation model:
+
+| File | Scope |
+|------|-------|
+| `DIGISTRATUM.md` | Ecosystem context (read from workspace) |
+| `AGENTS.md` | Project standards (this file) |
+| `PROJECT_CONTEXT.md` | App-specific domain, purpose, deviations |
+| `/docs/*.md` | Deep-dive topics (one per topic) |
+
+- **Known issues** → DSKanban issues, not documentation
+- **Sparse context** → Keep docs tight, link to /docs/ for depth
+- See `PROJECT_CONTEXT.md` for this app's domain and purpose
