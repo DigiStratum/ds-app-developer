@@ -48,8 +48,9 @@ func TestCallbackHandler_TokenExchangeFails_ReturnsInternalError(t *testing.T) {
 	}
 }
 
-// TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects tests FR-AUTH-001 happy path
-func TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects(t *testing.T) {
+// TestCallbackHandler_TokenExchangeSuccess_Redirects tests FR-AUTH-001 happy path
+// Note: ds_session cookie is set by DSAccount, not by this handler
+func TestCallbackHandler_TokenExchangeSuccess_Redirects(t *testing.T) {
 	// Arrange: Mock DSAccount token endpoint
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/sso/token" {
@@ -77,25 +78,9 @@ func TestCallbackHandler_TokenExchangeSuccess_SetsCookieAndRedirects(t *testing.
 	// Act
 	CallbackHandler(rr, req)
 
-	// Assert: Should redirect with cookie
+	// Assert: Should redirect to the state URL
 	if rr.Code != http.StatusFound {
 		t.Errorf("expected status %d, got %d", http.StatusFound, rr.Code)
-	}
-
-	// Check cookie was set
-	cookies := rr.Result().Cookies()
-	var sessionCookie *http.Cookie
-	for _, c := range cookies {
-		if c.Name == "ds_session" {
-			sessionCookie = c
-			break
-		}
-	}
-	if sessionCookie == nil {
-		t.Fatal("expected ds_session cookie to be set")
-	}
-	if sessionCookie.Value != "mock-access-token" {
-		t.Errorf("expected cookie value 'mock-access-token', got %s", sessionCookie.Value)
 	}
 
 	// Check redirect location
