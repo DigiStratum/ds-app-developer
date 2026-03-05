@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAppShellAuth } from './useAppShellAuth';
 import { DS_URLS } from '@digistratum/ds-core';
 import type { DSHeaderProps, DSApp, NavLink } from './types';
 import { PreferencesModal } from './PreferencesModal';
@@ -68,9 +69,13 @@ export function DSHeader({
   const tenantMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const user = auth?.user;
-  const isAuthenticated = auth?.isAuthenticated ?? false;
-  const currentTenant = auth?.currentTenant;
+  // Use internal auth hook (props can override if provided)
+  const internalAuth = useAppShellAuth();
+  const effectiveAuth = auth ?? internalAuth;
+  
+  const user = effectiveAuth.user;
+  const isAuthenticated = effectiveAuth.isAuthenticated;
+  const currentTenant = effectiveAuth.currentTenant;
   const currentTenantInfo = user?.tenants?.find(t => t.id === currentTenant);
   const tenantName = currentTenantInfo?.name || t('nav.personal', 'Personal');
   const userName = user?.name || user?.email || '';
@@ -219,9 +224,9 @@ export function DSHeader({
                   {t('nav.account', 'Account')}
                 </p>
                 <div className="space-y-1">
-                  {!isAuthenticated && showUserMenu && auth && (
+                  {!isAuthenticated && showUserMenu && (
                     <button
-                      onClick={() => { auth.login(); setShowMobileMenu(false); }}
+                      onClick={() => { effectiveAuth.login(); setShowMobileMenu(false); }}
                       className="flex items-center w-full md:w-48 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,13 +256,13 @@ export function DSHeader({
                         </div>
                       </a>
 
-                      {showTenantSwitcher && user.tenants && user.tenants.length > 0 && auth && (
+                      {showTenantSwitcher && user.tenants && user.tenants.length > 0 && (
                         <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
                           <p className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400">
                             {t('nav.workspace', 'Workspace')}
                           </p>
                           <button
-                            onClick={() => { auth.switchTenant(null); setShowMobileMenu(false); }}
+                            onClick={() => { effectiveAuth.switchTenant(null); setShowMobileMenu(false); }}
                             className={`flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md ${
                               !currentTenant 
                                 ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
@@ -272,7 +277,7 @@ export function DSHeader({
                           {user.tenants.map((tenant) => (
                             <button
                               key={tenant.id}
-                              onClick={() => { auth.switchTenant(tenant.id); setShowMobileMenu(false); }}
+                              onClick={() => { effectiveAuth.switchTenant(tenant.id); setShowMobileMenu(false); }}
                               className={`flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md ${
                                 currentTenant === tenant.id 
                                   ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' 
@@ -299,9 +304,9 @@ export function DSHeader({
                       </button>
 
 
-                      {auth && (
+                      {(
                         <button
-                          onClick={() => { auth.logout(); setShowMobileMenu(false); }}
+                          onClick={() => { effectiveAuth.logout(); setShowMobileMenu(false); }}
                           className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
                           <span className="ds-icon ds-icon-arrow-right-on-rectangle ds-icon-sm mr-2" />
