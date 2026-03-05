@@ -48,7 +48,7 @@ export function Layout({
   children, 
   appName = 'DS Developer', 
   appLogo,
-  currentAppId = 'dsdeveloper',
+  currentAppId = 'developer',
   extraFooterLinks = [],
   showAppSwitcher = true,
   showThemeToggle = false,

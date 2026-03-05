@@ -60,7 +60,7 @@ export function DeveloperAppShell({
   children,
   appName = 'DS Developer',
   appLogo,
-  currentAppId = 'dsdeveloper',
+  currentAppId = 'developer',
   showAppSwitcher = true,
   showThemeToggle = false,
   showUserMenu = true,
