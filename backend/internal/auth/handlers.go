@@ -72,19 +72,9 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("token exchange successful", "token_type", tokenResp.TokenType, "expires_in", tokenResp.ExpiresIn)
 
-	// Set the DSAccount session cookie (shared across *.digistratum.com)
-	// This is the ONLY session cookie we need - DSAccount owns sessions
-	cookie := &http.Cookie{
-		Name:     "ds_session",
-		Value:    tokenResp.AccessToken,
-		Path:     "/",
-		Domain:   ".digistratum.com",
-		MaxAge:   tokenResp.ExpiresIn,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, cookie)
+	// NOTE: We do NOT set ds_session cookie here.
+	// DSAccount already set it when the user logged in.
+	// The cookie is shared across *.digistratum.com subdomains.
 
 	// Get redirect URL from state param (how OAuth returns our original redirect)
 	redirectURL := r.URL.Query().Get("state")
