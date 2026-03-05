@@ -24,6 +24,7 @@
 
 | Hook | Use For |
 |------|---------|
+| `useSessionData()` | **App-scoped session storage** - use for ALL user session state |
 | `useTheme()` | Get/set theme (light/dark/system) |
 | `useFeatureFlags()` | Check feature flag state |
 | `useConsent()` | GDPR consent state |
@@ -39,6 +40,26 @@
 | `storage` | Safe localStorage/sessionStorage wrapper |
 | `discovery` | Service URL resolution |
 | `constants` | Shared constants (URLs, keys) |
+
+---
+
+## Session Data Pattern
+
+**`useSessionData()` is the REQUIRED way to store session-scoped state.**
+
+```tsx
+import { useSessionData } from '@digistratum/ds-core';
+
+const [draft, setDraft] = useSessionData<FormDraft>('invoice-draft');
+```
+
+Features:
+- Type-safe with generics
+- App-scoped (no cross-app leakage)
+- Syncs across tabs
+- Cleared on DSAccount logout
+
+**Do NOT use raw `localStorage`/`sessionStorage` for user data.** See boilerplate/AGENTS.md for exceptions policy.
 
 ---
 

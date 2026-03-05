@@ -31,6 +31,52 @@ This app MUST:
 
 ---
 
+## Session Data Pattern (CRITICAL)
+
+**Use `useSessionData()` from `@digistratum/ds-core` for ALL session-scoped state.**
+
+This hook provides app-scoped session storage that:
+- Automatically syncs across tabs
+- Scoped per-app (no cross-app data leakage)
+- Cleared on logout via DSAccount
+- Type-safe with TypeScript generics
+
+### ✅ DO
+
+```tsx
+import { useSessionData } from '@digistratum/ds-core';
+
+// Store user preferences, form drafts, UI state
+const [draft, setDraft] = useSessionData<FormDraft>('invoice-draft');
+const [filters, setFilters] = useSessionData<FilterState>('search-filters');
+```
+
+### ❌ DON'T
+
+```tsx
+// NEVER use raw browser storage for session data
+localStorage.setItem('user-data', JSON.stringify(data));    // ❌
+sessionStorage.setItem('user-prefs', JSON.stringify(prefs)); // ❌
+
+// These bypass app scoping and won't be cleared on logout
+```
+
+### Exceptions
+
+Direct `localStorage`/`sessionStorage` usage requires explicit approval in code review.
+Valid exceptions:
+- Device-specific settings (e.g., `theme-preference` before auth)
+- Performance-critical caching with documented TTL
+- Third-party library requirements
+
+Document any exception with:
+```tsx
+// EXCEPTION: localStorage approved for [reason]
+// Reviewed: [date] by [reviewer]
+```
+
+---
+
 ## Auth Handler Contract
 
 | Handler | Purpose | Cookie Behavior |
