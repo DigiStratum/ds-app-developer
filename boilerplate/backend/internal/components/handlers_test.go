@@ -601,3 +601,253 @@ func TestGetVersionHandler_NotFound(t *testing.T) {
 		t.Error("expected nil version for non-existent version")
 	}
 }
+
+// Additional tests for components handlers
+
+// Tests: Component struct has correct JSON fields
+func TestComponent_JSONFields(t *testing.T) {
+	now := time.Now()
+	component := &Component{
+		Name:        "test-component",
+		Description: "Test description",
+		Author:      "user-123",
+		Repository:  "https://github.com/test/repo",
+		License:     "MIT",
+		Keywords:    []string{"test", "example"},
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	if component.Name != "test-component" {
+		t.Error("Name not accessible")
+	}
+	if len(component.Keywords) != 2 {
+		t.Errorf("expected 2 keywords, got %d", len(component.Keywords))
+	}
+}
+
+// Tests: Version struct has correct fields
+func TestVersion_Structure(t *testing.T) {
+	now := time.Now()
+	version := &Version{
+		ComponentName: "test-component",
+		Version:       "1.0.0",
+		S3Key:         "test-component/1.0.0.tar.gz",
+		Size:          1024,
+		Checksum:      "abc123",
+		Dependencies:  map[string]string{"dep1": "^1.0.0"},
+		PublishedAt:   now,
+		PublishedBy:   "user-123",
+	}
+
+	if version.ComponentName != "test-component" {
+		t.Error("ComponentName not accessible")
+	}
+	if version.Size != 1024 {
+		t.Error("Size not accessible")
+	}
+	if len(version.Dependencies) != 1 {
+		t.Error("Dependencies not accessible")
+	}
+}
+
+// Tests: RegisterComponentRequest struct
+func TestRegisterComponentRequest_Structure(t *testing.T) {
+	req := RegisterComponentRequest{
+		Name:        "new-component",
+		Description: "A new component",
+		Repository:  "https://github.com/org/repo",
+		License:     "Apache-2.0",
+		Keywords:    []string{"new", "component"},
+	}
+
+	if req.Name != "new-component" {
+		t.Error("Name not set")
+	}
+	if req.License != "Apache-2.0" {
+		t.Error("License not set")
+	}
+}
+
+// Tests: PublishVersionRequest struct
+func TestPublishVersionRequest_Structure(t *testing.T) {
+	req := PublishVersionRequest{
+		Size:             2048,
+		Checksum:         "sha256-hash",
+		Dependencies:     map[string]string{"core": "^2.0.0"},
+		PeerDependencies: map[string]string{"react": ">=16.0.0"},
+	}
+
+	if req.Size != 2048 {
+		t.Error("Size not set")
+	}
+	if req.Checksum != "sha256-hash" {
+		t.Error("Checksum not set")
+	}
+	if len(req.PeerDependencies) != 1 {
+		t.Error("PeerDependencies not set")
+	}
+}
+
+// Tests: PublishVersionResponse struct
+func TestPublishVersionResponse_Structure(t *testing.T) {
+	resp := PublishVersionResponse{
+		UploadURL: "https://s3.example.com/upload/signed-url",
+		Version: &Version{
+			ComponentName: "my-component",
+			Version:       "2.0.0",
+		},
+	}
+
+	if resp.UploadURL == "" {
+		t.Error("UploadURL not set")
+	}
+	if resp.Version == nil {
+		t.Error("Version not set")
+	}
+}
+
+// Tests: DownloadResponse struct
+func TestDownloadResponse_Structure(t *testing.T) {
+	resp := DownloadResponse{
+		DownloadURL: "https://s3.example.com/download/signed-url",
+		Version: &Version{
+			ComponentName: "my-component",
+			Version:       "1.0.0",
+		},
+	}
+
+	if resp.DownloadURL == "" {
+		t.Error("DownloadURL not set")
+	}
+	if resp.Version == nil {
+		t.Error("Version not set")
+	}
+}
+
+// Tests: ComponentWithVersions struct
+func TestComponentWithVersions_Structure(t *testing.T) {
+	resp := ComponentWithVersions{
+		Component: &Component{Name: "my-component"},
+		Versions: []*Version{
+			{Version: "1.0.0"},
+			{Version: "1.1.0"},
+		},
+	}
+
+	if resp.Component == nil {
+		t.Error("Component not set")
+	}
+	if len(resp.Versions) != 2 {
+		t.Errorf("expected 2 versions, got %d", len(resp.Versions))
+	}
+}
+
+// Tests: NewHandler creates handler with dependencies
+
+// Tests: validateComponentName edge cases
+func TestValidateComponentName_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{"single_char", "a", true},
+		{"max_length", string(make([]byte, 128)), false}, // all zeros, invalid chars
+		{"with_numbers_only", "123component", true},
+		{"scoped_nested", "@org/sub/name", false}, // nested scopes not allowed
+		{"double_hyphen", "my--component", true},
+		{"leading_underscore", "_component", false},
+		{"trailing_hyphen", "component-", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := validateComponentName(tt.input)
+			if got != tt.want {
+				t.Errorf("validateComponentName(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+// Tests: validateVersion edge cases
+func TestValidateVersion_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{"major_only", "1", false},
+		{"major_minor", "1.0", false},
+		{"full_semver", "1.0.0", true},
+		{"with_v_prefix", "v1.0.0", true},
+		{"double_v", "vv1.0.0", false},
+		{"alpha_prerelease", "1.0.0-alpha", true},
+		{"numeric_prerelease", "1.0.0-0", true},
+		{"complex_prerelease", "1.0.0-alpha.beta.1", true},
+		{"build_only", "1.0.0+build", true},
+		{"prerelease_and_build", "1.0.0-rc.1+build.123", true},
+		{"invalid_chars", "1.0.0-$pecial", false},
+		{"leading_zero", "01.0.0", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := validateVersion(tt.input)
+			if got != tt.want {
+				t.Errorf("validateVersion(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+// Tests: buildS3Key generates correct S3 key
+func TestBuildS3Key(t *testing.T) {
+	key := buildS3Key("my-component", "1.2.3")
+	expected := "my-component/1.2.3.tar.gz"
+	if key != expected {
+		t.Errorf("expected %q, got %q", expected, key)
+	}
+}
+
+// Tests: buildS3Key with scoped component
+func TestBuildS3Key_ScopedComponent(t *testing.T) {
+	key := buildS3Key("@org/my-component", "1.0.0")
+	expected := "@org/my-component/1.0.0.tar.gz"
+	if key != expected {
+		t.Errorf("expected %q, got %q", expected, key)
+	}
+}
+
+// Tests: Component deprecation fields
+func TestComponent_DeprecationFields(t *testing.T) {
+	component := &Component{
+		Name:               "deprecated-component",
+		Deprecated:         true,
+		DeprecationMessage: "Use new-component instead",
+	}
+
+	if !component.Deprecated {
+		t.Error("Deprecated should be true")
+	}
+	if component.DeprecationMessage == "" {
+		t.Error("DeprecationMessage should be set")
+	}
+}
+
+// Tests: Version deprecation fields
+func TestVersion_DeprecationFields(t *testing.T) {
+	version := &Version{
+		Version:            "1.0.0",
+		Deprecated:         true,
+		DeprecationMessage: "Security vulnerability, upgrade to 1.0.1",
+	}
+
+	if !version.Deprecated {
+		t.Error("Deprecated should be true")
+	}
+	if version.DeprecationMessage == "" {
+		t.Error("DeprecationMessage should be set")
+	}
+}

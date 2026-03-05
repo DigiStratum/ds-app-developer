@@ -372,3 +372,5 @@ func TestHandler_InvalidDepth(t *testing.T) {
 		t.Errorf("expected status 400, got %d", w.Code)
 	}
 }
+
+// Additional tests for health package

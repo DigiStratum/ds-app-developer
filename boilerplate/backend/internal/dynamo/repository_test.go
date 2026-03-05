@@ -158,3 +158,6 @@ func TestPersonalScope_Isolated(t *testing.T) {
 		t.Error("personal scope key should differ from tenant key")
 	}
 }
+
+// Additional tests
+

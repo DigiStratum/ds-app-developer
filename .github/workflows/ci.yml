@@ -71,11 +71,11 @@ jobs:
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${COVERAGE}%"
-          # NOTE: Threshold temporarily lowered from 80% to 30% while tests are added.
-          # TODO: Incrementally increase threshold as coverage improves.
-          # Target packages without tests: dynamo, featureflags, middleware, session, theme, api
-          if (( $(echo "$COVERAGE < 30" | bc -l) )); then
-            echo "::error::Coverage ${COVERAGE}% is below 30% threshold"
+          # NOTE: Threshold set to 45% as of 2026-03-05.
+          # Issue #1107 progress: 31.9% -> 45% (session, dsauth, featureflags tests added)
+          # Remaining gap: components (3.1%), featureflags store (requires DynamoDB infrastructure tests)
+          if (( $(echo "$COVERAGE < 45" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 45% threshold"
             exit 1
           fi
           echo "::notice::Coverage ${COVERAGE}% meets minimum threshold (target: 80%)"
