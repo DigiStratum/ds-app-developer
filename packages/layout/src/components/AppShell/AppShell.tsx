@@ -69,6 +69,12 @@ export interface AppShellExtendedProps extends AppShellProps {
   
   /** Custom menu content for hamburger menu (in addition to app nav items) */
   menuContent?: ReactNode;
+  
+  /** Header ad slot content (between header and main content) */
+  headerAdSlot?: ReactNode;
+  
+  /** Footer ad slot content (between main content and footer) */
+  footerAdSlot?: ReactNode;
 }
 
 /**
@@ -189,6 +195,8 @@ export function AppShell({
   className = '',
   contentClassName = '',
   menuContent,
+  headerAdSlot,
+  footerAdSlot,
 }: AppShellExtendedProps) {
   // Extract user and tenant from auth context
   const user = auth?.user ?? null;
@@ -282,6 +290,13 @@ export function AppShell({
         </header>
       )}
 
+      {/* Header Ad Slot */}
+      {headerAdSlot && (
+        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+          {headerAdSlot}
+        </div>
+      )}
+
       {/* Content Container */}
       <main 
         className={`ds-container-margins flex-1 bg-white dark:bg-gray-800 my-2 ${contentClassName}`}
@@ -291,6 +306,13 @@ export function AppShell({
           {children}
         </div>
       </main>
+
+      {/* Footer Ad Slot */}
+      {footerAdSlot && (
+        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+          {footerAdSlot}
+        </div>
+      )}
 
       {/* DS Footer (or custom footer) - hideable via hideFooter */}
       {!hideFooter && (
