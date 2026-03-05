@@ -69,6 +69,17 @@ export function DSHeader({
   const tenantMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  // Close menu on ESC key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMobileMenu) {
+        setShowMobileMenu(false);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [showMobileMenu]);
+
   // Use internal auth hook (props can override if provided)
   const internalAuth = useAppShellAuth();
   const effectiveAuth = auth ?? internalAuth;
