@@ -5,7 +5,6 @@ import type { AuthContext, ThemeContext } from '@digistratum/layout';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@digistratum/ds-core';
 import { DeveloperFooter, FooterLink } from './DeveloperFooter';
-import { AdSlot } from './AdSlot';
 import { AdDemoToggle } from './AdDemoToggle';
 import { PlaceholderAd } from './PlaceholderAd';
 import { useAdDemoSafe } from '../hooks/useAdDemo';
@@ -150,18 +149,10 @@ export function Layout({
       showPreferences={false}
       showGdprBanner={false}
       menuContent={menuContent}
+      headerAdSlot={showAdDemo ? <PlaceholderAd position="header" /> : undefined}
+      footerAdSlot={showAdDemo ? <PlaceholderAd position="footer" /> : undefined}
     >
-      {/* Ad slot between header and content */}
-      <AdSlot position="header">
-        {showAdDemo && <PlaceholderAd position="header" />}
-      </AdSlot>
-      
       {children}
-      
-      {/* Ad slot between content and footer */}
-      <AdSlot position="footer">
-        {showAdDemo && <PlaceholderAd position="footer" />}
-      </AdSlot>
     </AppShell>
   );
 }

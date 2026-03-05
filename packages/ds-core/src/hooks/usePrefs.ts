@@ -209,3 +209,35 @@ export function usePrefs() {
 export function getPrefs(): UserPrefs {
   return getPrefsFromCookie();
 }
+
+/**
+ * Apply stored preferences to the document on page load.
+ * Call this once at app initialization (e.g., in main.tsx or App.tsx).
+ */
+export function initPrefs(): UserPrefs {
+  const prefs = getPrefsFromCookie();
+  
+  // Apply theme to document
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(prefs.theme);
+  }
+  
+  return prefs;
+}
+
+/**
+ * Hook that initializes prefs on first render.
+ * Use in a top-level component (e.g., App) to ensure prefs are applied on load.
+ */
+export function usePrefsInit() {
+  const prefs = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  
+  // Apply theme on mount
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(prefs.theme);
+  }
+  
+  return prefs;
+}

@@ -48,6 +48,8 @@ export function DSAppShell({
   privateBrandedHeader,
   leftAdMargin,
   rightAdMargin,
+  headerAdSlot,
+  footerAdSlot,
   showAppSwitcher = true,
   showThemeToggle = true,
   showUserMenu = true,
@@ -88,6 +90,8 @@ export function DSAppShell({
       privateBrandedHeader,
       leftAdMargin,
       rightAdMargin,
+  headerAdSlot,
+  footerAdSlot,
       showAppSwitcher,
       showThemeToggle,
       showUserMenu,
@@ -133,6 +137,8 @@ export function DSAppShell({
       privateBrandedHeader,
       leftAdMargin,
       rightAdMargin,
+  headerAdSlot,
+  footerAdSlot,
       showAppSwitcher,
       showThemeToggle,
       showUserMenu,
@@ -171,7 +177,7 @@ export function DSAppShell({
       </header>
 
       {/* Top ad slot */}
-      <AdSlot position="header" />
+      <AdSlot position="header">{headerAdSlot}</AdSlot>
 
       {/* Main content area with optional side margins */}
       <div className="flex-1 flex">
@@ -193,7 +199,7 @@ export function DSAppShell({
       </div>
 
       {/* Bottom ad slot */}
-      <AdSlot position="footer" />
+      <AdSlot position="footer">{footerAdSlot}</AdSlot>
 
       {/* Footer */}
       <footer 

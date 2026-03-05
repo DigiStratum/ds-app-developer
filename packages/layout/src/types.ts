@@ -152,6 +152,12 @@ export interface DSAppShellProps {
   
   /** Right ad/margin slot (collapsible) */
   rightAdMargin?: SlotConfig;
+
+  /** Header ad slot (between header and content) */
+  headerAdSlot?: ReactNode;
+
+  /** Footer ad slot (between content and footer) */
+  footerAdSlot?: ReactNode;
   
   // --- Feature toggles ---
   

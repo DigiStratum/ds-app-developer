@@ -164,6 +164,8 @@ export {
 // Unified preferences
 export { 
   usePrefs, 
+  initPrefs,
+  usePrefsInit,
   getPrefs, 
   updatePrefs,
   SUPPORTED_LANGUAGES,
