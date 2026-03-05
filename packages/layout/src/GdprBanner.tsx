@@ -4,10 +4,21 @@ import { DS_URLS, usePrefs } from '@digistratum/ds-core';
 export type ConsentLevel = 'all' | 'essential' | null;
 
 /**
+ * Return type for useConsent hook
+ */
+export interface UseConsentReturn {
+  consentLevel: ConsentLevel;
+  hasConsented: boolean;
+  hasFullConsent: boolean;
+  setConsent: (level: 'all' | 'essential') => void;
+  clearConsent: () => void;
+}
+
+/**
  * Hook to check and manage cookie consent level
  * Wraps usePrefs for backward compatibility
  */
-export function useConsent() {
+export function useConsent(): UseConsentReturn {
   const { consent, hasConsented, hasFullConsent, setConsent, clearConsent } = usePrefs();
   return {
     consentLevel: consent,
