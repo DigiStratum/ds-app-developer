@@ -5,7 +5,7 @@
  */
 
 // Consent management
-export { useConsent, getConsentLevel, hasFullConsent } from './useConsent';
+export { useConsent } from './useConsent';
 export type { UseConsentReturn } from './useConsent';
 
 // Feature flags
@@ -33,14 +33,19 @@ export { useShellLoader, prefetchShell } from './useShellLoader';
 export { 
   usePrefs, 
   getPrefs, 
-  updatePrefs,
   SUPPORTED_LANGUAGES,
 } from './usePrefs';
 export type { 
-  UsePrefsReturn, 
   UserPrefs, 
   LanguageCode, 
   ThemeMode,
+  ConsentLevel,
 } from './usePrefs';
-// Re-export ConsentLevel from usePrefs for new code
-export type { ConsentLevel } from './usePrefs';
+
+// Session data
+export { useSessionData } from './useSessionData';
+export type { 
+  SessionInfo, 
+  UseSessionDataOptions, 
+  UseSessionDataReturn,
+} from './useSessionData';

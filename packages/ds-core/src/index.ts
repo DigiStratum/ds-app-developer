@@ -66,11 +66,7 @@ export type {
 // =============================================================================
 
 // Consent management
-export {
-  useConsent,
-  getConsentLevel,
-  hasFullConsent,
-} from './hooks/useConsent';
+export { useConsent } from './hooks/useConsent';
 export type { UseConsentReturn } from './hooks/useConsent';
 
 // Feature flags
@@ -167,12 +163,18 @@ export {
   initPrefs,
   usePrefsInit,
   getPrefs, 
-  updatePrefs,
   SUPPORTED_LANGUAGES,
 } from './hooks/usePrefs';
 export type { 
-  UsePrefsReturn, 
   UserPrefs, 
   LanguageCode, 
   ThemeMode,
 } from './hooks/usePrefs';
+
+// Session data
+export { useSessionData } from './hooks/useSessionData';
+export type { 
+  SessionInfo, 
+  UseSessionDataOptions, 
+  UseSessionDataReturn,
+} from './hooks/useSessionData';
