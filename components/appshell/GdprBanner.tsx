@@ -1,78 +1,13 @@
-import { useCallback, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DS_URLS } from '@digistratum/ds-core';
-import type { ConsentLevel } from './types';
-
-const COOKIE_CONSENT_KEY = 'ds-cookie-consent';
-const COOKIE_DOMAIN = '.digistratum.com';
-const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
-
-const listeners = new Set<() => void>();
-
-function subscribe(callback: () => void): () => void {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
-}
-
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-function setCookie(name: string, value: string, maxAge: number): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
-}
-
-function deleteCookie(name: string): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; domain=${COOKIE_DOMAIN}; path=/; max-age=0`;
-}
-
-function getSnapshot(): ConsentLevel {
-  const value = getCookie(COOKIE_CONSENT_KEY);
-  if (value === 'all' || value === 'essential') {
-    return value;
-  }
-  return null;
-}
-
-function notifyListeners(): void {
-  listeners.forEach((callback) => callback());
-}
-
-/**
- * Hook to check and manage cookie consent level
- */
-export function useConsent() {
-  const consentLevel = useSyncExternalStore(subscribe, getSnapshot, () => null);
-
-  const setConsent = useCallback((level: 'all' | 'essential') => {
-    setCookie(COOKIE_CONSENT_KEY, level, COOKIE_MAX_AGE);
-    notifyListeners();
-  }, []);
-
-  const clearConsent = useCallback(() => {
-    deleteCookie(COOKIE_CONSENT_KEY);
-    notifyListeners();
-  }, []);
-
-  return {
-    consentLevel,
-    hasConsented: consentLevel !== null,
-    hasFullConsent: consentLevel === 'all',
-    setConsent,
-    clearConsent,
-  };
-}
+import { DS_URLS, usePrefs } from '@digistratum/ds-core';
 
 /**
  * GDPR cookie consent banner component
+ * Uses unified ds-prefs cookie via usePrefs hook
  */
 export function GdprBanner() {
   const { t } = useTranslation();
-  const { hasConsented, setConsent } = useConsent();
+  const { hasConsented, setConsent } = usePrefs();
 
   if (hasConsented) {
     return null;
@@ -133,4 +68,16 @@ export function GdprBanner() {
       </div>
     </div>
   );
+}
+
+// Re-export useConsent for backwards compatibility (now just wraps usePrefs)
+export function useConsent() {
+  const { consent, hasConsented, hasFullConsent, setConsent, clearConsent } = usePrefs();
+  return {
+    consentLevel: consent,
+    hasConsented,
+    hasFullConsent,
+    setConsent,
+    clearConsent,
+  };
 }

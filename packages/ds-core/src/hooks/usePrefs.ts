@@ -10,7 +10,6 @@ import { useCallback, useSyncExternalStore } from 'react';
 // Cookie configuration
 const COOKIE_NAME = 'ds-prefs';
 const COOKIE_DOMAIN = '.digistratum.com';
-const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
 
 // Supported languages (Google Translate common subset)
 export const SUPPORTED_LANGUAGES = [
@@ -80,9 +79,9 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-function setCookie(name: string, value: string, maxAge: number): void {
+function setCookie(name: string, value: string): void {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; SameSite=Lax; Secure`;
 }
 
 function encodePrefs(prefs: UserPrefs): string {
@@ -123,7 +122,7 @@ function getPrefsFromCookie(): UserPrefs {
 
 function savePrefs(prefs: UserPrefs): void {
   const encoded = encodePrefs(prefs);
-  setCookie(COOKIE_NAME, encoded, COOKIE_MAX_AGE);
+  setCookie(COOKIE_NAME, encoded);
   notifyListeners();
 }
 

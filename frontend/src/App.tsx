@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AdDemoProvider } from './hooks/useAdDemo';
@@ -55,6 +56,18 @@ function SessionLoader({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const location = useLocation();
+  
+  // Clean up logout query param after redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('logged_out')) {
+      // Remove the param and replace history
+      params.delete('logged_out');
+      const newSearch = params.toString();
+      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
   
   return (
     <ErrorBoundary resetKey={location.pathname}>

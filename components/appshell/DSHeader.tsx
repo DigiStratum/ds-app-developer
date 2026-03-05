@@ -293,15 +293,16 @@ export function DSHeader({
                         </div>
                       )}
 
-
                       {/* Preferences */}
-                      <button
-                        onClick={() => { setShowPreferencesModal(true); setShowMobileMenu(false); }}
-                        className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <span className="ds-icon ds-icon-adjustments-horizontal ds-icon-sm mr-2" />
-                        {t('nav.preferences', 'Preferences')}
-                      </button>
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                        <button
+                          onClick={() => { setShowPreferencesModal(true); setShowMobileMenu(false); }}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <span className="ds-icon ds-icon-adjustments-horizontal ds-icon-sm mr-2" />
+                          {t('nav.preferences', 'Preferences')}
+                        </button>
+                      </div>
 
 
                       {(
