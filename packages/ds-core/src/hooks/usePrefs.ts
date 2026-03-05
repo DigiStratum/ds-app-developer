@@ -1,13 +1,12 @@
 /**
  * @digistratum/ds-core - usePrefs Hook
  * 
- * Unified user preferences hook storing all preferences in a single ds-prefs cookie.
- * Uses cookies with domain=.digistratum.com for cross-subdomain sharing.
+ * Unified preferences management with single ds-prefs cookie.
+ * Stores: language | theme | consent in base64-encoded format.
  */
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-// Cookie configuration
 const COOKIE_NAME = 'ds-prefs';
 const COOKIE_DOMAIN = '.digistratum.com';
 
@@ -25,27 +24,27 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ko', label: 'Korean', nativeLabel: '한국어' },
   { code: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
   { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी' },
-  { code: 'nl', label: 'Dutch', nativeLabel: 'Nederlands' },
-  { code: 'pl', label: 'Polish', nativeLabel: 'Polski' },
-  { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe' },
+  { code: 'bn', label: 'Bengali', nativeLabel: 'বাংলা' },
+  { code: 'pa', label: 'Punjabi', nativeLabel: 'ਪੰਜਾਬੀ' },
   { code: 'vi', label: 'Vietnamese', nativeLabel: 'Tiếng Việt' },
   { code: 'th', label: 'Thai', nativeLabel: 'ไทย' },
+  { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe' },
+  { code: 'pl', label: 'Polish', nativeLabel: 'Polski' },
+  { code: 'uk', label: 'Ukrainian', nativeLabel: 'Українська' },
+  { code: 'nl', label: 'Dutch', nativeLabel: 'Nederlands' },
   { code: 'sv', label: 'Swedish', nativeLabel: 'Svenska' },
   { code: 'cs', label: 'Czech', nativeLabel: 'Čeština' },
-  { code: 'uk', label: 'Ukrainian', nativeLabel: 'Українська' },
-  { code: 'he', label: 'Hebrew', nativeLabel: 'עברית' },
   { code: 'el', label: 'Greek', nativeLabel: 'Ελληνικά' },
-  { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
-  { code: 'hu', label: 'Hungarian', nativeLabel: 'Magyar' },
-  { code: 'da', label: 'Danish', nativeLabel: 'Dansk' },
-  { code: 'fi', label: 'Finnish', nativeLabel: 'Suomi' },
-  { code: 'no', label: 'Norwegian', nativeLabel: 'Norsk' },
+  { code: 'he', label: 'Hebrew', nativeLabel: 'עברית' },
   { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
   { code: 'ms', label: 'Malay', nativeLabel: 'Bahasa Melayu' },
   { code: 'fil', label: 'Filipino', nativeLabel: 'Filipino' },
+  { code: 'hu', label: 'Hungarian', nativeLabel: 'Magyar' },
+  { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
+  { code: 'da', label: 'Danish', nativeLabel: 'Dansk' },
 ] as const;
 
-export type LanguageCode = string; // Allow any language code
+export type LanguageCode = string;
 export type ThemeMode = 'light' | 'dark';
 export type ConsentLevel = 'all' | 'essential' | null;
 
@@ -99,7 +98,6 @@ function decodePrefs(encoded: string): UserPrefs | null {
     const validThemes: ThemeMode[] = ['light', 'dark'];
     const validConsent: (string | null)[] = ['all', 'essential', '-'];
     
-    // Accept any language code
     if (!validThemes.includes(theme as ThemeMode)) return null;
     if (!validConsent.includes(consent)) return null;
     
@@ -116,8 +114,9 @@ function decodePrefs(encoded: string): UserPrefs | null {
 function getPrefsFromCookie(): UserPrefs {
   const encoded = getCookie(COOKIE_NAME);
   if (!encoded) return { ...DEFAULT_PREFS };
-  const prefs = decodePrefs(encoded);
-  return prefs ?? { ...DEFAULT_PREFS };
+  
+  const decoded = decodePrefs(encoded);
+  return decoded ?? { ...DEFAULT_PREFS };
 }
 
 function savePrefs(prefs: UserPrefs): void {
@@ -143,26 +142,12 @@ function getServerSnapshot(): UserPrefs {
   return { ...DEFAULT_PREFS };
 }
 
-export interface UsePrefsReturn {
-  prefs: UserPrefs;
-  lang: string;
-  setLang: (lang: string) => void;
-  getLangInfo: (code: string) => typeof SUPPORTED_LANGUAGES[number] | undefined;
-  theme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
-  toggleTheme: () => void;
-  consent: ConsentLevel;
-  hasConsented: boolean;
-  hasFullConsent: boolean;
-  setConsent: (level: 'all' | 'essential') => void;
-  clearConsent: () => void;
-  resetPrefs: () => void;
-}
-
 /**
- * Hook to manage unified user preferences
+ * Unified preferences hook
+ * 
+ * Manages language, theme, and consent in a single ds-prefs cookie.
  */
-export function usePrefs(): UsePrefsReturn {
+export function usePrefs() {
   const prefs = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   
   const setLang = useCallback((lang: string) => {
@@ -179,18 +164,16 @@ export function usePrefs(): UsePrefsReturn {
     savePrefs({ ...current, theme });
     // Apply to document
     if (typeof document !== 'undefined') {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
     }
   }, []);
   
   const toggleTheme = useCallback(() => {
     const current = getPrefsFromCookie();
-    const newTheme: ThemeMode = current.theme === 'light' ? 'dark' : 'light';
-    savePrefs({ ...current, theme: newTheme });
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    }
-  }, []);
+    const newTheme = current.theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+  }, [setTheme]);
   
   const setConsent = useCallback((level: 'all' | 'essential') => {
     const current = getPrefsFromCookie();
@@ -204,9 +187,6 @@ export function usePrefs(): UsePrefsReturn {
   
   const resetPrefs = useCallback(() => {
     savePrefs({ ...DEFAULT_PREFS });
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.remove('dark');
-    }
   }, []);
   
   return {
@@ -228,19 +208,4 @@ export function usePrefs(): UsePrefsReturn {
 
 export function getPrefs(): UserPrefs {
   return getPrefsFromCookie();
-}
-
-export function updatePrefs(updates: Partial<UserPrefs>): void {
-  const current = getPrefsFromCookie();
-  savePrefs({ ...current, ...updates });
-}
-
-/**
- * Apply theme to document on initial load
- * Call this in your app's entry point
- */
-export function applyStoredTheme(): void {
-  if (typeof document === 'undefined') return;
-  const prefs = getPrefsFromCookie();
-  document.documentElement.classList.toggle('dark', prefs.theme === 'dark');
 }
