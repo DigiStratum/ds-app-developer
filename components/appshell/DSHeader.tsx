@@ -90,7 +90,8 @@ export function DSHeader({
         if (!res.ok) throw new Error('Failed to fetch apps');
         return res.json();
       })
-      .then((data: Array<{ id: string; name: string; url: string; icon?: string; status?: string; is_public?: boolean; display_order?: number }>) => {
+      .then((response: { apps: Array<{ id: string; name: string; url: string; icon?: string; status?: string; is_public?: boolean; display_order?: number }> }) => {
+        const data = response.apps || [];
         if (cancelled) return;
         const filteredApps = data
           .filter(app => {
@@ -118,7 +119,7 @@ export function DSHeader({
       });
     
     return () => { cancelled = true; };
-  }, [appsApiUrl = `${DS_URLS.ACCOUNT}/api/apps/available`, isAuthenticated]);
+  }, [appsApiUrl, isAuthenticated]);
 
   const apps = fetchedApps ?? propApps ?? DEFAULT_DS_APPS;
 
