@@ -61,10 +61,14 @@
 - **NFR-A11Y-004:** Screen reader compatibility
 
 ### NFR-TEST: Testing
-- **NFR-TEST-001:** Unit test coverage > 80%
-- **NFR-TEST-002:** Integration tests for all API endpoints
-- **NFR-TEST-003:** E2E tests for critical user flows
-- **NFR-TEST-004:** All tests must pass for deployment
+
+> **Detailed documentation:** [docs/NFR-TEST.md](docs/NFR-TEST.md)
+
+- **NFR-TEST-001:** Backend unit test coverage > 80% (see [docs/NFR-TEST.md](docs/NFR-TEST.md#nfr-test-001-backend-unit-test-coverage))
+- **NFR-TEST-002:** Frontend unit test coverage (baseline 8%, target 70% phased) (see [docs/NFR-TEST.md](docs/NFR-TEST.md#nfr-test-002-frontend-unit-test-coverage))
+- **NFR-TEST-003:** Integration tests for all API endpoints
+- **NFR-TEST-004:** E2E tests for critical user flows
+- **NFR-TEST-005:** All tests must pass for deployment
 
 ### NFR-MON: Monitoring
 - **NFR-MON-001:** Structured logging to CloudWatch
@@ -109,11 +113,12 @@
 | NFR-A11Y-002 | `frontend/src/components/*.tsx` (semantic elements: header, main, nav, footer) | `frontend/e2e/accessibility.spec.ts:page has proper heading hierarchy`, `main landmark is present` | ✅ |
 | NFR-A11Y-003 | `frontend/src/components/DSNav.tsx` (keyboard handlers), `frontend/e2e/navigation.spec.ts` | `frontend/e2e/accessibility.spec.ts:Focus Management`, `frontend/e2e/navigation.spec.ts:Keyboard Navigation` | ✅ |
 | NFR-A11Y-004 | aria-labels throughout components | `frontend/e2e/accessibility.spec.ts:buttons have accessible names`, `Live Regions` | ✅ |
-| NFR-TEST-001 | Current: Backend 31% auth, 72% health; Frontend needs measurement | - | ⚠️ Below target |
-| NFR-TEST-002 | `backend/test/integration/api_test.go` | Partial (health endpoint tested, others TODO) | ⚠️ |
-| NFR-TEST-003 | `frontend/e2e/*.spec.ts` (auth, navigation, theme-i18n, accessibility, api-integration) | E2E tests exist for critical flows | ✅ |
-| NFR-TEST-004 | `.github/workflows/*.yml` (CI/CD gates) | - | ⚠️ Infra only |
+| NFR-TEST-001 | `docs/NFR-TEST.md`, backend coverage config | `go test -cover` CI gate | ⚠️ Below 80% target |
+| NFR-TEST-002 | `docs/NFR-TEST.md`, `frontend/vite.config.ts` thresholds | `npm run test:coverage` CI gate | ✅ At baseline (8%) |
+| NFR-TEST-003 | `backend/test/integration/api_test.go` | Partial (health endpoint tested, others TODO) | ⚠️ |
+| NFR-TEST-004 | `frontend/e2e/*.spec.ts` (auth, navigation, theme-i18n, accessibility, api-integration) | E2E tests exist for critical flows | ✅ |
 | NFR-MON-001 | `backend/internal/middleware/logging.go:LoggingMiddleware`, `backend/cmd/api/main.go` (JSON handler) | - | ✅ Impl verified |
+| NFR-TEST-005 | `.github/workflows/*.yml` (CI/CD gates) | Tests must pass for deployment | ✅ Enforced |
 | NFR-MON-002 | `cdk/lib/constructs/monitoring.ts:ErrorRateAlarm` | - | ✅ Impl verified |
 | NFR-MON-003 | `cdk/lib/constructs/monitoring.ts` (dashboard with P95, P99 latency graphs) | - | ✅ Impl verified |
 | NFR-MON-004 | `backend/internal/middleware/correlation.go:CorrelationIDMiddleware` | - | ✅ Impl verified |
@@ -142,7 +147,7 @@
 ### Infrastructure-Only (Not Unit Testable)
 - NFR-SEC-002, NFR-SEC-003, NFR-SEC-005: TLS, secrets, CORS are CDK/infrastructure concerns.
 - NFR-AVAIL-001: Uptime is an operational metric, not a testable requirement.
-- NFR-TEST-004: CI/CD gating is workflow configuration.
+- NFR-TEST-005: CI/CD gating is workflow configuration.
 
 ---
 *Last updated: 2026-02-20*

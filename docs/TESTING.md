@@ -3,6 +3,8 @@
 > Comprehensive testing patterns, conventions, and standards for the DS App Developer.
 > Tests must trace to requirement IDs from REQUIREMENTS.md.
 
+>
+> **Coverage requirements & exception policy:** See [NFR-TEST.md](./NFR-TEST.md)
 ## Table of Contents
 
 - [Philosophy](#philosophy)
