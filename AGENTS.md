@@ -802,3 +802,47 @@ make coverage
 ---
 
 *This document is AI-friendly by design. Agents: load this file at the start of every session.*
+
+---
+
+## AppShell Architecture (Separation of Concerns)
+
+The `components/appshell/` directory contains the **shared DS application shell** that all DS apps consume. This is a self-contained module with clear boundaries.
+
+### What belongs IN the AppShell
+
+Everything that should be consistent across all DS apps:
+
+- **Layout structure:** Header, footer, sidebar, content areas
+- **Navigation:** App switcher, menu structure, mobile nav
+- **Cross-app integration:** SSO auth flows, tenant switching, preferences
+- **Business logic:** 
+  - Fetching apps from registry (`DS_URLS.ACCOUNT/api/apps/available`)
+  - Cookie consent / GDPR compliance
+  - Theme persistence
+  - Language/i18n coordination
+- **Ad slots:** Placement and essential behaviors
+- **Default styling:** Consistent look & feel
+
+### What stays OUT of the AppShell (app-specific)
+
+Apps inject their specifics via props/callbacks:
+
+- `getMenuItems()` — app's navigation items
+- `customHeaderZone` — app-specific header content
+- `customFooter` — override default footer
+- `appName`, `appIcon` — branding
+- Page content (obviously)
+
+### Key Principle
+
+**Any app that syncs the appshell automatically inherits all updates.** No app-specific configuration should be needed for core appshell functionality. When adding new cross-app features, put them in the appshell with sensible defaults—don't require each app to opt-in.
+
+### Syncing the AppShell
+
+```bash
+# Pull latest appshell into any DS app
+npx ds-components sync
+```
+
+This copies from ds-app-developer's canonical `components/appshell/` to the consuming app.
