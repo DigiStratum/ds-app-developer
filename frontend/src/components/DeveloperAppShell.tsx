@@ -153,7 +153,7 @@ export function DeveloperAppShell({
         showThemeToggle={showThemeToggle}
         showUserMenu={showUserMenu}
         showGdprBanner={false} // Using custom footer with GDPR banner
-        appsApiUrl="/api/apps" // Fetch apps from DSAccount registry
+        appsApiUrl="https://account.digistratum.com/api/apps/available" // Fetch apps from DSAccount registry
       >
         <AdSlot position="header">
           {showAdDemo && <PlaceholderAd position="header" />}
