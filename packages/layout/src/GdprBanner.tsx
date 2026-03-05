@@ -1,82 +1,18 @@
-import { useCallback, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DS_URLS } from '@digistratum/ds-core';
-
-const COOKIE_CONSENT_KEY = 'ds-cookie-consent';
-// Cookie domain for cross-subdomain sharing (e.g., developer.digistratum.com, account.digistratum.com)
-const COOKIE_DOMAIN = '.digistratum.com';
-// Consent cookie expires in 1 year
-const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
+import { DS_URLS, usePrefs } from '@digistratum/ds-core';
 
 export type ConsentLevel = 'all' | 'essential' | null;
 
-// External store for cross-component reactivity
-const listeners = new Set<() => void>();
-
-function subscribe(callback: () => void): () => void {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
-}
-
-/**
- * Read consent level from cookie
- */
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-/**
- * Set consent cookie with cross-subdomain domain
- */
-function setCookie(name: string, value: string, maxAge: number): void {
-  if (typeof document === 'undefined') return;
-  // Use root domain for cross-subdomain sharing
-  // SameSite=Lax allows the cookie to be sent on navigation from external sites
-  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
-}
-
-/**
- * Delete consent cookie
- */
-function deleteCookie(name: string): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; domain=${COOKIE_DOMAIN}; path=/; max-age=0`;
-}
-
-function getSnapshot(): ConsentLevel {
-  const value = getCookie(COOKIE_CONSENT_KEY);
-  if (value === 'all' || value === 'essential') {
-    return value;
-  }
-  return null;
-}
-
-function notifyListeners(): void {
-  listeners.forEach((callback) => callback());
-}
-
 /**
  * Hook to check and manage cookie consent level
+ * Wraps usePrefs for backward compatibility
  */
 export function useConsent() {
-  const consentLevel = useSyncExternalStore(subscribe, getSnapshot, () => null);
-
-  const setConsent = useCallback((level: 'all' | 'essential') => {
-    setCookie(COOKIE_CONSENT_KEY, level, COOKIE_MAX_AGE);
-    notifyListeners();
-  }, []);
-
-  const clearConsent = useCallback(() => {
-    deleteCookie(COOKIE_CONSENT_KEY);
-    notifyListeners();
-  }, []);
-
+  const { consent, hasConsented, hasFullConsent, setConsent, clearConsent } = usePrefs();
   return {
-    consentLevel,
-    hasConsented: consentLevel !== null,
-    hasFullConsent: consentLevel === 'all',
+    consentLevel: consent,
+    hasConsented,
+    hasFullConsent,
     setConsent,
     clearConsent,
   };
@@ -84,6 +20,7 @@ export function useConsent() {
 
 /**
  * GDPR cookie consent banner component
+ * Uses unified ds-prefs cookie via usePrefs hook
  */
 export function GdprBanner() {
   const { t } = useTranslation();
@@ -99,7 +36,7 @@ export function GdprBanner() {
       aria-modal="true"
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-description"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"
+      className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-4"
     >
       <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4">

@@ -35,7 +35,6 @@ export const STORAGE_KEYS = {
   /** Theme preference */
   THEME: 'ds-theme',
   /** Cookie consent level */
-  COOKIE_CONSENT: 'ds-cookie-consent',
   /** Current tenant ID */
   CURRENT_TENANT: 'ds_currentTenant',
   /** Feature flags cache */

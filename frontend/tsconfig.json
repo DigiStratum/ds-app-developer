@@ -20,6 +20,8 @@
       "@/*": ["src/*"],
       "@digistratum/appshell": ["../components/appshell/index.ts"],
       "@digistratum/appshell/*": ["../components/appshell/*"],
+      "@digistratum/ds-core": ["../packages/ds-core/src"],
+      "@digistratum/ds-core/*": ["../packages/ds-core/src/*"],
       "@digistratum/layout": ["../components/layout-compat.ts"],
       "@digistratum/layout/*": ["../components/appshell/*"]
     }

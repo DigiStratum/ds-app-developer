@@ -22,6 +22,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@digistratum/ds-core': path.resolve(__dirname, '../packages/ds-core/src'),
       '@digistratum/appshell': path.resolve(__dirname, '../components/appshell'),
       '@digistratum/layout': path.resolve(__dirname, '../components/layout-compat.ts'),
       'react': path.resolve(__dirname, 'node_modules/react'),
