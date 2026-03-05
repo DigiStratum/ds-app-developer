@@ -109,6 +109,8 @@ export function AppShell({
   className = '',
   contentClassName = '',
   menuContent,
+  headerAdSlot,
+  footerAdSlot,
 }: AppShellExtendedProps) {
   const user = auth?.user ?? null;
   const tenant = getCurrentTenant(auth);
@@ -194,6 +196,13 @@ export function AppShell({
         </header>
       )}
 
+      {/* Header Ad Slot */}
+      {headerAdSlot && (
+        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+          {headerAdSlot}
+        </div>
+      )}
+
       {/* Content Container */}
       <main 
         className={`ds-container-margins flex-1 bg-white dark:bg-gray-800 my-2 ${contentClassName}`}
@@ -203,6 +212,13 @@ export function AppShell({
           {children}
         </div>
       </main>
+
+      {/* Footer Ad Slot */}
+      {footerAdSlot && (
+        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+          {footerAdSlot}
+        </div>
+      )}
 
       {/* DS Footer (or custom footer) */}
       {!hideFooter && (

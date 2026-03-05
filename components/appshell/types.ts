@@ -186,6 +186,12 @@ export interface AppShellExtendedProps extends AppShellProps {
   contentClassName?: string;
   /** Custom menu content for hamburger menu */
   menuContent?: ReactNode;
+  
+  /** Header ad slot content (between header and main content) */
+  headerAdSlot?: ReactNode;
+  
+  /** Footer ad slot content (between main content and footer) */
+  footerAdSlot?: ReactNode;
 }
 
 /**
