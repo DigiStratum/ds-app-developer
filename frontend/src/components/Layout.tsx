@@ -149,7 +149,6 @@ export function Layout({
       showUserMenu={showUserMenu}
       showPreferences={false}
       showGdprBanner={false}
-      appsApiUrl="https://account.digistratum.com/api/apps/available"
       menuContent={menuContent}
     >
       {/* Ad slot between header and content */}

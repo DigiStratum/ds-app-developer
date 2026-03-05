@@ -49,7 +49,7 @@ export function DSHeader({
   theme,
   navLinks = [],
   apps: propApps,
-  appsApiUrl,
+  appsApiUrl = `${DS_URLS.ACCOUNT}/api/apps/available`,
   showAppSwitcher = true,
   showThemeToggle = true,
   showUserMenu = true,
@@ -118,7 +118,7 @@ export function DSHeader({
       });
     
     return () => { cancelled = true; };
-  }, [appsApiUrl, isAuthenticated]);
+  }, [appsApiUrl = `${DS_URLS.ACCOUNT}/api/apps/available`, isAuthenticated]);
 
   const apps = fetchedApps ?? propApps ?? DEFAULT_DS_APPS;
 
