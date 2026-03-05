@@ -37,6 +37,29 @@ export default defineConfig({
     setupFiles: './src/__tests__/setup.ts',
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['e2e/**/*'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary', 'json', 'lcov', 'html'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.spec.{ts,tsx}',
+        'src/__tests__/**',
+        'src/vite-env.d.ts',
+        'src/main.tsx', // Entry point, minimal testable logic
+      ],
+      // NFR-TEST-001: Frontend coverage targets
+      // Baseline (2026-03-05): statements 8.52%, branches 55.4%, functions 26.47%, lines 8.52%
+      // Current threshold: Prevent regression from baseline
+      // Target: 70% lines/statements, 60% branches/functions
+      thresholds: {
+        statements: 8,
+        branches: 50,
+        functions: 25,
+        lines: 8,
+      },
+    },
   },
   define: {
     __SHELL_DEV_MODE__: JSON.stringify(process.env.NODE_ENV === 'development'),

@@ -54,15 +54,27 @@ Run coverage: `go test -coverprofile=coverage.out ./...`
 
 ### Frontend (TypeScript/React)
 
-| Directory | Minimum Coverage |
-|-----------|------------------|
-| `src/hooks/` | 85% |
-| `src/components/` | 80% |
-| `src/api/` | 80% |
-| `src/utils/` | 90% |
-| **Overall** | **80%** |
+**Current Baseline (2026-03-05):**
 
-Run coverage: `npm run test:coverage`
+| Metric | Current | Threshold | Target |
+|--------|---------|-----------|--------|
+| Statements | 8.52% | 8% | 70% |
+| Branches | 55.4% | 50% | 60% |
+| Functions | 26.47% | 25% | 60% |
+| Lines | 8.52% | 8% | 70% |
+
+**Phased Coverage Targets:**
+
+| Phase | Timeline | Target |
+|-------|----------|--------|
+| Phase 1 | Current | Prevent regression from baseline |
+| Phase 2 | +2 sprints | 30% lines/statements |
+| Phase 3 | +4 sprints | 50% lines/statements |
+| Phase 4 | +6 sprints | 70% lines/statements (target state) |
+
+Coverage is configured in `frontend/vite.config.ts` with thresholds that will fail CI on regression.
+
+Run coverage: `npm run test:coverage` (in `frontend/`)
 
 ### CI Enforcement
 
