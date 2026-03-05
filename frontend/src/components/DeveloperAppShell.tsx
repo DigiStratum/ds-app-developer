@@ -107,15 +107,6 @@ export function DeveloperAppShell({
   const getMenuItems = (authUser: User | null, _tenant: Tenant | null): MenuItem[] => {
     const items: MenuItem[] = [];
     
-    // Public navigation items (available to all users)
-    items.push({
-      id: 'home',
-      label: t('nav.home', 'Home'),
-      path: '/',
-      icon: '🏠',
-      active: location.pathname === '/',
-    });
-
     // Authenticated user navigation
     if (authUser) {
       items.push({

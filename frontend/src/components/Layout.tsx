@@ -90,15 +90,6 @@ export function Layout({
    */
   const getMenuItems = (authUser: User | null, _tenant: Tenant | null): MenuItem[] => {
     const items: MenuItem[] = [];
-    
-    // Public navigation
-    items.push({
-      id: 'home',
-      label: 'Home',
-      path: '/',
-      icon: '🏠',
-      active: location.pathname === '/',
-    });
 
     // Authenticated user navigation
     if (authUser) {

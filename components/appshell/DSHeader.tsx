@@ -327,53 +327,39 @@ export function DSHeader({
 
                 </div>
               </div>
-              {/* Section 2: App Switcher */}
+              {/* Apps Section - merged with app-specific options */}
               {showAppSwitcher && (
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
                   <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    {t('nav.dsApps', 'DigiStratum Apps')}
+                    {t('nav.apps', 'Apps')}
                   </p>
                   <div className="space-y-1">
                     {apps.map((app) => {
                       const isCurrent = currentAppId === app.id;
-                      if (isCurrent) {
-                        return (
-                          <div
-                            key={app.id}
-                            className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
+                      return (
+                        <div key={app.id}>
+                          {/* App row */}
+                          <a
+                            href={app.url}
+                            className={`flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md transition-colors ${
+                              isCurrent
+                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
+                            onClick={() => setShowMobileMenu(false)}
                           >
                             <span className="text-lg mr-2">{app.icon}</span>
                             <span className="font-medium truncate">{app.name}</span>
-                            <span className="ml-auto text-xs text-blue-500 dark:text-blue-300 shrink-0">
-                              {t('nav.current', 'Current')}
-                            </span>
-                          </div>
-                        );
-                      }
-                      return (
-                        <a
-                          key={app.id}
-                          href={app.url}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => setShowMobileMenu(false)}
-                        >
-                          <span className="text-lg mr-2">{app.icon}</span>
-                          <span className="font-medium truncate">{app.name}</span>
-                        </a>
+                          </a>
+                          {/* App-specific menu items (accordion) */}
+                          {isCurrent && menuContent && (
+                            <div className="ml-6 mt-1 space-y-1 border-l-2 border-blue-200 dark:border-blue-700 pl-3 [&>*]:w-full [&>*]:md:w-40">
+                              {menuContent}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
-                  </div>
-                </div>
-              )}
-
-              {/* Section 3: App-specific content */}
-              {menuContent && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                  <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    {t('nav.appOptions', 'Options')}
-                  </p>
-                  <div className="space-y-1 [&>*]:w-full [&>*]:md:w-48">
-                    {menuContent}
                   </div>
                 </div>
               )}
