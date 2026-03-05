@@ -7,10 +7,7 @@ import { PreferencesModal } from './PreferencesModal';
 // Default DS apps for app-switcher
 const DEFAULT_DS_APPS: DSApp[] = [
   { id: 'dsaccount', name: 'DS Account', url: DS_URLS.ACCOUNT, icon: '👤' },
-  { id: 'dskanban', name: 'DS Projects', url: DS_URLS.PROJECTS, icon: '📋' },
-  { id: 'dscrm', name: 'DS CRM', url: DS_URLS.CRM, icon: '💼' },
   { id: 'dsdeveloper', name: 'DS Developer', url: DS_URLS.DEVELOPER, icon: '🛠️' },
-  { id: 'ds-noc', name: 'DS NOC', url: DS_URLS.NOC, icon: '📡' },
 ];
 
 function getDefaultIcon(appId: string): string {
