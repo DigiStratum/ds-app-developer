@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/globals.css';
+import '@digistratum/ds-icons/dist/icons.css';
 import './i18n/config';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

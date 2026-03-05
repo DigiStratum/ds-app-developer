@@ -9,7 +9,8 @@
     "packages/cdk-constructs",
     "boilerplate/frontend",
     "packages/ds-core",
-    "packages/ds-ui"
+    "packages/ds-ui",
+    "packages/ds-icons"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

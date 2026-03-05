@@ -1,0 +1,16 @@
+{
+  "name": "@digistratum/ds-icons",
+  "version": "0.1.0",
+  "description": "CSS-based icon system for DigiStratum apps",
+  "main": "dist/icons.css",
+  "style": "dist/icons.css",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "clean": "rm -rf dist/*"
+  },
+  "keywords": ["icons", "css", "digistratum"],
+  "license": "MIT"
+}

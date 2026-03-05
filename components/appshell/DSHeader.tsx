@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DS_URLS, usePrefs, SUPPORTED_LANGUAGES } from '@digistratum/ds-core';
+import { DS_URLS } from '@digistratum/ds-core';
 import type { DSHeaderProps, DSApp, NavLink } from './types';
+import { PreferencesModal } from './PreferencesModal';
 
 // Default DS apps for app-switcher
 const DEFAULT_DS_APPS: DSApp[] = [
@@ -58,11 +59,11 @@ export function DSHeader({
   menuContent,
 }: DSHeaderProps) {
   const { t } = useTranslation();
-  const { lang, setLang } = usePrefs();
   const [showUserMenuDropdown, setShowUserMenuDropdown] = useState(false);
   const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [showAppSwitcherDropdown, setShowAppSwitcherDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [fetchedApps, setFetchedApps] = useState<DSApp[] | null>(null);
   const [appsLoading, setAppsLoading] = useState(false);
 
@@ -138,36 +139,6 @@ export function DSHeader({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const cycleTheme = () => {
-    if (!theme) return;
-    const themes: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system'];
-    const currentIndex = themes.indexOf(theme.theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    theme.setTheme(themes[nextIndex]);
-  };
-
-  const ThemeIcon = () => {
-    if (!theme) return null;
-    if (theme.theme === 'system') {
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      );
-    }
-    if (theme.resolvedTheme === 'dark') {
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      );
-    }
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    );
-  };
 
   return (
     <div className={className}>
@@ -319,86 +290,43 @@ export function DSHeader({
                         </div>
                       )}
 
-                      {showThemeToggle && theme && (
-                        <button
-                          onClick={cycleTheme}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <ThemeIcon />
-                          <span className="ml-2">
-                            {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
-                          </span>
-                        </button>
-                      )}
 
-                      {/* Language selector */}
-                      <div className="relative">
-                        <button
-                          onClick={() => {
-                            const codes = SUPPORTED_LANGUAGES.map(l => l.code);
-                            const currentIndex = codes.indexOf(lang);
-                            const nextIndex = (currentIndex + 1) % codes.length;
-                            setLang(codes[nextIndex] as typeof lang);
-                          }}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                          </svg>
-                          <span>
-                            {SUPPORTED_LANGUAGES.find(l => l.code === lang)?.flag} {SUPPORTED_LANGUAGES.find(l => l.code === lang)?.label}
-                          </span>
-                        </button>
-                      </div>
+                      {/* Preferences */}
+                      <button
+                        onClick={() => { setShowPreferencesModal(true); setShowMobileMenu(false); }}
+                        className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <span className="ds-icon ds-icon-adjustments-horizontal ds-icon-sm mr-2" />
+                        {t('nav.preferences', 'Preferences')}
+                      </button>
+
 
                       {auth && (
                         <button
                           onClick={() => { auth.logout(); setShowMobileMenu(false); }}
                           className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
+                          <span className="ds-icon ds-icon-arrow-right-on-rectangle ds-icon-sm mr-2" />
                           {t('common.logout', 'Sign Out')}
                         </button>
                       )}
                     </>
                   )}
 
-                  {!isAuthenticated && showThemeToggle && theme && (
+
+                  {/* Preferences (unauthenticated) */}
+                  {!isAuthenticated && (
                     <button
-                      onClick={cycleTheme}
+                      onClick={() => { setShowPreferencesModal(true); setShowMobileMenu(false); }}
                       className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
-                      <ThemeIcon />
-                      <span className="ml-2">
-                        {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
-                      </span>
+                        <span className="ds-icon ds-icon-adjustments-horizontal ds-icon-sm mr-2" />
+                      {t('nav.preferences', 'Preferences')}
                     </button>
                   )}
 
-                  {/* Language selector (unauthenticated) */}
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        const codes = SUPPORTED_LANGUAGES.map(l => l.code);
-                        const currentIndex = codes.indexOf(lang);
-                        const nextIndex = (currentIndex + 1) % codes.length;
-                        setLang(codes[nextIndex] as typeof lang);
-                      }}
-                      className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                      </svg>
-                      <span>
-                        {SUPPORTED_LANGUAGES.find(l => l.code === lang)?.flag} {SUPPORTED_LANGUAGES.find(l => l.code === lang)?.label}
-                      </span>
-                    </button>
-                  </div>
                 </div>
               </div>
-
               {/* Section 2: App Switcher */}
               {showAppSwitcher && (
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
@@ -453,6 +381,12 @@ export function DSHeader({
           </div>
         </div>
       )}
+
+      {/* Preferences Modal */}
+      <PreferencesModal
+        isOpen={showPreferencesModal}
+        onClose={() => setShowPreferencesModal(false)}
+      />
     </div>
   );
 }

@@ -60,3 +60,5 @@ export type {
 
 // Utility components
 export { CustomHeaderZone } from './CustomHeaderZone';
+export { PreferencesModal } from './PreferencesModal';
+export type { PreferencesModalProps } from './PreferencesModal';

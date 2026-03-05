@@ -12,26 +12,53 @@ const COOKIE_NAME = 'ds-prefs';
 const COOKIE_DOMAIN = '.digistratum.com';
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
 
-// Supported languages
+// Supported languages (Google Translate common subset)
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'es', label: 'Español', flag: '🇪🇸' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'en', label: 'English', nativeLabel: 'English' },
+  { code: 'es', label: 'Spanish', nativeLabel: 'Español' },
+  { code: 'fr', label: 'French', nativeLabel: 'Français' },
+  { code: 'de', label: 'German', nativeLabel: 'Deutsch' },
+  { code: 'it', label: 'Italian', nativeLabel: 'Italiano' },
+  { code: 'pt', label: 'Portuguese', nativeLabel: 'Português' },
+  { code: 'ru', label: 'Russian', nativeLabel: 'Русский' },
+  { code: 'zh', label: 'Chinese', nativeLabel: '中文' },
+  { code: 'ja', label: 'Japanese', nativeLabel: '日本語' },
+  { code: 'ko', label: 'Korean', nativeLabel: '한국어' },
+  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
+  { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी' },
+  { code: 'nl', label: 'Dutch', nativeLabel: 'Nederlands' },
+  { code: 'pl', label: 'Polish', nativeLabel: 'Polski' },
+  { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe' },
+  { code: 'vi', label: 'Vietnamese', nativeLabel: 'Tiếng Việt' },
+  { code: 'th', label: 'Thai', nativeLabel: 'ไทย' },
+  { code: 'sv', label: 'Swedish', nativeLabel: 'Svenska' },
+  { code: 'cs', label: 'Czech', nativeLabel: 'Čeština' },
+  { code: 'uk', label: 'Ukrainian', nativeLabel: 'Українська' },
+  { code: 'he', label: 'Hebrew', nativeLabel: 'עברית' },
+  { code: 'el', label: 'Greek', nativeLabel: 'Ελληνικά' },
+  { code: 'ro', label: 'Romanian', nativeLabel: 'Română' },
+  { code: 'hu', label: 'Hungarian', nativeLabel: 'Magyar' },
+  { code: 'da', label: 'Danish', nativeLabel: 'Dansk' },
+  { code: 'fi', label: 'Finnish', nativeLabel: 'Suomi' },
+  { code: 'no', label: 'Norwegian', nativeLabel: 'Norsk' },
+  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
+  { code: 'ms', label: 'Malay', nativeLabel: 'Bahasa Melayu' },
+  { code: 'fil', label: 'Filipino', nativeLabel: 'Filipino' },
 ] as const;
 
-export type LanguageCode = typeof SUPPORTED_LANGUAGES[number]['code'];
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type LanguageCode = string; // Allow any language code
+export type ThemeMode = 'light' | 'dark';
 export type ConsentLevel = 'all' | 'essential' | null;
 
 export interface UserPrefs {
-  lang: LanguageCode;
+  lang: string;
   theme: ThemeMode;
   consent: ConsentLevel;
 }
 
 const DEFAULT_PREFS: UserPrefs = {
   lang: 'en',
-  theme: 'system',
+  theme: 'light',
   consent: null,
 };
 
@@ -70,16 +97,15 @@ function decodePrefs(encoded: string): UserPrefs | null {
     if (parts.length !== 3) return null;
     
     const [lang, theme, consent] = parts;
-    const validLangs = SUPPORTED_LANGUAGES.map(l => l.code);
-    const validThemes: ThemeMode[] = ['light', 'dark', 'system'];
+    const validThemes: ThemeMode[] = ['light', 'dark'];
     const validConsent: (string | null)[] = ['all', 'essential', '-'];
     
-    if (!validLangs.includes(lang as LanguageCode)) return null;
+    // Accept any language code
     if (!validThemes.includes(theme as ThemeMode)) return null;
     if (!validConsent.includes(consent)) return null;
     
     return {
-      lang: lang as LanguageCode,
+      lang: lang || 'en',
       theme: theme as ThemeMode,
       consent: consent === '-' ? null : consent as ConsentLevel,
     };
@@ -120,12 +146,12 @@ function getServerSnapshot(): UserPrefs {
 
 export interface UsePrefsReturn {
   prefs: UserPrefs;
-  lang: LanguageCode;
-  setLang: (lang: LanguageCode) => void;
-  getLangInfo: (code: LanguageCode) => typeof SUPPORTED_LANGUAGES[number] | undefined;
+  lang: string;
+  setLang: (lang: string) => void;
+  getLangInfo: (code: string) => typeof SUPPORTED_LANGUAGES[number] | undefined;
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
-  cycleTheme: () => void;
+  toggleTheme: () => void;
   consent: ConsentLevel;
   hasConsented: boolean;
   hasFullConsent: boolean;
@@ -140,26 +166,31 @@ export interface UsePrefsReturn {
 export function usePrefs(): UsePrefsReturn {
   const prefs = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   
-  const setLang = useCallback((lang: LanguageCode) => {
+  const setLang = useCallback((lang: string) => {
     const current = getPrefsFromCookie();
     savePrefs({ ...current, lang });
   }, []);
   
-  const getLangInfo = useCallback((code: LanguageCode) => {
+  const getLangInfo = useCallback((code: string) => {
     return SUPPORTED_LANGUAGES.find(l => l.code === code);
   }, []);
   
   const setTheme = useCallback((theme: ThemeMode) => {
     const current = getPrefsFromCookie();
     savePrefs({ ...current, theme });
+    // Apply to document
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
   }, []);
   
-  const cycleTheme = useCallback(() => {
-    const themes: ThemeMode[] = ['light', 'dark', 'system'];
+  const toggleTheme = useCallback(() => {
     const current = getPrefsFromCookie();
-    const currentIndex = themes.indexOf(current.theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    savePrefs({ ...current, theme: themes[nextIndex] });
+    const newTheme: ThemeMode = current.theme === 'light' ? 'dark' : 'light';
+    savePrefs({ ...current, theme: newTheme });
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    }
   }, []);
   
   const setConsent = useCallback((level: 'all' | 'essential') => {
@@ -174,6 +205,9 @@ export function usePrefs(): UsePrefsReturn {
   
   const resetPrefs = useCallback(() => {
     savePrefs({ ...DEFAULT_PREFS });
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
   
   return {
@@ -183,7 +217,7 @@ export function usePrefs(): UsePrefsReturn {
     getLangInfo,
     theme: prefs.theme,
     setTheme,
-    cycleTheme,
+    toggleTheme,
     consent: prefs.consent,
     hasConsented: prefs.consent !== null,
     hasFullConsent: prefs.consent === 'all',
@@ -200,4 +234,14 @@ export function getPrefs(): UserPrefs {
 export function updatePrefs(updates: Partial<UserPrefs>): void {
   const current = getPrefsFromCookie();
   savePrefs({ ...current, ...updates });
+}
+
+/**
+ * Apply theme to document on initial load
+ * Call this in your app's entry point
+ */
+export function applyStoredTheme(): void {
+  if (typeof document === 'undefined') return;
+  const prefs = getPrefsFromCookie();
+  document.documentElement.classList.toggle('dark', prefs.theme === 'dark');
 }
