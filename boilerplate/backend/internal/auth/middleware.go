@@ -9,13 +9,6 @@ import (
 	"github.com/DigiStratum/ds-app-developer/backend/internal/session"
 )
 
-type contextKey string
-
-const (
-	userContextKey   contextKey = "user"
-	tenantContextKey contextKey = "tenant"
-)
-
 // User represents an authenticated user [FR-AUTH-003]
 type User struct {
 	ID      string       `json:"id"`
@@ -64,9 +57,9 @@ func Middleware(next http.Handler) http.Handler {
 		// Add user and tenant to context
 		ctx := r.Context()
 		if user != nil {
-			ctx = context.WithValue(ctx, userContextKey, user)
+			ctx = context.WithValue(ctx, UserContextKey, user)
 		}
-		ctx = context.WithValue(ctx, tenantContextKey, tenantID)
+		ctx = context.WithValue(ctx, TenantContextKey, tenantID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -96,13 +89,13 @@ func RequireAuthMiddleware(next http.Handler) http.Handler {
 
 // GetUser extracts user from context
 func GetUser(ctx context.Context) *User {
-	user, _ := ctx.Value(userContextKey).(*User)
+	user, _ := ctx.Value(UserContextKey).(*User)
 	return user
 }
 
 // GetTenantID extracts tenant ID from context [FR-TENANT-001]
 func GetTenantID(ctx context.Context) string {
-	tenant, _ := ctx.Value(tenantContextKey).(string)
+	tenant, _ := ctx.Value(TenantContextKey).(string)
 	return tenant
 }
 

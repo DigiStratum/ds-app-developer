@@ -8,11 +8,11 @@ import (
 
 // Evaluator evaluates feature flags against a given context
 type Evaluator struct {
-	store *Store
+	store FlagStore
 }
 
-// NewEvaluator creates a new Evaluator
-func NewEvaluator(store *Store) *Evaluator {
+// NewEvaluator creates a new Evaluator with a FlagStore
+func NewEvaluator(store FlagStore) *Evaluator {
 	return &Evaluator{store: store}
 }
 

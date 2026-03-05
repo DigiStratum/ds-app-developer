@@ -28,6 +28,21 @@ type EvaluateResponse struct {
 	Flags map[string]bool `json:"flags"`
 }
 
+// Handler provides HTTP handlers for feature flag operations.
+// Use NewHandler to create an instance with dependencies.
+type Handler struct {
+	store     FlagStore
+	evaluator *Evaluator
+}
+
+// NewHandler creates a new Handler with the provided store.
+func NewHandler(store FlagStore) *Handler {
+	return &Handler{
+		store:     store,
+		evaluator: NewEvaluator(store),
+	}
+}
+
 // writeJSON writes a JSON response
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -50,15 +65,14 @@ func writeError(w http.ResponseWriter, r *http.Request, status int, code, messag
 // EvaluateHandler evaluates all flags for the current user context
 // GET /api/flags/evaluate
 // Returns: { "flags": { "flag-key": true, "other-flag": false } }
-func EvaluateHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EvaluateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	evaluator := GetDefaultEvaluator()
 
 	// Build evaluation context from request
 	evalCtx := buildEvaluationContext(r)
 
 	// Evaluate all flags
-	results, err := evaluator.EvaluateAll(ctx, evalCtx)
+	results, err := h.evaluator.EvaluateAll(ctx, evalCtx)
 	if err != nil {
 		slog.Error("failed to evaluate flags", "error", err)
 		writeError(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to evaluate flags")
@@ -83,7 +97,7 @@ func EvaluateHandler(w http.ResponseWriter, r *http.Request) {
 
 // ListHandler lists all feature flags (admin only)
 // GET /api/flags
-func ListHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ListHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Check admin permission
@@ -92,8 +106,7 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := GetStore()
-	flags, err := store.List(ctx)
+	flags, err := h.store.List(ctx)
 	if err != nil {
 		slog.Error("failed to list flags", "error", err)
 		writeError(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to list flags")
@@ -105,7 +118,7 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 
 // UpdateHandler updates a feature flag (admin only)
 // PUT /api/flags/:key
-func UpdateHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Check admin permission
@@ -130,10 +143,8 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := GetStore()
-
 	// Get existing flag or create new one
-	flag, err := store.Get(ctx, flagKey)
+	flag, err := h.store.Get(ctx, flagKey)
 	if err != nil {
 		slog.Error("failed to get flag", "key", flagKey, "error", err)
 		writeError(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to get flag")
@@ -168,7 +179,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	flag.UpdatedAt = time.Now().UTC()
 
 	// Save
-	if err := store.Save(ctx, flag); err != nil {
+	if err := h.store.Save(ctx, flag); err != nil {
 		slog.Error("failed to save flag", "key", flagKey, "error", err)
 		writeError(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to save flag")
 		return
@@ -242,7 +253,7 @@ func isAdmin(r *http.Request) bool {
 
 // DeleteHandler deletes a feature flag (admin only)
 // DELETE /api/flags/:key
-func DeleteHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Check admin permission
@@ -259,8 +270,7 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	flagKey := path
 
-	store := GetStore()
-	if err := store.Delete(ctx, flagKey); err != nil {
+	if err := h.store.Delete(ctx, flagKey); err != nil {
 		slog.Error("failed to delete flag", "key", flagKey, "error", err)
 		writeError(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to delete flag")
 		return
@@ -270,4 +280,27 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("flag deleted", "key", flagKey)
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Package-level handler functions using the default store.
+// These are convenience functions for direct use in routing.
+
+// EvaluateHandler evaluates all flags for the current user context (package-level)
+func EvaluateHandler(w http.ResponseWriter, r *http.Request) {
+	NewHandler(GetStore()).EvaluateHandler(w, r)
+}
+
+// ListHandler lists all feature flags (package-level)
+func ListHandler(w http.ResponseWriter, r *http.Request) {
+	NewHandler(GetStore()).ListHandler(w, r)
+}
+
+// UpdateHandler updates a feature flag (package-level)
+func UpdateHandler(w http.ResponseWriter, r *http.Request) {
+	NewHandler(GetStore()).UpdateHandler(w, r)
+}
+
+// DeleteHandler deletes a feature flag (package-level)
+func DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	NewHandler(GetStore()).DeleteHandler(w, r)
 }

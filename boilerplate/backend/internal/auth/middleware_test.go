@@ -157,7 +157,7 @@ func TestGetTenantID_FromContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			ctx = context.WithValue(ctx, tenantContextKey, tt.tenantID)
+			ctx = context.WithValue(ctx, TenantContextKey, tt.tenantID)
 
 			result := GetTenantID(ctx)
 			if result != tt.expected {
