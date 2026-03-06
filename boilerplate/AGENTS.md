@@ -4,26 +4,28 @@
 
 ## API Architecture
 
-Every app exposes **two API surfaces**:
+**One API, multiple auth methods, admin extensions.**
 
-| API | Purpose | Auth | Consumers |
-|-----|---------|------|-----------|
-| **Frontend API** | Serves the UI | SSO session cookie | Browser/SPA |
-| **Admin API** | Automation, service-to-service | API key | Agents, scripts, other services |
+| Auth Method | Consumer | Header/Cookie |
+|-------------|----------|---------------|
+| SSO session | Frontend/browser | `ds_session` cookie |
+| API key | Agents, scripts, services | `X-API-Key` header |
 
-**Admin API requirements:**
-- All CRUD operations available (no UI-only features)
-- API key auth via `X-API-Key` header
-- OpenAPI spec published at `/api/spec` or `/docs/api.yaml`
-- Business rules, validation, audit trails enforced
+**Endpoint categories:**
+- **Core endpoints:** Used by frontend AND agents (same logic, dogfooded)
+- **Admin extensions:** Agent-only (`/api/admin/*`) for bulk ops, audit, direct CRUD
+
+**Key principle:** Agents use the same core endpoints as the frontend. This dogfoods the API and surfaces real issues. Admin extensions are *additions*, not duplicates.
 
 **File locations:**
 ```
 backend/internal/api/
-├── handlers.go         # Frontend API handlers
-├── admin_handlers.go   # Admin API handlers
-├── middleware_auth.go  # SSO auth
-└── middleware_apikey.go # API key auth
+├── handlers.go         # Core API handlers (frontend + agents)
+├── admin_handlers.go   # Admin-only extensions
+└── ...
+backend/internal/middleware/
+├── auth.go             # SSO session auth
+└── apikey.go           # API key auth
 ```
 
 ## Project Structure
