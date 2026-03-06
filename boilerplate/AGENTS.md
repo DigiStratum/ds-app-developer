@@ -2,6 +2,30 @@
 
 > Read `DIGISTRATUM.md` (workspace) first for ecosystem context: SSO, shared packages, stack, env vars.
 
+## API Architecture
+
+Every app exposes **two API surfaces**:
+
+| API | Purpose | Auth | Consumers |
+|-----|---------|------|-----------|
+| **Frontend API** | Serves the UI | SSO session cookie | Browser/SPA |
+| **Admin API** | Automation, service-to-service | API key | Agents, scripts, other services |
+
+**Admin API requirements:**
+- All CRUD operations available (no UI-only features)
+- API key auth via `X-API-Key` header
+- OpenAPI spec published at `/api/spec` or `/docs/api.yaml`
+- Business rules, validation, audit trails enforced
+
+**File locations:**
+```
+backend/internal/api/
+├── handlers.go         # Frontend API handlers
+├── admin_handlers.go   # Admin API handlers
+├── middleware_auth.go  # SSO auth
+└── middleware_apikey.go # API key auth
+```
+
 ## Project Structure
 
 ```
