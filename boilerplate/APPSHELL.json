@@ -1,0 +1,7 @@
+{
+  "appshell_version": "1.0.0",
+  "generated_from": "ds-app-developer/boilerplate",
+  "generated_at": "2026-03-05",
+  "app_id": "boilerplate",
+  "notes": "This is the canonical boilerplate. Derived apps copy this file and update app_id."
+}
