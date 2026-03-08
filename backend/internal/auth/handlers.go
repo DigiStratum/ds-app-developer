@@ -1,82 +1,24 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
-	"time"
 )
 
-// tokenResponse represents DSAccount's /api/sso/token response
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-}
-
 // CallbackHandler handles SSO callback [FR-AUTH-001]
-// This exchanges the authorization code with DSAccount for a session token,
-// then sets the ds_session cookie to use across *.digistratum.com
+// DSAccount has already authenticated the user and set the ds_session cookie
+// (shared across *.digistratum.com). We just redirect to the intended destination.
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		http.Error(w, "Missing authorization code", http.StatusBadRequest)
-		return
-	}
+	// The code param confirms DSAccount authorized the request, but we don't need
+	// to exchange it — the ds_session cookie was already set by DSAccount during login.
+	// This callback is just the redirect back to complete the flow.
 
-	slog.Info("SSO callback received", "code_length", len(code))
+	slog.Info("SSO callback received, redirecting")
 
-	// Exchange code for token with DSAccount
-	ssoURL := os.Getenv("DSACCOUNT_SSO_URL")
-	if ssoURL == "" {
-		ssoURL = "https://account.digistratum.com"
-	}
-
-	appID := os.Getenv("DSACCOUNT_APP_ID")
-	appSecret := os.Getenv("DSACCOUNT_APP_SECRET")
-
-	tokenReq := map[string]string{
-		"code":       code,
-		"app_id":     appID,
-		"app_secret": appSecret,
-	}
-	tokenBody, _ := json.Marshal(tokenReq)
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Post(ssoURL+"/api/sso/token", "application/json", bytes.NewReader(tokenBody))
-	if err != nil {
-		slog.Error("failed to exchange code for token", "error", err)
-		http.Error(w, "Failed to authenticate", http.StatusInternalServerError)
-		return
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		slog.Error("token exchange failed", "status", resp.StatusCode, "body", string(body))
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
-		return
-	}
-
-	var tokenResp tokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		slog.Error("failed to decode token response", "error", err)
-		http.Error(w, "Failed to process authentication", http.StatusInternalServerError)
-		return
-	}
-
-	slog.Info("token exchange successful", "token_type", tokenResp.TokenType, "expires_in", tokenResp.ExpiresIn)
-
-	// NOTE: We do NOT set ds_session cookie here.
-	// DSAccount already set it when the user logged in.
-	// The cookie is shared across *.digistratum.com subdomains.
-
-	// Get redirect URL from state param (how OAuth returns our original redirect)
+	// Get redirect URL from state param (preserved through the auth flow)
 	redirectURL := r.URL.Query().Get("state")
 	if redirectURL == "" {
 		redirectURL = "/"
