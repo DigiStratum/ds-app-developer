@@ -141,7 +141,8 @@ sync_dir "$BOILERPLATE_DIR/frontend/src/boilerplate" "$TARGET_PATH/frontend/src/
 
 echo ""
 echo -e "${GREEN}[3/4] Updating workflows...${NC}"
-sync_dir "$BOILERPLATE_DIR/../.github/workflows" "$TARGET_PATH/.github/workflows" ".github/workflows/"
+# Workflows are app-specific, not synced
+# sync_dir "$BOILERPLATE_DIR/../.github/workflows" "$TARGET_PATH/.github/workflows" ".github/workflows/"
 
 echo ""
 echo -e "${GREEN}[4/4] Updating shared configs...${NC}"
