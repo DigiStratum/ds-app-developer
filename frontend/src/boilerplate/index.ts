@@ -18,10 +18,10 @@
 // Components
 export { DSNav } from './DSNav';
 export { DeveloperHeader } from './DeveloperHeader';
-export { DeveloperFooter } from './DeveloperFooter';
+export { DeveloperFooter, GdprBanner } from './DeveloperFooter';
 export { DeveloperAppShell } from './DeveloperAppShell';
-export { CookieConsent, GdprBanner } from './CookieConsent';
-export { default as Footer } from './Footer';
+export { CookieConsent } from './CookieConsent';
+export { Footer } from './Footer';
 export { PreferencesModal } from './PreferencesModal';
 
 // Hooks

@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import { AppShell, CustomHeaderZone, type MenuItem, type Tenant } from '@digistratum/layout';
+import { AppShell, type MenuItem, type Tenant, type DSApp } from '@digistratum/layout';
 import type { AuthContext, ThemeContext, User } from '@digistratum/layout';
 import { useAuth } from './useAuth';
 import { useTheme } from '@digistratum/ds-core';
@@ -40,40 +39,30 @@ export function DeveloperAppShell({
 }: DeveloperAppShellProps) {
   const { t } = useTranslation();
   const { user, currentTenant, isAuthenticated, login, logout, switchTenant, availableApps } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
-  // Build auth context for AppShell
+  // Build auth context for AppShell (maps our User to layout's User)
   const authContext: AuthContext = {
     user: user ? {
       id: user.id,
-      name: user.name || user.email?.split('@')[0] || 'User',
+      name: user.name || user.display_name || user.email?.split('@')[0] || 'User',
       email: user.email || '',
-      avatar: user.avatar,
-      role: user.role,
+      // avatarUrl not in our User type, omit
     } : null,
     isAuthenticated,
     login: () => login(),
     logout: () => logout(),
-    currentTenant: currentTenant ? {
-      id: currentTenant.id,
-      name: currentTenant.name,
-      type: currentTenant.type,
-      logoUrl: currentTenant.logoUrl,
-    } : null,
-    availableTenants: user?.tenants?.map(t => ({
-      id: t.id,
-      name: t.name,
-      type: t.type,
-      logoUrl: t.logoUrl,
-    })) || [],
-    switchTenant: (tenantId: string) => switchTenant(tenantId),
+    currentTenant: currentTenant ?? null,
+    switchTenant: (tenantId: string | null) => {
+      if (tenantId) switchTenant(tenantId);
+    },
   };
 
-  // Build theme context for AppShell
+  // Build theme context for AppShell (already compatible)
   const themeContext: ThemeContext = {
-    theme: theme === 'dark' ? 'dark' : 'light',
-    toggleTheme,
+    theme,
+    resolvedTheme,
+    setTheme,
   };
 
   // Get menu items
@@ -82,21 +71,26 @@ export function DeveloperAppShell({
     
     if (authUser) {
       items.push({
-        key: 'dashboard',
+        id: 'dashboard',
         label: t('nav.dashboard', 'Dashboard'),
         path: '/dashboard',
-        isActive: location.pathname === '/dashboard',
       });
     }
     
     return items;
   };
 
-  // Custom header zone (for app-specific content like ads)
-  const customHeaderZone: CustomHeaderZone | undefined = headerAdSlot ? {
-    position: 'right',
-    content: headerAdSlot,
-  } : undefined;
+  // Convert availableApps to DSApp format
+  const apps: DSApp[] = availableApps.map(app => ({
+    id: app.id,
+    name: app.name,
+    url: app.url,
+    icon: app.icon,
+    current: app.id === currentAppId,
+  }));
+
+  // Suppress unused vars for now - footerAdSlot needs footer slot support
+  void footerAdSlot;
 
   return (
     <AppShell
@@ -107,9 +101,9 @@ export function DeveloperAppShell({
       theme={themeContext}
       getMenuItems={getMenuItems}
       showAppSwitcher={showAppSwitcher}
-      availableApps={availableApps}
-      customHeaderZone={customHeaderZone}
-      footer={<DeveloperFooter adSlot={footerAdSlot} />}
+      apps={apps}
+      customHeader={headerAdSlot}
+      customFooter={<DeveloperFooter appName={appName} />}
     >
       {children}
     </AppShell>

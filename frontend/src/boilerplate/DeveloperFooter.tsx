@@ -141,7 +141,7 @@ export function DeveloperFooter({
   showCopyright = true,
   showDefaultLinks = true,
   extraLinks = [],
-  _showAdToggle = true,
+  showAdToggle = true,
   className = '',
 }: DeveloperFooterProps) {
   const { t } = useTranslation();
@@ -182,7 +182,7 @@ export function DeveloperFooter({
             {/* Links and Dev Tools */}
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 mt-2 sm:mt-0">
               {/* Ad Demo Toggle (Developer Tool) - only if not moved to header */}
-              {adSlot}
+              {showAdToggle && null /* Ad slot placeholder */}
               
               {/* Links */}
               {allLinks.length > 0 && (

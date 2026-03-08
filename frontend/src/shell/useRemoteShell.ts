@@ -218,9 +218,9 @@ export function createLazyShellComponents(config: ShellLoaderConfig = {}) {
   // In development, use local components
   if (import.meta.env.DEV) {
     return {
-      Layout: lazy(() => import('../components/Layout').then(m => ({ default: m.Layout }))),
-      Header: lazy(() => import('../components/DeveloperHeader').then(m => ({ default: m.DeveloperHeader }))),
-      Footer: lazy(() => import('../components/DeveloperFooter').then(m => ({ default: m.DeveloperFooter }))),
+      Layout: lazy(() => import('../app/Layout').then(m => ({ default: m.Layout }))),
+      Header: lazy(() => import('../boilerplate/DeveloperHeader').then(m => ({ default: m.DeveloperHeader }))),
+      Footer: lazy(() => import('../boilerplate/DeveloperFooter').then(m => ({ default: m.DeveloperFooter }))),
     };
   }
 

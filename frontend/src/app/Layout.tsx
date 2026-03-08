@@ -149,8 +149,7 @@ export function Layout({
       showPreferences={false}
       showGdprBanner={false}
       menuContent={menuContent}
-      headerAdSlot={showAdDemo ? <PlaceholderAd position="header" /> : undefined}
-      footerAdSlot={showAdDemo ? <PlaceholderAd position="footer" /> : undefined}
+      customHeader={showAdDemo ? <PlaceholderAd position="header" /> : undefined}
     >
       {children}
     </AppShell>
