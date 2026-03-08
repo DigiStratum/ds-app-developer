@@ -20,8 +20,8 @@
     "prebuild": "node -e \"const fs = require(\\\"fs\\\"); fs.writeFileSync(\\\"public/buildinfo.json\\\", JSON.stringify({timestamp: new Date().toISOString(), commit: process.env.GIT_COMMIT || \\\"local\\\", branch: process.env.GIT_BRANCH || \\\"unknown\\\"}, null, 2));\""
   },
   "dependencies": {
-    "@digistratum/ds-core": "https://packages.digistratum.com/@digistratum/ds-core/ds-core-0.1.3.tgz",
-    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.10.tgz",
+    "@digistratum/ds-core": "https://packages.digistratum.com/@digistratum/ds-core/ds-core-0.1.4.tgz",
+    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.11.tgz",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",

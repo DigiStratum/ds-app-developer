@@ -208,3 +208,26 @@ button:focus,
     margin-right: 0;
   }
 }
+
+/* Focus visible styles for accessibility [FR-A11Y-001]
+ * Ensures all interactive elements have visible focus indicators
+ * Uses :focus-visible to only show on keyboard navigation, not mouse clicks
+ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+  border-radius: var(--ds-radius-sm);
+}
+
+/* Remove default outline for :focus (shown via :focus-visible instead) */
+a:focus,
+button:focus,
+[role="button"]:focus {
+  outline: none;
+}
