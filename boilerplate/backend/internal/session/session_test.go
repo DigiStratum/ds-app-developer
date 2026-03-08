@@ -281,9 +281,9 @@ func TestSetSessionCookie_SetsCorrectAttributes(t *testing.T) {
 // Tests: SetSessionCookie sets secure flag based on ENV
 func TestSetSessionCookie_SecureFlag(t *testing.T) {
 	originalEnv := os.Getenv("ENV")
-	defer os.Setenv("ENV", originalEnv)
+	defer func() { _ = os.Setenv("ENV", originalEnv) }()
 
-	os.Setenv("ENV", "local")
+	_ = os.Setenv("ENV", "local")
 
 	session := &Session{ID: "session-123", ExpiresAt: time.Now().Add(time.Hour)}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -677,13 +677,13 @@ func TestGetDSAuthConfig_ReturnsNilWithoutEnvVars(t *testing.T) {
 	originalURL := os.Getenv("DSACCOUNT_SSO_URL")
 	originalAppID := os.Getenv("DSACCOUNT_APP_ID")
 	defer func() {
-		os.Setenv("DSACCOUNT_SSO_URL", originalURL)
-		os.Setenv("DSACCOUNT_APP_ID", originalAppID)
+		_ = os.Setenv("DSACCOUNT_SSO_URL", originalURL)
+		_ = os.Setenv("DSACCOUNT_APP_ID", originalAppID)
 		dsauthConfig = nil // Clear cache again
 	}()
 
-	os.Setenv("DSACCOUNT_SSO_URL", "")
-	os.Setenv("DSACCOUNT_APP_ID", "")
+	_ = os.Setenv("DSACCOUNT_SSO_URL", "")
+	_ = os.Setenv("DSACCOUNT_APP_ID", "")
 
 	cfg := getDSAuthConfig()
 

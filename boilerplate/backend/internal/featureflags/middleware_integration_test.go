@@ -148,19 +148,20 @@ func TestContextKeys_ExpectedValues(t *testing.T) {
 
 // Tests: Middleware function signature is correct
 func TestMiddleware_SignatureCorrect(t *testing.T) {
-	// Verify Middleware returns http.Handler
-	var mw func(http.Handler) http.Handler = Middleware
-	if mw == nil {
-		t.Error("Middleware should not be nil")
+	// Verify Middleware has correct signature by using it
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	wrapped := Middleware(handler)
+	if wrapped == nil {
+		t.Error("Middleware should return non-nil handler")
 	}
 }
 
 // Tests: IsEnabledForUser function signature
 func TestIsEnabledForUser_SignatureCorrect(t *testing.T) {
-	var fn func(context.Context, string, string, string, string) bool = IsEnabledForUser
-	if fn == nil {
-		t.Error("IsEnabledForUser should not be nil")
-	}
+	// Verify function can be called with correct args
+	ctx := context.Background()
+	// This will return false with nil store, but verifies signature
+	_ = IsEnabledForUser(ctx, "flag", "user", "session", "tenant")
 }
 
 // Tests: Middleware sets context values when executed with test evaluator

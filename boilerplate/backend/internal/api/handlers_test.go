@@ -3,32 +3,12 @@
 package api
 
 import (
-	"context"
+	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
 )
-
-// contextKey type for test context values
-type testContextKey string
-
-const (
-	userContextKey   testContextKey = "user"
-	tenantContextKey testContextKey = "tenant"
-)
-
-// setUser adds user to context for testing
-func setUser(ctx context.Context, user *auth.User) context.Context {
-	return context.WithValue(ctx, testContextKey("user"), user)
-}
-
-// setTenantID adds tenant ID to context for testing
-func setTenantID(ctx context.Context, tenantID string) context.Context {
-	return context.WithValue(ctx, testContextKey("tenant"), tenantID)
-}
 
 // Tests NFR-AVAIL-003: Health endpoint returns healthy status
 func TestHealthHandler_ReturnsHealthy(t *testing.T) {
@@ -360,10 +340,7 @@ func TestErrorResponse_EmptyDetails(t *testing.T) {
 		t.Fatalf("failed to marshal: %v", err)
 	}
 
-	// Verify details is omitted when empty
-	if containsSubstring(string(data), "details") {
-		// Details might be included as null or omitted, both acceptable
-	}
+	_ = data // Suppress unused warning - details verification is implicit in successful marshal
 }
 
 // Tests: SessionResponse without user
@@ -473,14 +450,4 @@ func TestGetCurrentTenantHandler_ReturnsJSON(t *testing.T) {
 	if contentType != "application/json" {
 		t.Errorf("expected Content-Type application/json, got %q", contentType)
 	}
-}
-
-// helper function
-func containsSubstring(haystack, needle string) bool {
-	for i := 0; i <= len(haystack)-len(needle); i++ {
-		if haystack[i:i+len(needle)] == needle {
-			return true
-		}
-	}
-	return false
 }

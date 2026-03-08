@@ -489,14 +489,6 @@ func TestEvaluateFlag_EmptyContext(t *testing.T) {
 	}
 }
 
-// Tests: NewEvaluator creates valid evaluator
-func TestNewEvaluator_CreatesEvaluator(t *testing.T) {
-	evaluator := &Evaluator{store: nil}
-	if evaluator == nil {
-		t.Error("expected non-nil evaluator")
-	}
-}
-
 // Tests: Percentage rollout prefers user ID over session ID
 func TestEvaluateFlag_PercentageRollout_PrefersUserID(t *testing.T) {
 	flag := &FeatureFlag{

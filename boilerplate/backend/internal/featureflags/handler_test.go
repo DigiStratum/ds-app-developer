@@ -1,28 +1,11 @@
 package featureflags
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
 )
-
-// withUser is a test helper to add a user to context
-func withUser(ctx context.Context, user *auth.User) context.Context {
-	type contextKey string
-	const userContextKey contextKey = "user"
-	return context.WithValue(ctx, userContextKey, user)
-}
-
-// withTenant is a test helper to add a tenant to context
-func withTenant(ctx context.Context, tenantID string) context.Context {
-	type contextKey string
-	const tenantContextKey contextKey = "tenant"
-	return context.WithValue(ctx, tenantContextKey, tenantID)
-}
 
 // Tests: writeJSON sets correct content type and status
 func TestWriteJSON_SetsContentType(t *testing.T) {

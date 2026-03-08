@@ -140,9 +140,6 @@ func TestMiddleware_DefaultCookieName(t *testing.T) {
 	_ = Middleware(cfg)
 	
 	// Config should use default "ds_session"
-	if cfg.SessionCookieName != "" {
-		// Original config is not modified - defaults are applied internally
-	}
 }
 
 // Tests: APIMiddleware returns 401 when no token
