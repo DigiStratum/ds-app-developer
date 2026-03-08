@@ -37,11 +37,9 @@ func init() {
 	// Build the HTTP handler
 	mux := http.NewServeMux()
 
-	// Health check - shallow is unauthenticated, deep requires auth [NFR-AVAIL-003]
-	// For deep health checks, we need session/auth context for superadmin check
-	healthMux := http.NewServeMux()
-	healthMux.HandleFunc("GET /health", health.Handler)
-	mux.Handle("/health", session.Middleware(auth.Middleware(healthMux)))
+	// Health check at /api/health - no auth required [NFR-AVAIL-003]
+	
+	mux.HandleFunc("GET /api/health", health.Handler)
 
 	// Auth routes (no session middleware - they manage sessions directly)
 	// Note: Routes are under /api/auth/* so CloudFront routes them to API Gateway
