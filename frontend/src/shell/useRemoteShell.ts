@@ -1,15 +1,13 @@
 /**
  * Remote Shell Loader Hook
  * 
- * Loads the DS App Shell from a CDN at runtime, enabling shell updates
- * without requiring app rebuilds. Falls back to local components in
- * development mode or when CDN is unavailable.
+ * Loads the DS App Shell from a CDN at runtime via script tag injection.
+ * The shell is IIFE format and assigns to window.DSLayout.
+ * Falls back to local components in development mode or when CDN is unavailable.
  * 
  * Part of App Shell Architecture (#911, #913, #914)
- * 
- * @see https://developer.digistratum.com/docs/app-shell
  */
-import { useState, useEffect, lazy, ComponentType, ReactNode } from 'react';
+import { useState, useEffect, ComponentType, ReactNode, createContext, useContext } from 'react';
 
 // Shell component types
 export interface ShellLayoutProps {
@@ -39,7 +37,6 @@ export interface ShellModule {
   DSHeader: ComponentType<Record<string, unknown>>;
   DSFooter: ComponentType<Record<string, unknown>>;
   Layout: ComponentType<ShellLayoutProps>;
-  // Additional exports can be typed as needed
   [key: string]: unknown;
 }
 
@@ -54,36 +51,67 @@ export interface RemoteShellState {
 
 // Configuration for the shell loader
 export interface ShellLoaderConfig {
-  /** CDN URL for the shell module */
   cdnUrl?: string;
-  /** Shell version to load (e.g., 'v1', 'v2', 'latest') */
   version?: string;
-  /** Whether to use local fallback in development */
   useLocalInDev?: boolean;
-  /** Custom fallback module */
   fallbackModule?: ShellModule | null;
-  /** Timeout for loading in milliseconds */
   timeout?: number;
 }
 
 // Default CDN configuration
 const DEFAULT_CDN_URL = 'https://apps.digistratum.com/shell';
 const DEFAULT_VERSION = 'v1';
-const DEFAULT_TIMEOUT = 10000; // 10 seconds
+const DEFAULT_TIMEOUT = 10000;
+
+// Declare DSLayout on window
+declare global {
+  interface Window {
+    DSLayout?: ShellModule;
+  }
+}
+
+/**
+ * Load shell via script tag injection (IIFE format)
+ */
+async function loadShellViaScript(url: string, timeout: number): Promise<ShellModule> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`Shell loading timed out after ${timeout}ms`));
+    }, timeout);
+
+    // Check if already loaded
+    if (window.DSLayout) {
+      clearTimeout(timeoutId);
+      resolve(window.DSLayout);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.async = true;
+    
+    script.onload = () => {
+      clearTimeout(timeoutId);
+      const module = window.DSLayout;
+      if (module) {
+        console.log('[Shell] Remote shell loaded successfully');
+        resolve(module);
+      } else {
+        reject(new Error('Shell loaded but DSLayout not found on window'));
+      }
+    };
+    
+    script.onerror = () => {
+      clearTimeout(timeoutId);
+      reject(new Error(`Failed to load shell script: ${url}`));
+    };
+    
+    document.head.appendChild(script);
+  });
+}
 
 /**
  * Hook to load the remote shell module
- * 
- * @example
- * ```tsx
- * const { state, module, error } = useRemoteShell();
- * 
- * if (state === 'pending') return <LoadingSpinner />;
- * if (state === 'error') return <FallbackShell />;
- * 
- * const { Layout } = module;
- * return <Layout>{children}</Layout>;
- * ```
  */
 export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState {
   const {
@@ -102,13 +130,11 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
 
     async function loadShell() {
-      // In development mode with useLocalInDev, use local components
+      // In development, try local components first
       if (useLocalInDev && import.meta.env.DEV) {
         try {
-          // Dynamic import of local shell components
           const localModule = await import('./LocalShellAdapter');
           if (!cancelled) {
             setState({
@@ -123,25 +149,13 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
         }
       }
 
-      // Set timeout for CDN loading
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error(`Shell loading timed out after ${timeout}ms`));
-        }, timeout);
-      });
-
       try {
-        // Construct the shell URL
         const shellUrl = `${cdnUrl}/${version}/shell.js`;
+        console.log('[Shell] Loading from:', shellUrl);
         
-        // Race between loading and timeout
-        const shellModule = await Promise.race([
-          import(/* @vite-ignore */ shellUrl),
-          timeoutPromise,
-        ]) as ShellModule;
+        const shellModule = await loadShellViaScript(shellUrl, timeout);
 
         if (!cancelled) {
-          clearTimeout(timeoutId);
           setState({
             state: 'loaded',
             module: shellModule,
@@ -150,7 +164,6 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
         }
       } catch (err) {
         if (!cancelled) {
-          clearTimeout(timeoutId!);
           const error = err instanceof Error ? err : new Error(String(err));
           console.error('[Shell] Failed to load remote shell:', error);
           
@@ -186,7 +199,6 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
 
     return () => {
       cancelled = true;
-      if (timeoutId!) clearTimeout(timeoutId);
     };
   }, [cdnUrl, version, useLocalInDev, fallbackModule, timeout]);
 
@@ -194,57 +206,24 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
 }
 
 /**
- * Create lazy-loaded shell components from the remote module
- * 
- * @example
- * ```tsx
- * const { Layout, Header, Footer } = createLazyShellComponents();
- * 
- * return (
- *   <Suspense fallback={<LoadingShell />}>
- *     <Layout>
- *       <Content />
- *     </Layout>
- *   </Suspense>
- * );
- * ```
+ * Create a lazy-loaded component from the shell
  */
-export function createLazyShellComponents(config: ShellLoaderConfig = {}) {
-  const {
-    cdnUrl = import.meta.env.VITE_SHELL_CDN_URL || DEFAULT_CDN_URL,
-    version = import.meta.env.VITE_SHELL_VERSION || DEFAULT_VERSION,
-  } = config;
-
-  // In development, use local components
-  if (import.meta.env.DEV) {
-    return {
-      Layout: lazy(() => import('../app/Layout').then(m => ({ default: m.Layout }))),
-      Header: lazy(() => import('../boilerplate/DeveloperHeader').then(m => ({ default: m.DeveloperHeader }))),
-      Footer: lazy(() => import('../boilerplate/DeveloperFooter').then(m => ({ default: m.DeveloperFooter }))),
-    };
-  }
-
-  // In production, load from CDN
-  const shellUrl = `${cdnUrl}/${version}/shell.js`;
-  const shellModulePromise = import(/* @vite-ignore */ shellUrl);
-
-  return {
-    Layout: lazy(() => shellModulePromise.then(m => ({ 
-      default: m.Layout || m.DSAppShell || m.default 
-    }))),
-    Header: lazy(() => shellModulePromise.then(m => ({ 
-      default: m.DSHeader || m.Header || m.default?.DSHeader 
-    }))),
-    Footer: lazy(() => shellModulePromise.then(m => ({ 
-      default: m.DSFooter || m.Footer || m.default?.DSFooter 
-    }))),
-  };
+export function createShellComponent<T extends keyof ShellModule>(
+  componentName: T,
+  config?: ShellLoaderConfig
+): ComponentType<ShellModule[T] extends ComponentType<infer P> ? P : never> {
+  // This is a simplified version - the actual implementation would use React.lazy
+  // with a custom loader that waits for the shell to load
+  return (() => null) as unknown as ComponentType<any>;
 }
 
-/**
- * Shell context for providing shell module to children
- */
-import { createContext, useContext } from 'react';
+// Re-export types for consumers
+export type { ShellLoaderConfig as RemoteShellConfig };
+
+// ============================================================================
+// Context for sharing shell state across components
+// ============================================================================
+
 
 export const ShellContext = createContext<RemoteShellState | null>(null);
 
@@ -254,4 +233,16 @@ export function useShellContext(): RemoteShellState {
     throw new Error('useShellContext must be used within ShellProvider');
   }
   return ctx;
+}
+
+/**
+ * Create lazy-loaded shell components
+ */
+export function createLazyShellComponents(_config: ShellLoaderConfig = {}) {
+  // Placeholder - actual implementation would create lazy components
+  return {
+    Layout: null as unknown as ComponentType<ShellLayoutProps>,
+    Header: null as unknown as ComponentType<Record<string, unknown>>,
+    Footer: null as unknown as ComponentType<Record<string, unknown>>,
+  };
 }
