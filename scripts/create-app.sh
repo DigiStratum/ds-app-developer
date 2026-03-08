@@ -98,6 +98,7 @@ if [ -z "$APP_SLUG" ]; then
 fi
 
 APP_NAME="$REPO_PREFIX-$APP_SLUG"
+DISPLAY_NAME="$(echo "$APP_SLUG" | sed -E "s/-/ /g; s/\b(.)/\u\1/g")"  # e.g., account -> Account
 DOMAIN="$APP_SLUG.$BASE_DOMAIN"
 DEST_PATH="$HOME/repos/digistratum/$APP_NAME"
 GITHUB_ORG="DigiStratum"
@@ -196,12 +197,22 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|DSAppDeveloperStack|$CDK_STACK_NAME|g" "$file"
         sed -i '' "s|dsAccountAppId: 'developer'|dsAccountAppId: '$APP_SLUG'|g" "$file"
         sed -i '' "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
+        # App config.ts placeholders
+        sed -i '' "s|id: \047myapp\047|id: \047$APP_SLUG\047|g" "$file"
+        sed -i '' "s|name: \047My App\047|name: \047$DISPLAY_NAME\047|g" "$file"
+        sed -i '' "s|baseUrl: \047https://myapp.example.com\047|baseUrl: \047https://$DOMAIN\047|g" "$file"
+        sed -i '' "s|ssoUrl: \047https://account.example.com\047|ssoUrl: \047https://account.$BASE_DOMAIN\047|g" "$file"
     else
         sed -i "s|ds-app-developer|$APP_NAME|g" "$file"
         sed -i "s|developer\.digistratum\.com|$DOMAIN|g" "$file"
         sed -i "s|DSAppDeveloperStack|$CDK_STACK_NAME|g" "$file"
         sed -i "s|dsAccountAppId: 'developer'|dsAccountAppId: '$APP_SLUG'|g" "$file"
         sed -i "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
+        # App config.ts placeholders
+        sed -i "s|id: \047myapp\047|id: \047$APP_SLUG\047|g" "$file"
+        sed -i "s|name: \047My App\047|name: \047$DISPLAY_NAME\047|g" "$file"
+        sed -i "s|baseUrl: \047https://myapp.example.com\047|baseUrl: \047https://$DOMAIN\047|g" "$file"
+        sed -i "s|ssoUrl: \047https://account.example.com\047|ssoUrl: \047https://account.$BASE_DOMAIN\047|g" "$file"
     fi
 done
 
