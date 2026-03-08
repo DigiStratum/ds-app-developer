@@ -187,7 +187,7 @@ func (m *MockArtifactStore) HeadArtifact(ctx context.Context, componentName, ver
 	}
 	return &ArtifactMetadata{
 		Size:        1024,
-		ContentType: "application/gzip",
+		LastModified: time.Now(),
 	}, nil
 }
 
@@ -195,11 +195,3 @@ func (m *MockArtifactStore) HeadArtifact(ctx context.Context, componentName, ver
 var _ ComponentRepository = (*MockRepository)(nil)
 var _ ArtifactStore = (*MockArtifactStore)(nil)
 
-// Error types for testing
-type conflictError struct{ name string }
-
-func (e *conflictError) Error() string { return e.name + " already exists" }
-
-type notFoundError struct{ name string }
-
-func (e *notFoundError) Error() string { return e.name + " not found" }

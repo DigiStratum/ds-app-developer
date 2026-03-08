@@ -19,7 +19,7 @@ type Handler struct {
 }
 
 // NewHandler creates a new component handler.
-func NewHandler(repo ComponentRepository, s3 *S3Service) *Handler {
+func NewHandler(repo ComponentRepository, s3 ArtifactStore) *Handler {
 	return &Handler{
 		repo: repo,
 		s3:   s3,
@@ -61,6 +61,10 @@ func (h *Handler) ListComponentsHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	
+	if components == nil {
+		components = []*Component{}
+	}
 	api.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"components": components,
 		"count":      len(components),
