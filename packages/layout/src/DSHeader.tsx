@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DS_URLS } from '@digistratum/ds-core';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
+import { CookiePreferencesModal } from './CookiePreferencesModal';
 
 // Default DS apps for app-switcher (used when no apps prop or appsApiUrl provided)
 const DEFAULT_DS_APPS: DSApp[] = [
@@ -87,6 +88,7 @@ export function DSHeader({
   const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [showAppSwitcherDropdown, setShowAppSwitcherDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [fetchedApps, setFetchedApps] = useState<DSApp[] | null>(null);
   const [appsLoading, setAppsLoading] = useState(false);
 
@@ -202,7 +204,8 @@ export function DSHeader({
   };
 
   return (
-    <div className={className}>
+    <>
+      <div className={className}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and nav links */}
@@ -407,13 +410,12 @@ export function DSHeader({
                           <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Manage account →</p>
                         </a>
                         <div className="py-1">
-                          <a href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <button onClick={() => { setShowUserMenuDropdown(false); setShowPreferencesModal(true); }} className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                             </svg>
-                            {t('common.settings', 'Settings')}
-                          </a>
+                            {t('preferences.title', 'Preferences')}
+                          </button>
                           <button
                             onClick={() => auth.logout()}
                             className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -556,19 +558,17 @@ export function DSHeader({
                         </button>
                       )}
 
-                      {/* Settings link */}
+{/* Preferences button - opens modal */}
                       {showPreferences && (
-                        <a 
-                          href="/settings" 
+                        <button
+                          onClick={() => { setShowMobileMenu(false); setShowPreferencesModal(true); }}
                           className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => setShowMobileMenu(false)}
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                           </svg>
-                          {t('common.settings', 'Settings')}
-                        </a>
+                          {t('preferences.title', 'Preferences')}
+                        </button>
                       )}
 
                       {/* Logout */}
@@ -656,5 +656,12 @@ export function DSHeader({
         </div>
       )}
     </div>
+
+      {/* Preferences Modal */}
+      <CookiePreferencesModal
+        isOpen={showPreferencesModal}
+        onClose={() => setShowPreferencesModal(false)}
+      />
+    </>
   );
 }
