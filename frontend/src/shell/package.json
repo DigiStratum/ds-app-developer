@@ -1,0 +1,6 @@
+{
+  "name": "@ds/shell",
+  "version": "1.0.0",
+  "description": "Remote shell loading for DS apps",
+  "private": true
+}

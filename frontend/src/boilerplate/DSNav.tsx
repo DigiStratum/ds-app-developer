@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../hooks/useAuth';
-import { useTenantTheme } from '../hooks/useTenantTheme';
+import { useAuth } from './useAuth';
+import { useTenantTheme } from './useTenantTheme';
 import { PreferencesModal } from './PreferencesModal';
 
 // DS Ecosystem apps for app-switcher [FR-NAV-002]

@@ -1,4 +1,4 @@
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../boilerplate/useAuth';
 
 export function DashboardPage() {
   const { user, currentTenant } = useAuth();

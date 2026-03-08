@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { AdDemoProvider } from './hooks/useAdDemo';
 import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
-import { RemoteShellWrapper, ShellLayout } from './components/RemoteShellWrapper';
-import { HomePage } from './pages/Home';
-import { DashboardPage } from './pages/Dashboard';
+
+// Shell - wholesale replaceable
+import { RemoteShellWrapper, ShellLayout } from './shell';
+
+// Boilerplate - wholesale replaceable
+import { AuthProvider, useAuth } from './boilerplate';
+
+// App-specific - direct imports to avoid circular references
+import { HomePage } from './app/pages/Home';
+import { DashboardPage } from './app/pages/Dashboard';
+import { AdDemoProvider } from './app/features/useAdDemo';
+
 import { useTranslation } from 'react-i18next';
 
 // Protected route wrapper [FR-AUTH-002]
-// Only used for routes that require authentication (not the landing page)
-// Auth controls are ONLY in the nav bar - unauthenticated users redirect to home
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -26,7 +31,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Redirect to home page - auth controls are only in the nav bar
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -56,11 +60,9 @@ function SessionLoader({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const location = useLocation();
   
-  // Clean up logout query param after redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('logged_out')) {
-      // Remove the param and replace history
       params.delete('logged_out');
       const newSearch = params.toString();
       const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
@@ -72,10 +74,7 @@ function AppRoutes() {
     <ErrorBoundary resetKey={location.pathname}>
       <SessionLoader>
         <Routes>
-          {/* Public routes - accessible with guest session */}
           <Route path="/" element={<HomePage />} />
-          
-          {/* Protected routes - require authentication */}
           <Route
             path="/dashboard"
             element={
@@ -86,8 +85,6 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Catch-all route - redirect unknown paths to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SessionLoader>

@@ -2,12 +2,12 @@ import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AppShell, type MenuItem, type Tenant, type User } from '@digistratum/layout';
 import type { AuthContext, ThemeContext } from '@digistratum/layout';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../boilerplate/useAuth';
 import { useTheme } from '@digistratum/ds-core';
-import { DeveloperFooter, FooterLink } from './DeveloperFooter';
-import { AdDemoToggle } from './AdDemoToggle';
-import { PlaceholderAd } from './PlaceholderAd';
-import { useAdDemoSafe } from '../hooks/useAdDemo';
+import { DeveloperFooter, FooterLink } from '../boilerplate/DeveloperFooter';
+import { AdDemoToggle } from './features/AdDemoToggle';
+import { PlaceholderAd } from './features/PlaceholderAd';
+import { useAdDemoSafe } from './features/useAdDemo';
 
 interface LayoutProps {
   children: ReactNode;

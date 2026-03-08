@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../hooks/useAuth';
-import { ShellLayout } from '../components/RemoteShellWrapper';
+import { useAuth } from '../../boilerplate/useAuth';
+import { ShellLayout } from '../../shell';
 
 // Landing page - accessible without authentication (guest session pattern)
 // Shows different content for guest vs authenticated users

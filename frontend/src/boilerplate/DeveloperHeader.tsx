@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './useAuth';
 import { useTenantTheme, useTheme } from '@digistratum/ds-core';
 import { PreferencesModal } from './PreferencesModal';
 

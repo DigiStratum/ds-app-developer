@@ -1,4 +1,4 @@
-import { useAdDemoSafe } from '../hooks/useAdDemo';
+import { useAdDemoSafe } from './useAdDemo';
 
 /**
  * AdDemoToggle - Toggle button for ad demo mode

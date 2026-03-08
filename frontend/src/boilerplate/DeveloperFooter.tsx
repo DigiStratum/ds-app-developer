@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useConsent } from '@digistratum/ds-core';
-import { AdDemoToggle } from './AdDemoToggle';
+
 
 /**
  * Link configuration for footer navigation
@@ -182,7 +182,7 @@ export function DeveloperFooter({
             {/* Links and Dev Tools */}
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 mt-2 sm:mt-0">
               {/* Ad Demo Toggle (Developer Tool) - only if not moved to header */}
-              {showAdToggle && <AdDemoToggle />}
+              {adSlot}
               
               {/* Links */}
               {allLinks.length > 0 && (

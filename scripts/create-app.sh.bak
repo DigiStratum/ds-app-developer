@@ -46,11 +46,7 @@ BOILERPLATE_DIR="$REPO_ROOT/boilerplate"
 if [ $# -lt 1 ]; then
     echo -e "${RED}Error: Missing app slug${NC}"
     echo ""
-    echo "Usage: $0 <app-slug> [--domain <base-domain>] [--prefix <repo-prefix>]"
-    echo ""
-    echo "Options:"
-    echo "  --domain <base-domain>   Base domain (default: digistratum.com)"
-    echo "  --prefix <repo-prefix>   Repo prefix (default: ds-app)"
+    echo "Usage: $0 <app-slug>"
     echo ""
     echo "Example:"
     echo "  $0 testlaunch"
@@ -58,47 +54,12 @@ if [ $# -lt 1 ]; then
     echo ""
     echo "  $0 crm"
     echo "  # Creates ds-app-crm at crm.digistratum.com"
-    echo ""
-    echo "  $0 account --domain leapkick.com --prefix lk"
-    echo "  # Creates lk-account at account.leapkick.com"
     exit 1
 fi
 
-# Parse arguments
-APP_SLUG=""
-BASE_DOMAIN="digistratum.com"
-REPO_PREFIX="ds-app"
-
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --domain)
-            BASE_DOMAIN="$2"
-            shift 2
-            ;;
-        --prefix)
-            REPO_PREFIX="$2"
-            shift 2
-            ;;
-        -*)
-            echo -e "${RED}Error: Unknown option $1${NC}"
-            exit 1
-            ;;
-        *)
-            if [ -z "$APP_SLUG" ]; then
-                APP_SLUG="$1"
-            fi
-            shift
-            ;;
-    esac
-done
-
-if [ -z "$APP_SLUG" ]; then
-    echo -e "${RED}Error: Missing app slug${NC}"
-    exit 1
-fi
-
-APP_NAME="$REPO_PREFIX-$APP_SLUG"
-DOMAIN="$APP_SLUG.$BASE_DOMAIN"
+APP_SLUG="$1"
+APP_NAME="ds-app-$APP_SLUG"
+DOMAIN="$APP_SLUG.digistratum.com"
 DEST_PATH="$HOME/repos/digistratum/$APP_NAME"
 GITHUB_ORG="DigiStratum"
 

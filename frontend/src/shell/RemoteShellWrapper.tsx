@@ -33,7 +33,7 @@ import {
   ShellContext, 
   type ShellLayoutProps,
   type ShellLoaderConfig,
-} from '../hooks/useRemoteShell';
+} from './useRemoteShell';
 
 // ============================================================================
 // Types

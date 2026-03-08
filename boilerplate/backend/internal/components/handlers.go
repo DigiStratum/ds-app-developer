@@ -14,12 +14,12 @@ import (
 
 // Handler provides HTTP handlers for component operations.
 type Handler struct {
-	repo *Repository
-	s3   *S3Service
+	repo ComponentRepository
+	s3   ArtifactStore
 }
 
 // NewHandler creates a new component handler.
-func NewHandler(repo *Repository, s3 *S3Service) *Handler {
+func NewHandler(repo ComponentRepository, s3 *S3Service) *Handler {
 	return &Handler{
 		repo: repo,
 		s3:   s3,

@@ -109,7 +109,7 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
       if (useLocalInDev && import.meta.env.DEV) {
         try {
           // Dynamic import of local shell components
-          const localModule = await import('../components/LocalShellAdapter');
+          const localModule = await import('./LocalShellAdapter');
           if (!cancelled) {
             setState({
               state: 'fallback',
@@ -164,7 +164,7 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
           } else {
             // Try local components as last resort
             try {
-              const localModule = await import('../components/LocalShellAdapter');
+              const localModule = await import('./LocalShellAdapter');
               setState({
                 state: 'fallback',
                 module: localModule.localShellModule,
