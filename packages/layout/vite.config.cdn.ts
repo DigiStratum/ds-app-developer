@@ -30,13 +30,12 @@ export default defineConfig({
     },
     rollupOptions: {
       // Externalize peer dependencies - consumers provide these
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-i18next', 'i18next'],
+      external: ['react', 'react-dom', 'react-i18next', 'i18next'],
       output: {
         // Global variable names for externalized dependencies
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          'react/jsx-runtime': 'ReactJSXRuntime',
           'react-i18next': 'ReactI18next',
           i18next: 'i18next',
         },
