@@ -141,7 +141,7 @@ export function DeveloperFooter({
   showCopyright = true,
   showDefaultLinks = true,
   extraLinks = [],
-  showAdToggle = true,
+  _showAdToggle = true,
   className = '',
 }: DeveloperFooterProps) {
   const { t } = useTranslation();

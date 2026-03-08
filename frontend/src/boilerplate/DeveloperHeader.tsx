@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import { useTenantTheme, useTheme } from '@digistratum/ds-core';
@@ -136,7 +136,7 @@ export function DeveloperHeader({
     setTheme(themes[nextIndex]);
   };
 
-  const ThemeIcon = () => {
+  const themeIcon = useMemo(() => {
     if (theme === 'system') {
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@ export function DeveloperHeader({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
       </svg>
     );
-  };
+  }, [theme, resolvedTheme]);
 
   return (
     <>
@@ -278,7 +278,7 @@ export function DeveloperHeader({
                   aria-label={t('nav.toggleTheme', `Theme: ${theme}`)}
                   title={`Theme: ${theme}`}
                 >
-                  <ThemeIcon />
+                  {themeIcon}
                 </button>
               )}
 
@@ -500,7 +500,7 @@ export function DeveloperHeader({
                   onClick={cycleTheme}
                   className="flex items-center w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <ThemeIcon />
+                  {themeIcon}
                   <span className="ml-3">
                     {t('nav.theme', 'Theme')}: {theme.charAt(0).toUpperCase() + theme.slice(1)}
                   </span>
