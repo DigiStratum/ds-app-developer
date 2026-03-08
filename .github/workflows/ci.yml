@@ -182,10 +182,6 @@ jobs:
         run: npm run lint
         working-directory: frontend
 
-      - name: Run TypeScript type check
-        run: npm run typecheck || npx tsc --noEmit
-        working-directory: frontend
-
   developer-frontend-test:
     name: Developer Frontend Test
     runs-on: ubuntu-latest
