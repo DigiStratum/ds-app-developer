@@ -5,15 +5,15 @@ import { resolve } from 'path';
 /**
  * Vite configuration for CDN bundle output.
  * 
- * Builds @digistratum/layout as an IIFE bundle suitable for CDN distribution.
- * React and peer dependencies are externalized - consumers must provide them.
+ * Builds @digistratum/layout as an ES module bundle for CDN distribution.
+ * Uses ESM format for compatibility with dynamic import() in apps.
  * 
  * Usage:
  *   npx vite build --config vite.config.cdn.ts
  * 
  * Output:
- *   dist/cdn/ds-layout.iife.js      - Minified bundle
- *   dist/cdn/ds-layout.iife.js.map  - Source map
+ *   dist/cdn/shell.js      - ESM bundle
+ *   dist/cdn/shell.js.map  - Source map
  */
 export default defineConfig({
   plugins: [react()],
@@ -25,22 +25,17 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'DSLayout',
-      fileName: 'ds-layout',
-      formats: ['iife'],
+      fileName: () => 'shell.js',
+      formats: ['es'],
     },
     rollupOptions: {
-      // Externalize peer dependencies - consumers provide these
-      external: ['react', 'react-dom', 'react-i18next', 'i18next'],
+      // Externalize React - apps provide it
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-i18next', 'i18next'],
       output: {
-        // Global variable names for externalized dependencies
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-          'react-i18next': 'ReactI18next',
-          i18next: 'i18next',
-        },
-        // Add banner comment for CDN usage
-        banner: '/* @digistratum/layout - CDN Bundle - Requires React as global */',
+        // For ESM, globals aren't used but we still need to specify format
+        format: 'es',
+        // Add banner comment
+        banner: '/* @digistratum/layout - CDN Shell (ESM) */',
       },
     },
   },
