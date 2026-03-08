@@ -33,7 +33,7 @@ export function CookieConsent() {
       aria-modal="true"
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-description"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"
+      className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-4"
     >
       <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4">
@@ -43,7 +43,6 @@ export function CookieConsent() {
               id="cookie-consent-title"
               className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center sm:justify-start gap-2"
             >
-              <span aria-hidden="true">🍪</span>
               {t('cookies.title', 'We use cookies to improve your experience')}
             </h2>
             <p

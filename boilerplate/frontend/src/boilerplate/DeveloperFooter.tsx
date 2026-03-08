@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useConsent } from '@digistratum/ds-core';
 
+
 /**
  * Link configuration for footer navigation
  */
@@ -67,9 +68,9 @@ function GdprBanner() {
       aria-modal="true"
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-description"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"
+      className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4"
     >
-      <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 py-2.5 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4">
           {/* Header and description */}
           <div className="text-center sm:text-left">
@@ -77,7 +78,6 @@ function GdprBanner() {
               id="cookie-consent-title"
               className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center sm:justify-start gap-2"
             >
-              <span aria-hidden="true">🍪</span>
               {t('cookies.title', 'We use cookies to improve your experience')}
             </h2>
             <p
@@ -167,7 +167,7 @@ export function DeveloperFooter({
         className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 ${className}`}
         style={{ borderRadius: 'var(--ds-container-radius) var(--ds-container-radius) 0 0' }}
       >
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
             {/* Copyright */}
             {showCopyright && (
@@ -176,24 +176,30 @@ export function DeveloperFooter({
               </p>
             )}
 
-            {/* Links */}
-            {allLinks.length > 0 && (
-              <nav className="flex flex-wrap justify-center sm:justify-end space-x-4 mt-2 sm:mt-0" aria-label={t('footer.navigation', 'Footer navigation')}>
-                {allLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                    {...(link.url.startsWith('http') && !link.url.includes('digistratum.com') 
-                      ? { target: '_blank', rel: 'noopener noreferrer' } 
-                      : {}
-                    )}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            )}
+            {/* Links and Dev Tools */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 mt-2 sm:mt-0">
+              {/* Ad Demo Toggle (Developer Tool) - only if not moved to header */}
+              
+              
+              {/* Links */}
+              {allLinks.length > 0 && (
+                <nav className="flex flex-wrap space-x-4" aria-label={t('footer.navigation', 'Footer navigation')}>
+                  {allLinks.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                      {...(link.url.startsWith('http') && !link.url.includes('digistratum.com') 
+                        ? { target: '_blank', rel: 'noopener noreferrer' } 
+                        : {}
+                      )}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              )}
+            </div>
           </div>
         </div>
       </footer>

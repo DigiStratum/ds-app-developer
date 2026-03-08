@@ -1,15 +1,20 @@
+import { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
-import { CookieConsent, DeveloperAppShell } from './components';
-import { HomePage } from './pages/Home';
-import { DashboardPage } from './pages/Dashboard';
-import { SettingsPage } from './pages/Settings';
+
+// Shell - wholesale replaceable
+import { RemoteShellWrapper, ShellLayout } from './shell';
+
+// Boilerplate - wholesale replaceable
+import { AuthProvider, useAuth } from './boilerplate';
+
+// App-specific - direct imports
+import { HomePage } from './app/pages/Home';
+import { DashboardPage } from './app/pages/Dashboard';
+
 import { useTranslation } from 'react-i18next';
 
-// Protected route wrapper [FR-AUTH-002]
-// Only used for routes that require authentication (not the landing page)
-// Auth controls are ONLY in the nav bar - unauthenticated users redirect to home
+// Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -25,7 +30,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Redirect to home page - auth controls are only in the nav bar
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -55,36 +59,31 @@ function SessionLoader({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const location = useLocation();
   
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('logged_out')) {
+      params.delete('logged_out');
+      const newSearch = params.toString();
+      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+  
   return (
     <ErrorBoundary resetKey={location.pathname}>
       <SessionLoader>
         <Routes>
-          {/* Public routes - accessible with guest session */}
           <Route path="/" element={<HomePage />} />
-          
-          {/* Protected routes - require authentication */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <DeveloperAppShell>
-                  <SettingsPage />
-                </DeveloperAppShell>
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DeveloperAppShell>
+                <ShellLayout appName="{{APP_NAME}}">
                   <DashboardPage />
-                </DeveloperAppShell>
+                </ShellLayout>
               </ProtectedRoute>
             }
           />
-          
-          {/* Catch-all route - redirect unknown paths to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SessionLoader>
@@ -96,8 +95,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppRoutes />
-        <CookieConsent />
+        <RemoteShellWrapper>
+          <AppRoutes />
+        </RemoteShellWrapper>
       </AuthProvider>
     </ThemeProvider>
   );

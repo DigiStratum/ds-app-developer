@@ -1,0 +1,6 @@
+{
+  "name": "@ds/boilerplate",
+  "version": "1.0.0",
+  "description": "Shared DS app components - wholesale replaceable",
+  "private": true
+}

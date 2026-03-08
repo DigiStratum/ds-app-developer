@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../hooks/useAuth';
-import { useTenantTheme } from '../hooks/useTenantTheme';
+import { useAuth } from './useAuth';
+import { useTenantTheme } from './useTenantTheme';
 import { PreferencesModal } from './PreferencesModal';
 
 // DS Ecosystem apps for app-switcher [FR-NAV-002]
@@ -71,7 +71,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
           <div className="flex justify-between h-16">
             {/* Logo [FR-NAV-001] - leftmost element, supports tenant branding */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center" aria-label={t('nav.home', 'Go to homepage')}>
+              <a href="/" className="flex items-center">
                 {/* Subtle placeholder while theme loads */}
                 <div 
                   className={`h-10 transition-opacity duration-200 ${
@@ -81,7 +81,7 @@ export function DSNav({ appName: _appName = 'DS App', currentAppId }: DSNavProps
                 >
                   <img 
                     src={logoUrl || '/lk_logo.svg'} 
-                    alt="" 
+                    alt="LeapKick" 
                     className="h-10"
                     onLoad={() => setLogoLoaded(true)}
                     onError={() => setLogoLoaded(true)}
