@@ -5,9 +5,9 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { AdDemoProvider, useAdDemo } from '../hooks/useAdDemo';
-import { AdDemoToggle } from '../components/AdDemoToggle';
-import { PlaceholderAd } from '../components/PlaceholderAd';
+import { AdDemoProvider, useAdDemo } from '../app/features/useAdDemo';
+import { AdDemoToggle } from '../app/features/AdDemoToggle';
+import { PlaceholderAd } from '../app/features/PlaceholderAd';
 
 // Test component to access hook values
 function TestConsumer() {
