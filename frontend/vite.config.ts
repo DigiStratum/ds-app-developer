@@ -22,13 +22,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@digistratum/ds-core': path.resolve(__dirname, '../packages/ds-core/src'),
-      '@digistratum/appshell': path.resolve(__dirname, '../components/appshell'),
-      '@digistratum/layout': path.resolve(__dirname, '../components/layout-compat.ts'),
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      'react-i18next': path.resolve(__dirname, 'node_modules/react-i18next'),
-      'i18next': path.resolve(__dirname, 'node_modules/i18next'),
     },
   },
   test: {
@@ -47,12 +40,8 @@ export default defineConfig({
         'src/**/*.spec.{ts,tsx}',
         'src/__tests__/**',
         'src/vite-env.d.ts',
-        'src/main.tsx', // Entry point, minimal testable logic
+        'src/main.tsx',
       ],
-      // NFR-TEST-001: Frontend coverage targets
-      // Baseline (2026-03-05): statements 8.52%, branches 55.4%, functions 26.47%, lines 8.52%
-      // Current threshold: Prevent regression from baseline
-      // Target: 70% lines/statements, 60% branches/functions
       thresholds: {
         statements: 8,
         branches: 50,

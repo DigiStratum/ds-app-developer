@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -17,16 +21,20 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@digistratum/appshell": ["../components/appshell/index.ts"],
-      "@digistratum/appshell/*": ["../components/appshell/*"],
-      "@digistratum/ds-core": ["../packages/ds-core/src"],
-      "@digistratum/ds-core/*": ["../packages/ds-core/src/*"],
-      "@digistratum/layout": ["../components/layout-compat.ts"],
-      "@digistratum/layout/*": ["../components/appshell/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["src"],
-  "exclude": ["src/__tests__"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/__tests__"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }
