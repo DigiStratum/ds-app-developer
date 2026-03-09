@@ -16,6 +16,7 @@ import { Monitoring } from './constructs';
 interface DeveloperStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
+  zoneName: string;
   dsAccountUrl: string;
   dsAccountAppId: string;
   environment?: string;
@@ -94,7 +95,7 @@ export class DeveloperStack extends cdk.Stack {
     // Hosted zone lookup
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
       hostedZoneId: props.hostedZoneId,
-      zoneName: 'digistratum.com',
+      zoneName: props.zoneName,
     });
 
     // ACM certificate - MUST be in us-east-1 for CloudFront

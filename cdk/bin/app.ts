@@ -15,7 +15,8 @@ const env = {
 new DeveloperStack(app, 'DSAppDeveloperStack', {
   env,
   domainName: 'developer.digistratum.com',
-  hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
+  hostedZoneId: 'Z2HSQ1OB6HFLSJ',
+  zoneName: 'digistratum.com',
   dsAccountUrl: 'https://account.digistratum.com',
   dsAccountAppId: 'developer',
   // Note: DSACCOUNT_APP_SECRET is injected post-deploy by GitHub Actions
@@ -27,6 +28,6 @@ new DeveloperStack(app, 'DSAppDeveloperStack', {
 new SharedRuntimeStack(app, 'DSSharedRuntimeStack', {
   env,
   domainName: 'apps.digistratum.com',
-  hostedZoneId: 'Z2HSQ1OB6HFLSJ', // digistratum.com zone
+  hostedZoneId: 'Z2HSQ1OB6HFLSJ',
   zoneName: 'digistratum.com',
 });
