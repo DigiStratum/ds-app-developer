@@ -1,6 +1,6 @@
 {
   "name": "@digistratum/layout",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "description": "DigiStratum app shell and layout components",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -28,7 +28,7 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "@digistratum/ds-core": "^0.1.0",
+    "@digistratum/ds-core": "^0.1.0 || ^0.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^13.0.0",

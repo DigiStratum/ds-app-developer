@@ -80,6 +80,10 @@ export {
 export { ThemeProvider, useTheme } from './hooks/useTheme';
 export type { ThemeProviderProps } from './hooks/useTheme';
 
+// Authentication
+export { AuthProvider, useAuth, useAuthLoading } from './hooks/useAuth';
+export type { AuthContext, AuthProviderProps } from './hooks/useAuth';
+
 // Tenant theming
 export { useTenantTheme } from './hooks/useTenantTheme';
 export type { TenantThemeState, UseTenantThemeOptions } from './hooks/useTenantTheme';

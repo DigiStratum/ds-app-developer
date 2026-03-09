@@ -49,3 +49,14 @@ export type {
   UseSessionDataOptions, 
   UseSessionDataReturn,
 } from './useSessionData';
+
+// Authentication
+export { 
+  AuthProvider, 
+  useAuth, 
+  useAuthLoading,
+} from './useAuth';
+export type { 
+  AuthContext, 
+  AuthProviderProps,
+} from './useAuth';
