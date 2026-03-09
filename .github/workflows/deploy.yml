@@ -141,6 +141,10 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
