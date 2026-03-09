@@ -125,8 +125,18 @@ PRIVACY_URL=$(jq -r '.legal.privacyUrl // "https://www.digistratum.com/privacy"'
 TERMS_URL=$(jq -r '.legal.termsUrl // "https://www.digistratum.com/terms"' "$ECOSYSTEM_FILE")
 SUPPORT_URL=$(jq -r '.legal.supportUrl // "https://www.digistratum.com/support"' "$ECOSYSTEM_FILE")
 AWS_REGION=$(jq -r '.aws.region // "us-west-2"' "$ECOSYSTEM_FILE")
-ROUTE53_ZONE_ID=$(jq -r '.aws.route53ZoneId // "Z2HSQ1OB6HFLSJ"' "$ECOSYSTEM_FILE")
-ROUTE53_ZONE_NAME=$(jq -r '.aws.route53ZoneName // "digistratum.com"' "$ECOSYSTEM_FILE")
+ROUTE53_ZONE_ID=$(jq -r '.aws.route53ZoneId // ""' "$ECOSYSTEM_FILE")
+ROUTE53_ZONE_NAME=$(jq -r '.aws.route53ZoneName // ""' "$ECOSYSTEM_FILE")
+
+# Validate required AWS config (no defaults - must be explicit to prevent DNS accidents)
+if [ -z "$ROUTE53_ZONE_ID" ] || [ -z "$ROUTE53_ZONE_NAME" ]; then
+    echo -e "${RED}Error: Ecosystem config missing Route53 zone configuration${NC}"
+    echo "  route53ZoneId: $ROUTE53_ZONE_ID"
+    echo "  route53ZoneName: $ROUTE53_ZONE_NAME"
+    echo ""
+    echo "Update $ECOSYSTEM_FILE with valid aws.route53ZoneId and aws.route53ZoneName"
+    exit 1
+fi
 
 # Determine repo prefix based on ecosystem
 case "$ECOSYSTEM_ID" in
