@@ -4,15 +4,6 @@ import { DS_URLS } from '@digistratum/ds-core';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
 import { PreferencesModal } from './PreferencesModal';
 
-// Default DS apps for app-switcher (used when no apps prop or appsApiUrl provided)
-const DEFAULT_DS_APPS: DSApp[] = [
-  { id: 'dsaccount', name: 'DS Account', url: DS_URLS.ACCOUNT, icon: '👤' },
-  { id: 'dskanban', name: 'DS Projects', url: DS_URLS.PROJECTS, icon: '📋' },
-  { id: 'dscrm', name: 'DS CRM', url: DS_URLS.CRM, icon: '💼' },
-  { id: 'dsdeveloper', name: 'DS Developer', url: DS_URLS.DEVELOPER, icon: '🛠️' },
-  { id: 'ds-noc', name: 'DS NOC', url: DS_URLS.NOC, icon: '📡' },
-];
-
 // Get a default icon for known app IDs
 function getDefaultIcon(appId: string): string {
   const iconMap: Record<string, string> = {
@@ -151,8 +142,19 @@ export function DSHeader({
     return () => { cancelled = true; };
   }, [appsApiUrl, isAuthenticated]);
 
-  // Determine which apps list to use: fetched > prop > defaults
-  const apps = fetchedApps ?? propApps ?? DEFAULT_DS_APPS;
+  // Build the current app entry (always shows first)
+  const currentApp: DSApp | null = currentAppId ? {
+    id: currentAppId,
+    name: appName,
+    url: window.location.origin,
+    icon: getDefaultIcon(currentAppId),
+  } : null;
+
+  // Combine: current app + API apps (excluding current to avoid duplicates)
+  // If no API response, show only current app (no default fallback)
+  const apiApps = fetchedApps ?? propApps ?? [];
+  const otherApps = apiApps.filter(app => app.id !== currentAppId);
+  const apps = currentApp ? [currentApp, ...otherApps] : otherApps;
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -507,7 +509,33 @@ export function DSHeader({
                         </div>
                       </a>
 
-                      {/* Tenant Switcher */}
+                      {/* Preferences button - opens modal */}
+                      {showPreferences && (
+                        <button
+                          onClick={() => { setShowMobileMenu(false); setShowPreferencesModal(true); }}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                          </svg>
+                          {t('preferences.title', 'Preferences')}
+                        </button>
+                      )}
+
+                      {/* Logout */}
+                      {auth && (
+                        <button
+                          onClick={() => { auth.logout(); setShowMobileMenu(false); }}
+                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          {t('common.logout', 'Sign Out')}
+                        </button>
+                      )}
+
+                      {/* Tenant Switcher - after separator */}
                       {showTenantSwitcher && user.tenants && user.tenants.length > 0 && auth && (
                         <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
                           <p className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400">
@@ -544,49 +572,8 @@ export function DSHeader({
                           ))}
                         </div>
                       )}
-
-                      {/* Theme toggle */}
-                      {showThemeToggle && theme && (
-                        <button
-                          onClick={cycleTheme}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <ThemeIcon />
-                          <span className="ml-2">
-                            {t('nav.theme', 'Theme')}: {theme.theme.charAt(0).toUpperCase() + theme.theme.slice(1)}
-                          </span>
-                        </button>
-                      )}
-
-{/* Preferences button - opens modal */}
-                      {showPreferences && (
-                        <button
-                          onClick={() => { setShowMobileMenu(false); setShowPreferencesModal(true); }}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                          </svg>
-                          {t('preferences.title', 'Preferences')}
-                        </button>
-                      )}
-
-                      {/* Logout */}
-                      {auth && (
-                        <button
-                          onClick={() => { auth.logout(); setShowMobileMenu(false); }}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          {t('common.logout', 'Sign Out')}
-                        </button>
-                      )}
                     </>
                   )}
-
-                  {/* Theme toggle for guests */}
                   {!isAuthenticated && showThemeToggle && theme && (
                     <button
                       onClick={cycleTheme}
@@ -621,46 +608,44 @@ export function DSHeader({
                     {t('nav.apps', 'Apps')}
                   </p>
                   <div className="space-y-1">
-                    {apps.map((app) => {
-                      const isCurrent = currentAppId === app.id;
-                      if (isCurrent) {
-                        return (
-                          <div
-                            key={app.id}
-                            className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
-                          >
-                            <span className="text-lg mr-2">{app.icon}</span>
-                            <span className="font-medium truncate">{app.name}</span>
-                            <span className="ml-auto text-xs text-blue-500 dark:text-blue-300 shrink-0">
-                              {t('nav.current', 'Current')}
-                            </span>
-                          </div>
-                        );
-                      }
-                      return (
-                        <a
-                          key={app.id}
-                          href={app.url}
-                          className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => setShowMobileMenu(false)}
-                        >
-                          <span className="text-lg mr-2">{app.icon}</span>
-                          <span className="font-medium truncate">{app.name}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Section 3: App-specific content */}
-              {menuContent && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                  <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    {t('nav.appOptions', 'Options')}
-                  </p>
-                  <div className="space-y-1 [&>*]:w-full [&>*]:md:w-48">
-                    {menuContent}
+                    {/* Current app - always first */}
+                    {currentApp && (
+                      <div
+                        key={currentApp.id}
+                        className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
+                      >
+                        <span className="text-lg mr-2">{currentApp.icon}</span>
+                        <span className="font-medium truncate">{currentApp.name}</span>
+                        <span className="ml-auto text-xs text-blue-500 dark:text-blue-300 shrink-0">
+                          {t('nav.current', 'Current')}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* App-specific menu items - nested under current app */}
+                    {menuContent && (
+                      <div className="pl-4 space-y-1 [&>*]:w-full [&>*]:md:w-44">
+                        {menuContent}
+                      </div>
+                    )}
+                    
+                    {/* Separator if there are app-specific items AND other apps */}
+                    {menuContent && otherApps.length > 0 && (
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+                    )}
+                    
+                    {/* Other apps from API */}
+                    {otherApps.map((app) => (
+                      <a
+                        key={app.id}
+                        href={app.url}
+                        className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        <span className="text-lg mr-2">{app.icon}</span>
+                        <span className="font-medium truncate">{app.name}</span>
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
