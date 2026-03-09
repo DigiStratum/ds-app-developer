@@ -264,7 +264,7 @@ export function AppShell({
       {/* DS Header (logo, session, switcher, nav) - hideable via hideHeader */}
       {!hideHeader && (
         <header 
-          className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
+          className="ds-container-margins mb-1 bg-white dark:bg-gray-800 overflow-hidden"
           style={{ 
             borderBottomLeftRadius: 'var(--ds-container-radius, 8px)', 
             borderBottomRightRadius: 'var(--ds-container-radius, 8px)' 
@@ -292,14 +292,14 @@ export function AppShell({
 
       {/* Header Ad Slot */}
       {headerAdSlot && (
-        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+        <div className="w-full p-1" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
           {headerAdSlot}
         </div>
       )}
 
       {/* Content Container */}
       <main 
-        className={`ds-container-margins flex-1 bg-white dark:bg-gray-800 my-2 ${contentClassName}`}
+        className={`ds-container-margins flex-1 bg-white dark:bg-gray-800 my-1 ${contentClassName}`}
         style={{ borderRadius: 'var(--ds-container-radius, 8px)' }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -309,7 +309,7 @@ export function AppShell({
 
       {/* Footer Ad Slot */}
       {footerAdSlot && (
-        <div className="w-full" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
+        <div className="w-full p-1" style={{ backgroundColor: 'var(--ds-bg-margin, #f3f4f6)' }}>
           {footerAdSlot}
         </div>
       )}
@@ -317,7 +317,7 @@ export function AppShell({
       {/* DS Footer (or custom footer) - hideable via hideFooter */}
       {!hideFooter && (
         <footer 
-          className="ds-container-margins bg-white dark:bg-gray-800 overflow-hidden"
+          className="ds-container-margins mt-1 bg-white dark:bg-gray-800 overflow-hidden"
           style={{ 
             borderTopLeftRadius: 'var(--ds-container-radius, 8px)', 
             borderTopRightRadius: 'var(--ds-container-radius, 8px)' 
