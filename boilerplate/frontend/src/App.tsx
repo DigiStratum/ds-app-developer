@@ -17,8 +17,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <AppShell
-        appName="DS Developer"
-        currentAppId="dsdeveloper"
+        appName="DS developer"
+        currentAppId="developer"
         showAppSwitcher={false}
         showThemeToggle={true}
         showUserMenu={false}
