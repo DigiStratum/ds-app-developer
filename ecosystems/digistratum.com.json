@@ -30,8 +30,8 @@
   
   "aws": {
     "region": "us-west-2",
-    "route53ZoneId": "",
-    "certificateArn": ""
+    "route53ZoneId": "Z2HSQ1OB6HFLSJ",
+    "route53ZoneName": "digistratum.com"
   },
   
   "palette": {

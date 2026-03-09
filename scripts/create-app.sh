@@ -125,6 +125,8 @@ PRIVACY_URL=$(jq -r '.legal.privacyUrl // "https://www.digistratum.com/privacy"'
 TERMS_URL=$(jq -r '.legal.termsUrl // "https://www.digistratum.com/terms"' "$ECOSYSTEM_FILE")
 SUPPORT_URL=$(jq -r '.legal.supportUrl // "https://www.digistratum.com/support"' "$ECOSYSTEM_FILE")
 AWS_REGION=$(jq -r '.aws.region // "us-west-2"' "$ECOSYSTEM_FILE")
+ROUTE53_ZONE_ID=$(jq -r '.aws.route53ZoneId // "Z2HSQ1OB6HFLSJ"' "$ECOSYSTEM_FILE")
+ROUTE53_ZONE_NAME=$(jq -r '.aws.route53ZoneName // "digistratum.com"' "$ECOSYSTEM_FILE")
 
 # Determine repo prefix based on ecosystem
 case "$ECOSYSTEM_ID" in
@@ -249,6 +251,9 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|ds-app-developer|$APP_NAME|g" "$file"
         sed -i '' "s|developer\.digistratum\.com|$FULL_DOMAIN|g" "$file"
         sed -i '' "s|DSAppDeveloperStack|$CDK_STACK_NAME|g" "$file"
+        # Route53 zone replacements
+        sed -i '' "s|hostedZoneId: 'Z2HSQ1OB6HFLSJ'|hostedZoneId: '$ROUTE53_ZONE_ID'|g" "$file"
+        sed -i '' "s|zoneName: 'digistratum.com'|zoneName: '$ROUTE53_ZONE_NAME'|g" "$file"
         sed -i '' "s|dsAccountAppId: 'developer'|dsAccountAppId: '$APP_SLUG'|g" "$file"
         sed -i '' "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
         
@@ -283,6 +288,9 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i "s|ds-app-developer|$APP_NAME|g" "$file"
         sed -i "s|developer\.digistratum\.com|$FULL_DOMAIN|g" "$file"
         sed -i "s|DSAppDeveloperStack|$CDK_STACK_NAME|g" "$file"
+        # Route53 zone replacements
+        sed -i "s|hostedZoneId: 'Z2HSQ1OB6HFLSJ'|hostedZoneId: '$ROUTE53_ZONE_ID'|g" "$file"
+        sed -i "s|zoneName: 'digistratum.com'|zoneName: '$ROUTE53_ZONE_NAME'|g" "$file"
         sed -i "s|dsAccountAppId: 'developer'|dsAccountAppId: '$APP_SLUG'|g" "$file"
         sed -i "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
         sed -i "s|\.digistratum\.com|$COOKIE_DOMAIN|g" "$file"

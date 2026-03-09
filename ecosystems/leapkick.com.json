@@ -30,8 +30,8 @@
   
   "aws": {
     "region": "us-west-2",
-    "route53ZoneId": "",
-    "certificateArn": ""
+    "route53ZoneId": "Z054882424S8VBDMAU31",
+    "route53ZoneName": "leapkick.com"
   },
   
   "palette": {
