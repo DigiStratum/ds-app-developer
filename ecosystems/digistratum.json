@@ -1,0 +1,36 @@
+{
+  "$schema": "./ecosystem.schema.json",
+  "id": "digistratum",
+  "name": "DigiStratum",
+  "apex": "digistratum.com",
+  
+  "branding": {
+    "logo": "ds-logo.svg",
+    "favicon": "ds-favicon.svg",
+    "copyrightHolder": "DigiStratum LLC"
+  },
+  
+  "services": {
+    "account": "https://account.digistratum.com",
+    "registry": "https://registry.digistratum.com/api/apps",
+    "shell": "https://shell.digistratum.com/v1/shell.js"
+  },
+  
+  "auth": {
+    "cookieDomain": ".digistratum.com",
+    "sessionCookieName": "ds-session",
+    "prefsCookieName": "ds-prefs"
+  },
+  
+  "aws": {
+    "region": "us-west-2",
+    "route53ZoneId": "",
+    "certificateArn": ""
+  },
+  
+  "palette": {
+    "primary": "#2563eb",
+    "secondary": "#64748b",
+    "accent": "#0ea5e9"
+  }
+}

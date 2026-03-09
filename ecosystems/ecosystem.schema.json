@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ecosystem Configuration",
+  "description": "Configuration for a DS ecosystem (e.g., digistratum.com, leapkick.com)",
+  "type": "object",
+  "required": ["id", "name", "apex", "branding", "services", "auth"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Short identifier for the ecosystem"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name for the ecosystem"
+    },
+    "apex": {
+      "type": "string",
+      "description": "Apex domain (e.g., digistratum.com)"
+    },
+    "branding": {
+      "type": "object",
+      "required": ["logo", "copyrightHolder"],
+      "properties": {
+        "logo": {
+          "type": "string",
+          "description": "Logo filename (relative to public/ or assets/)"
+        },
+        "favicon": {
+          "type": "string",
+          "description": "Favicon filename"
+        },
+        "copyrightHolder": {
+          "type": "string",
+          "description": "Copyright holder for footer"
+        }
+      }
+    },
+    "services": {
+      "type": "object",
+      "required": ["account", "registry"],
+      "properties": {
+        "account": {
+          "type": "string",
+          "description": "URL to the account service"
+        },
+        "registry": {
+          "type": "string",
+          "description": "URL to the apps registry API"
+        },
+        "shell": {
+          "type": "string",
+          "description": "URL to the CDN-hosted shell.js"
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["cookieDomain"],
+      "properties": {
+        "cookieDomain": {
+          "type": "string",
+          "description": "Cookie domain for SSO (e.g., .digistratum.com)"
+        },
+        "sessionCookieName": {
+          "type": "string",
+          "description": "Name of the session cookie"
+        },
+        "prefsCookieName": {
+          "type": "string",
+          "description": "Name of the preferences cookie"
+        }
+      }
+    },
+    "aws": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "AWS region for deployment"
+        },
+        "route53ZoneId": {
+          "type": "string",
+          "description": "Route53 hosted zone ID"
+        },
+        "certificateArn": {
+          "type": "string",
+          "description": "ACM certificate ARN for the apex domain"
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "description": "Color palette for the ecosystem (future use)",
+      "properties": {
+        "primary": { "type": "string" },
+        "secondary": { "type": "string" },
+        "accent": { "type": "string" }
+      }
+    }
+  }
+}

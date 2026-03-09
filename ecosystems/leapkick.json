@@ -1,0 +1,36 @@
+{
+  "$schema": "./ecosystem.schema.json",
+  "id": "leapkick",
+  "name": "LeapKick",
+  "apex": "leapkick.com",
+  
+  "branding": {
+    "logo": "lk_logo.svg",
+    "favicon": "lk-favicon.svg",
+    "copyrightHolder": "DigiStratum LLC"
+  },
+  
+  "services": {
+    "account": "https://account.leapkick.com",
+    "registry": "https://registry.leapkick.com/api/apps",
+    "shell": "https://shell.leapkick.com/v1/shell.js"
+  },
+  
+  "auth": {
+    "cookieDomain": ".leapkick.com",
+    "sessionCookieName": "lk-session",
+    "prefsCookieName": "lk-prefs"
+  },
+  
+  "aws": {
+    "region": "us-west-2",
+    "route53ZoneId": "",
+    "certificateArn": ""
+  },
+  
+  "palette": {
+    "primary": "#10b981",
+    "secondary": "#6366f1",
+    "accent": "#f59e0b"
+  }
+}
