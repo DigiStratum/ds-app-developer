@@ -74,7 +74,7 @@ jobs:
           # NOTE: Threshold set to 30% as of 2026-03-05.
           # Issue #1107 progress: 31.9% -> 30% (session, dsauth, featureflags tests added)
           # Remaining gap: components (3.1%), featureflags store (requires DynamoDB infrastructure tests)
-          if (( $(echo "$COVERAGE < 45" | bc -l) )); then
+          if (( $(echo "$COVERAGE < 30" | bc -l) )); then
             echo "::error::Coverage ${COVERAGE}% is below 30% threshold"
             exit 1
           fi
