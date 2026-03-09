@@ -4,7 +4,8 @@ const config: Config = {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-    '../node_modules/@digistratum/**/*.{js,ts,jsx,tsx}',
+    // Scan @digistratum packages for Tailwind classes (compiled JS)
+    './node_modules/@digistratum/**/*.{js,mjs}',
   ],
   darkMode: 'class',
   theme: {
