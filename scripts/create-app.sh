@@ -253,7 +253,11 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
         
         # Ecosystem-specific replacements
+        # First: preserve packages.digistratum.com (shared package CDN for all ecosystems)
+        sed -i '' "s|packages\.digistratum\.com|__PACKAGES_CDN__|g" "$file"
         sed -i '' "s|\.digistratum\.com|$COOKIE_DOMAIN|g" "$file"
+        # Restore packages CDN
+        sed -i '' "s|__PACKAGES_CDN__|packages.digistratum.com|g" "$file"
         sed -i '' "s|https://account\.digistratum\.com|$ACCOUNT_URL|g" "$file"
         sed -i '' "s|https://registry\.digistratum\.com/api/apps|$REGISTRY_URL|g" "$file"
         sed -i '' "s|https://apps.digistratum.com/shell|${SHELL_URL%/v1/*}|g" "$file"
@@ -274,12 +278,16 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|{{ECOSYSTEM}}|$ECOSYSTEM_ID|g" "$file"
     else
         # Linux sed
+        # Preserve packages.digistratum.com (shared package CDN for all ecosystems)
+        sed -i "s|packages\.digistratum\.com|__PACKAGES_CDN__|g" "$file"
         sed -i "s|ds-app-developer|$APP_NAME|g" "$file"
         sed -i "s|developer\.digistratum\.com|$FULL_DOMAIN|g" "$file"
         sed -i "s|DSAppDeveloperStack|$CDK_STACK_NAME|g" "$file"
         sed -i "s|dsAccountAppId: 'developer'|dsAccountAppId: '$APP_SLUG'|g" "$file"
         sed -i "s|appName: 'developer'|appName: '$APP_SLUG'|g" "$file"
         sed -i "s|\.digistratum\.com|$COOKIE_DOMAIN|g" "$file"
+        # Restore packages CDN
+        sed -i "s|__PACKAGES_CDN__|packages.digistratum.com|g" "$file"
         sed -i "s|https://account\.digistratum\.com|$ACCOUNT_URL|g" "$file"
         sed -i "s|https://registry\.digistratum\.com/api/apps|$REGISTRY_URL|g" "$file"
         sed -i "s|https://apps.digistratum.com/shell|${SHELL_URL%/v1/*}|g" "$file"
