@@ -6,7 +6,6 @@
   "workspaces": [
     "packages/components",
     "packages/cdk-constructs",
-    "boilerplate/frontend",
     "packages/ds-core",
     "packages/ds-ui",
     "packages/ds-icons"

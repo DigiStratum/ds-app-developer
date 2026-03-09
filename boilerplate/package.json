@@ -1,7 +1,0 @@
-{
-  "name": "ds-app-developer",
-  "private": true,
-  "workspaces": [
-    "frontend"
-  ]
-}

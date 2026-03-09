@@ -1,4 +1,0 @@
-# CodeQL Configuration
-name: "{{APP_NAME}} CodeQL Config"
-
-# No paths to ignore for generated apps

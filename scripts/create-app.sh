@@ -40,7 +40,11 @@ NC='\033[0m' # No Color
 # Get script directory (ds-app-developer root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-BOILERPLATE_DIR="$REPO_ROOT/boilerplate"
+# Source directories (developer app IS the template - no separate boilerplate)
+FRONTEND_DIR="$REPO_ROOT/frontend"
+BACKEND_DIR="$REPO_ROOT/backend"
+CDK_DIR="$REPO_ROOT/cdk"
+TEMPLATES_DIR="$REPO_ROOT/templates"
 
 # Check arguments
 if [ $# -lt 1 ]; then
@@ -109,9 +113,9 @@ if [[ ! "$APP_SLUG" =~ ^[a-z][a-z0-9-]*$ ]]; then
     exit 1
 fi
 
-# Check if boilerplate exists
-if [ ! -d "$BOILERPLATE_DIR" ]; then
-    echo -e "${RED}Error: Boilerplate directory not found at $BOILERPLATE_DIR${NC}"
+# Check if source directories exist
+if [ ! -d "$FRONTEND_DIR" ] || [ ! -d "$BACKEND_DIR" ] || [ ! -d "$CDK_DIR" ]; then
+    echo -e "${RED}Error: Source directories (frontend, backend, cdk) not found in $REPO_ROOT${NC}"
     exit 1
 fi
 
@@ -179,8 +183,13 @@ echo ""
 mkdir -p "$DEST_PATH"
 
 # Step 1: Copy boilerplate (excluding node_modules)
-echo -e "${BLUE}[1/8] Copying boilerplate...${NC}"
-rsync -a --exclude='node_modules' --exclude='.git' "$BOILERPLATE_DIR"/ "$DEST_PATH/"
+echo -e "${BLUE}[1/8] Copying source files...${NC}"
+# Copy frontend, backend, cdk, .github separately
+mkdir -p "$DEST_PATH/frontend" "$DEST_PATH/backend" "$DEST_PATH/cdk" "$DEST_PATH/.github"
+rsync -a --exclude='node_modules' --exclude='.vite' --exclude='dist' "$FRONTEND_DIR"/ "$DEST_PATH/frontend/"
+rsync -a "$BACKEND_DIR"/ "$DEST_PATH/backend/"
+rsync -a --exclude='node_modules' --exclude='cdk.out' "$CDK_DIR"/ "$DEST_PATH/cdk/"
+rsync -a "$REPO_ROOT/templates/.github"/ "$DEST_PATH/.github/"
 
 # Step 2: Replace "developer" with new app name throughout
 echo -e "${BLUE}[2/8] Replacing developer → $APP_SLUG...${NC}"
