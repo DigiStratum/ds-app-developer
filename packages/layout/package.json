@@ -29,20 +29,20 @@
   },
   "peerDependencies": {
     "@digistratum/ds-core": "^0.1.0 || ^0.2.0",
+    "i18next": "^23.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-i18next": "^13.0.0",
-    "i18next": "^23.0.0"
+    "react-i18next": "^13.0.0"
   },
   "devDependencies": {
     "@digistratum/ds-core": "file:../ds-core",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "i18next": "^23.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^13.5.0",
-    "i18next": "^23.7.0",
     "terser": "^5.27.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
