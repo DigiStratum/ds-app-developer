@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@digistratum/ds-core": "https://packages.digistratum.com/@digistratum/ds-core/ds-core-0.1.4.tgz",
-    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.12.tgz",
+    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.15.tgz",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",

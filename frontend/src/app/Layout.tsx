@@ -146,7 +146,7 @@ export function Layout({
       showAppSwitcher={showAppSwitcher}
       showThemeToggle={showThemeToggle}
       showUserMenu={showUserMenu}
-      showPreferences={false}
+      showPreferences={true}
       showGdprBanner={false}
       menuContent={menuContent}
       customHeader={showAdDemo ? <PlaceholderAd position="header" /> : undefined}

@@ -4,10 +4,20 @@
  * Loads the DS App Shell from a CDN at runtime via script tag injection.
  * The shell is IIFE format and assigns to window.DSLayout.
  * Falls back to local components in development mode or when CDN is unavailable.
- * 
- * Part of App Shell Architecture (#911, #913, #914)
  */
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as ReactI18next from 'react-i18next';
+import i18next from 'i18next';
 import { useState, useEffect, ComponentType, ReactNode, createContext, useContext } from 'react';
+
+// Expose React and dependencies as globals for IIFE shell
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+  (window as any).ReactDOM = ReactDOM;
+  (window as any).ReactI18next = ReactI18next;
+  (window as any).i18next = i18next;
+}
 
 // Shell component types
 export interface ShellLayoutProps {
@@ -67,6 +77,10 @@ const DEFAULT_TIMEOUT = 10000;
 declare global {
   interface Window {
     DSLayout?: ShellModule;
+    React?: typeof React;
+    ReactDOM?: typeof ReactDOM;
+    ReactI18next?: typeof ReactI18next;
+    i18next?: typeof i18next;
   }
 }
 
@@ -209,11 +223,9 @@ export function useRemoteShell(config: ShellLoaderConfig = {}): RemoteShellState
  * Create a lazy-loaded component from the shell
  */
 export function createShellComponent<T extends keyof ShellModule>(
-  componentName: T,
-  config?: ShellLoaderConfig
+  _componentName: T,
+  _config?: ShellLoaderConfig
 ): ComponentType<ShellModule[T] extends ComponentType<infer P> ? P : never> {
-  // This is a simplified version - the actual implementation would use React.lazy
-  // with a custom loader that waits for the shell to load
   return (() => null) as unknown as ComponentType<any>;
 }
 
@@ -223,7 +235,6 @@ export type { ShellLoaderConfig as RemoteShellConfig };
 // ============================================================================
 // Context for sharing shell state across components
 // ============================================================================
-
 
 export const ShellContext = createContext<RemoteShellState | null>(null);
 
@@ -239,7 +250,6 @@ export function useShellContext(): RemoteShellState {
  * Create lazy-loaded shell components
  */
 export function createLazyShellComponents(_config: ShellLoaderConfig = {}) {
-  // Placeholder - actual implementation would create lazy components
   return {
     Layout: null as unknown as ComponentType<ShellLayoutProps>,
     Header: null as unknown as ComponentType<Record<string, unknown>>,

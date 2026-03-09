@@ -1,107 +1,37 @@
-import { useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
-
-// Shell - wholesale replaceable
-import { RemoteShellWrapper, ShellLayout } from './shell';
-
-// Boilerplate - wholesale replaceable
-import { AuthProvider, useAuth } from './boilerplate';
-
-// App-specific - direct imports to avoid circular references
-import { HomePage } from './app/pages/Home';
-import { DashboardPage } from './app/pages/Dashboard';
-import { AdDemoProvider } from './app/features/useAdDemo';
-
-import { useTranslation } from 'react-i18next';
-
-// Protected route wrapper [FR-AUTH-002]
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoading, isAuthenticated } = useAuth();
-  const { t } = useTranslation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ds-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-// Loading spinner for initial session load
-function SessionLoader({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useAuth();
-  const { t } = useTranslation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ds-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-function AppRoutes() {
-  const location = useLocation();
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('logged_out')) {
-      params.delete('logged_out');
-      const newSearch = params.toString();
-      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, []);
-  
-  return (
-    <ErrorBoundary resetKey={location.pathname}>
-      <SessionLoader>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <ShellLayout appName="DS App Developer">
-                  <DashboardPage />
-                </ShellLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </SessionLoader>
-    </ErrorBoundary>
-  );
-}
+/**
+ * Minimal AppShell Demo
+ * 
+ * This demonstrates the bare AppShell with NO app-specific content.
+ * The six zones:
+ * 1. Custom header zone (optional) - hidden
+ * 2. DSHeader (standard header)
+ * 3. Header ad slot - hidden by default
+ * 4. Main content (children) - placeholder
+ * 5. Footer ad slot - hidden by default
+ * 6. DSFooter (standard footer)
+ */
+import { ThemeProvider } from '@digistratum/ds-core';
+import { AppShell } from '@digistratum/layout';
 
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AdDemoProvider>
-          <RemoteShellWrapper>
-            <AppRoutes />
-          </RemoteShellWrapper>
-        </AdDemoProvider>
-      </AuthProvider>
+      <AppShell
+        appName="DS Developer"
+        currentAppId="dsdeveloper"
+        showAppSwitcher={false}
+        showThemeToggle={true}
+        showUserMenu={false}
+        showPreferences={true}
+        showGdprBanner={true}
+      >
+        {/* Main content placeholder */}
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-500 dark:text-gray-400">
+            Loading App...
+          </p>
+        </div>
+      </AppShell>
     </ThemeProvider>
   );
 }

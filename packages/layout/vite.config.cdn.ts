@@ -8,10 +8,14 @@ import { resolve } from 'path';
  * Outputs IIFE format that:
  * 1. Expects React, ReactDOM, i18next, react-i18next as globals
  * 2. Assigns exports to window.DSLayout
- * 3. App loads via script tag, then accesses window.DSLayout
+ * 3. Replaces process.env references for browser compatibility
  */
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+    'process.env': JSON.stringify({}),
+  },
   build: {
     outDir: 'dist/cdn',
     emptyDirOnBuild: true,

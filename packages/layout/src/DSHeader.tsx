@@ -262,7 +262,7 @@ export function DSHeader({
                   <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                     <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('nav.dsApps', 'DigiStratum Apps')}
+                        {t('nav.apps', 'Apps')}
                       </p>
                     </div>
                     <div className="py-1">
@@ -598,6 +598,19 @@ export function DSHeader({
                       </span>
                     </button>
                   )}
+
+                  {/* Preferences button for guests */}
+                  {!isAuthenticated && showPreferences && (
+                    <button
+                      onClick={() => { setShowMobileMenu(false); setShowPreferencesModal(true); }}
+                      className="flex items-center w-full md:w-48 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                      </svg>
+                      {t('preferences.title', 'Preferences')}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -605,7 +618,7 @@ export function DSHeader({
               {showAppSwitcher && (
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
                   <p className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    {t('nav.dsApps', 'DigiStratum Apps')}
+                    {t('nav.apps', 'Apps')}
                   </p>
                   <div className="space-y-1">
                     {apps.map((app) => {
