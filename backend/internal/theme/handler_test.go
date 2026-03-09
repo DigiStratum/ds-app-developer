@@ -62,7 +62,7 @@ func TestHandler_ReturnsEmptyConfigByDefault(t *testing.T) {
 	}
 
 	// Default should have empty/nil values
-	if config.CSSVars != nil && len(config.CSSVars) > 0 {
+	if len(config.CSSVars) > 0 {
 		t.Error("expected empty CSSVars by default")
 	}
 	if config.LogoURL != nil {
@@ -89,7 +89,7 @@ func TestGetThemeForTenant_ReturnsEmptyConfig(t *testing.T) {
 
 			// Currently returns empty config for all tenants
 			// This will change when DynamoDB integration is added
-			if config.CSSVars != nil && len(config.CSSVars) > 0 {
+			if len(config.CSSVars) > 0 {
 				t.Error("expected empty CSSVars")
 			}
 		})
@@ -149,11 +149,6 @@ func TestThemeConfig_OmitsEmptyFields(t *testing.T) {
 	}
 
 	// Should not include omitempty fields when nil/empty
-	jsonStr := string(data)
-	if jsonStr == "{}" {
-		// Actually logoAlt is not omitempty so it will be included
-	}
-
 	var decoded map[string]interface{}
 	if err := json.Unmarshal(data, &decoded); err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)

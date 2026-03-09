@@ -3,32 +3,16 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/DigiStratum/ds-app-developer/backend/internal/auth"
+
 )
 
-// contextKey type for test context values
-type testContextKey string
 
-const (
-	userContextKey   testContextKey = "user"
-	tenantContextKey testContextKey = "tenant"
-)
-
-// setUser adds user to context for testing
-func setUser(ctx context.Context, user *auth.User) context.Context {
-	return context.WithValue(ctx, testContextKey("user"), user)
-}
-
-// setTenantID adds tenant ID to context for testing
-func setTenantID(ctx context.Context, tenantID string) context.Context {
-	return context.WithValue(ctx, testContextKey("tenant"), tenantID)
-}
 
 // Tests NFR-AVAIL-003: Health endpoint returns healthy status
 func TestHealthHandler_ReturnsHealthy(t *testing.T) {
