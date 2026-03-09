@@ -13,7 +13,13 @@
   "services": {
     "account": "https://account.digistratum.com",
     "registry": "https://registry.digistratum.com/api/apps",
-    "shell": "https://shell.digistratum.com/v1/shell.js"
+    "shell": "https://apps.digistratum.com/shell/v1/shell.js"
+  },
+  
+  "legal": {
+    "privacyUrl": "https://www.digistratum.com/privacy",
+    "termsUrl": "https://www.digistratum.com/terms",
+    "supportUrl": "https://www.digistratum.com/support"
   },
   
   "auth": {

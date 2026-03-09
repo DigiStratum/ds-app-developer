@@ -13,7 +13,13 @@
   "services": {
     "account": "https://account.leapkick.com",
     "registry": "https://registry.leapkick.com/api/apps",
-    "shell": "https://shell.leapkick.com/v1/shell.js"
+    "shell": "https://apps.leapkick.com/shell/v1/shell.js"
+  },
+  
+  "legal": {
+    "privacyUrl": "https://www.leapkick.com/privacy",
+    "termsUrl": "https://www.leapkick.com/terms",
+    "supportUrl": "https://www.leapkick.com/support"
   },
   
   "auth": {

@@ -121,6 +121,9 @@ REGISTRY_URL=$(jq -r '.services.registry' "$ECOSYSTEM_FILE")
 SHELL_URL=$(jq -r '.services.shell' "$ECOSYSTEM_FILE")
 LOGO_FILE=$(jq -r '.branding.logo' "$ECOSYSTEM_FILE")
 COPYRIGHT_HOLDER=$(jq -r '.branding.copyrightHolder' "$ECOSYSTEM_FILE")
+PRIVACY_URL=$(jq -r '.legal.privacyUrl // "https://www.digistratum.com/privacy"' "$ECOSYSTEM_FILE")
+TERMS_URL=$(jq -r '.legal.termsUrl // "https://www.digistratum.com/terms"' "$ECOSYSTEM_FILE")
+SUPPORT_URL=$(jq -r '.legal.supportUrl // "https://www.digistratum.com/support"' "$ECOSYSTEM_FILE")
 AWS_REGION=$(jq -r '.aws.region // "us-west-2"' "$ECOSYSTEM_FILE")
 
 # Determine repo prefix based on ecosystem
@@ -253,12 +256,15 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|\.digistratum\.com|$COOKIE_DOMAIN|g" "$file"
         sed -i '' "s|https://account\.digistratum\.com|$ACCOUNT_URL|g" "$file"
         sed -i '' "s|https://registry\.digistratum\.com/api/apps|$REGISTRY_URL|g" "$file"
-        sed -i '' "s|https://shell\.digistratum\.com|${SHELL_URL%/*}|g" "$file"
+        sed -i '' "s|https://apps.digistratum.com/shell|${SHELL_URL%/v1/*}|g" "$file"
         sed -i '' "s|lk_logo\.svg|$LOGO_FILE|g" "$file"
         sed -i '' "s|ds-logo\.svg|$LOGO_FILE|g" "$file"
         sed -i '' "s|ds-session|$SESSION_COOKIE|g" "$file"
         sed -i '' "s|ds-prefs|$PREFS_COOKIE|g" "$file"
         sed -i '' "s|DigiStratum LLC|$COPYRIGHT_HOLDER|g" "$file"
+        sed -i '' "s|https://www.digistratum.com/privacy|$PRIVACY_URL|g" "$file"
+        sed -i '' "s|https://www.digistratum.com/terms|$TERMS_URL|g" "$file"
+        sed -i '' "s|https://www.digistratum.com/support|$SUPPORT_URL|g" "$file"
         
         # Template placeholders
         sed -i '' "s|{{APP_NAME}}|$APP_NAME|g" "$file"
@@ -276,7 +282,7 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i "s|\.digistratum\.com|$COOKIE_DOMAIN|g" "$file"
         sed -i "s|https://account\.digistratum\.com|$ACCOUNT_URL|g" "$file"
         sed -i "s|https://registry\.digistratum\.com/api/apps|$REGISTRY_URL|g" "$file"
-        sed -i "s|https://shell\.digistratum\.com|${SHELL_URL%/*}|g" "$file"
+        sed -i "s|https://apps.digistratum.com/shell|${SHELL_URL%/v1/*}|g" "$file"
         sed -i "s|lk_logo\.svg|$LOGO_FILE|g" "$file"
         sed -i "s|ds-logo\.svg|$LOGO_FILE|g" "$file"
         sed -i "s|ds-session|$SESSION_COOKIE|g" "$file"
@@ -285,6 +291,9 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i "s|{{APP_NAME}}|$APP_NAME|g" "$file"
         sed -i "s|{{DOMAIN}}|$FULL_DOMAIN|g" "$file"
         sed -i "s|{{ACCOUNT_ID}}|171949636152|g" "$file"
+        sed -i "s|https://www.digistratum.com/privacy|$PRIVACY_URL|g" "$file"
+        sed -i "s|https://www.digistratum.com/terms|$TERMS_URL|g" "$file"
+        sed -i "s|https://www.digistratum.com/support|$SUPPORT_URL|g" "$file"
         sed -i "s|{{CLOUDFRONT_ID}}|<your-dist-id>|g" "$file"
         sed -i "s|{{ECOSYSTEM}}|$ECOSYSTEM_ID|g" "$file"
     fi
