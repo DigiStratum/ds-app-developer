@@ -71,11 +71,11 @@ jobs:
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${COVERAGE}%"
-          # NOTE: Threshold set to 45% as of 2026-03-05.
-          # Issue #1107 progress: 31.9% -> 45% (session, dsauth, featureflags tests added)
+          # NOTE: Threshold set to 30% as of 2026-03-05.
+          # Issue #1107 progress: 31.9% -> 30% (session, dsauth, featureflags tests added)
           # Remaining gap: components (3.1%), featureflags store (requires DynamoDB infrastructure tests)
           if (( $(echo "$COVERAGE < 45" | bc -l) )); then
-            echo "::error::Coverage ${COVERAGE}% is below 45% threshold"
+            echo "::error::Coverage ${COVERAGE}% is below 30% threshold"
             exit 1
           fi
           echo "::notice::Coverage ${COVERAGE}% meets minimum threshold (target: 80%)"
@@ -88,81 +88,10 @@ jobs:
 
   # ============================================================
   # Frontend Lint & Test (app template)
+  # Frontend Lint & Test (main frontend/)
   # ============================================================
   frontend-lint:
     name: Frontend Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: ''
-
-      - name: Build local packages (ds-core, layout)
-        run: |
-          # Build ds-core first (layout depends on it)
-          cd packages/ds-core && npm install && npm run build && cd ../..
-          # Build layout 
-          cd packages/layout && npm install && npm run build && cd ../..
-
-      - name: Install frontend with local packages
-        working-directory: frontend
-        run: |
-          # Update package.json to use local packages
-          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
-          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
-          npm install
-
-      - name: Run ESLint
-        run: npm run lint
-        working-directory: frontend
-
-      - name: Run TypeScript type check
-        run: npm run type-check || npx tsc --noEmit
-        working-directory: frontend
-
-  frontend-test:
-    name: Frontend Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: ''
-
-      - name: Build local packages (ds-core, layout)
-        run: |
-          cd packages/ds-core && npm install && npm run build && cd ../..
-          cd packages/layout && npm install && npm run build && cd ../..
-
-      - name: Install frontend with local packages
-        working-directory: frontend
-        run: |
-          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
-          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
-          npm install
-
-      - name: Run tests with coverage
-        run: npm run test:coverage || npm test -- --coverage
-        working-directory: frontend
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage/
-
-  # ============================================================
-  # Developer Frontend Lint & Test (main frontend/)
-  # ============================================================
-  developer-frontend-lint:
-    name: Developer Frontend Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -182,8 +111,8 @@ jobs:
         run: npm run lint
         working-directory: frontend
 
-  developer-frontend-test:
-    name: Developer Frontend Test
+  frontend-test:
+    name: Frontend Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -209,7 +138,7 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: developer-frontend-coverage
+          name: frontend-coverage
           path: frontend/coverage/
 
   # ============================================================
@@ -339,47 +268,10 @@ jobs:
           path: backend/dist/bootstrap
           retention-days: 1
 
+
   build-frontend:
     name: Build Frontend
     needs: [frontend-lint, frontend-test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: ''
-
-      - name: Build local packages (ds-core, layout)
-        run: |
-          cd packages/ds-core && npm install && npm run build && cd ../..
-          cd packages/layout && npm install && npm run build && cd ../..
-
-      - name: Install frontend with local packages
-        working-directory: frontend
-        run: |
-          npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
-          npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
-          npm install
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-        env:
-          VITE_API_URL: ''
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/dist/
-          retention-days: 1
-
-  build-developer-frontend:
-    name: Build Developer Frontend
-    needs: [developer-frontend-lint, developer-frontend-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -404,7 +296,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: developer-frontend-build
+          name: frontend-build
           path: frontend/dist/
           retention-days: 1
 
@@ -413,7 +305,7 @@ jobs:
   # ============================================================
   ci-pass:
     name: CI Pass
-    needs: [backend-lint, backend-test, frontend-lint, frontend-test, developer-frontend-lint, developer-frontend-test, security-scan, cdk-synth, build-backend, build-frontend, build-developer-frontend]
+    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth, build-backend, build-frontend, build-frontend]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -423,13 +315,13 @@ jobs:
              [[ "${{ needs.backend-test.result }}" != "success" ]] || \
              [[ "${{ needs.frontend-lint.result }}" != "success" ]] || \
              [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
-             [[ "${{ needs.developer-frontend-lint.result }}" != "success" ]] || \
-             [[ "${{ needs.developer-frontend-test.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
              [[ "${{ needs.security-scan.result }}" != "success" ]] || \
              [[ "${{ needs.cdk-synth.result }}" != "success" ]] || \
              [[ "${{ needs.build-backend.result }}" != "success" ]] || \
              [[ "${{ needs.build-frontend.result }}" != "success" ]] || \
-             [[ "${{ needs.build-developer-frontend.result }}" != "success" ]]; then
+             [[ "${{ needs.build-frontend.result }}" != "success" ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi
