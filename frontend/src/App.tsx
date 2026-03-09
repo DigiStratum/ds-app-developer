@@ -11,11 +11,11 @@ import { AuthProvider, useAuth } from './boilerplate';
 // App-specific - direct imports to avoid circular references
 import { HomePage } from './app/pages/Home';
 import { DashboardPage } from './app/pages/Dashboard';
-import { AdDemoProvider } from './app/features/useAdDemo';
+import { DeveloperToolsProvider } from './app/features/useDeveloperTools';
 
 import { useTranslation } from 'react-i18next';
 
-// Protected route wrapper [FR-AUTH-002]
+// Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -96,11 +96,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AdDemoProvider>
+        <DeveloperToolsProvider>
           <RemoteShellWrapper>
             <AppRoutes />
           </RemoteShellWrapper>
-        </AdDemoProvider>
+        </DeveloperToolsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

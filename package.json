@@ -28,7 +28,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.19.tgz"
+    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.20.tgz"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.59.0"

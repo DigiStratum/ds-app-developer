@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DS_URLS } from '@digistratum/ds-core';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
 import { PreferencesModal } from './PreferencesModal';
+import { AppIcon, isEmojiIcon } from './AppIcon';
 
 // Get a default icon for known app IDs
 function getDefaultIcon(appId: string): string {
@@ -277,7 +278,7 @@ export function DSHeader({
                               key={app.id}
                               className="flex items-center px-4 py-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
                             >
-                              <span className="text-lg mr-3">{app.icon}</span>
+                              <AppIcon appId={app.id} className="mr-3" />
                               <span className="font-medium">{app.name}</span>
                               <span className="ml-auto text-xs text-blue-500 dark:text-blue-300">
                                 {t('nav.current', 'Current')}
@@ -292,7 +293,7 @@ export function DSHeader({
                             className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                             onClick={() => setShowAppSwitcherDropdown(false)}
                           >
-                            <span className="text-lg mr-3">{app.icon}</span>
+                            <AppIcon appId={app.id} className="mr-3" />
                             <span className="font-medium">{app.name}</span>
                           </a>
                         );
@@ -614,7 +615,7 @@ export function DSHeader({
                         key={currentApp.id}
                         className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 cursor-default"
                       >
-                        <span className="text-lg mr-2">{currentApp.icon}</span>
+                        <AppIcon appId={currentApp.id} className="mr-2" />
                         <span className="font-medium truncate">{currentApp.name}</span>
                         <span className="ml-auto text-xs text-blue-500 dark:text-blue-300 shrink-0">
                           {t('nav.current', 'Current')}
@@ -642,7 +643,7 @@ export function DSHeader({
                         className="flex items-center w-full md:w-48 px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setShowMobileMenu(false)}
                       >
-                        <span className="text-lg mr-2">{app.icon}</span>
+                        <AppIcon appId={app.id} className="mr-2" />
                         <span className="font-medium truncate">{app.name}</span>
                       </a>
                     ))}

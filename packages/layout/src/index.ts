@@ -44,6 +44,8 @@ export type {
 export { DSHeader } from './DSHeader';
 export { DSFooter } from './DSFooter';
 export { AdSlot } from './AdSlot';
+export { AppIcon, isEmojiIcon } from './AppIcon';
+export type { } from './AppIcon';
 export { GdprBanner, useConsent } from './GdprBanner';
 export { CookiePreferencesModal, useCookiePreferencesModal } from './CookiePreferencesModal';
 export { CustomHeaderZone } from './components/CustomHeaderZone';

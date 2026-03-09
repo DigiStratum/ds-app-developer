@@ -5,49 +5,39 @@ import type { AuthContext, ThemeContext } from '@digistratum/layout';
 import { useAuth } from '../boilerplate/useAuth';
 import { useTheme } from '@digistratum/ds-core';
 import { DeveloperFooter, FooterLink } from '../boilerplate/DeveloperFooter';
-import { AdDemoToggle } from './features/AdDemoToggle';
+import { DeveloperToolsToggle } from './features/DeveloperToolsToggle';
 import { PlaceholderAd } from './features/PlaceholderAd';
-import { useAdDemoSafe } from './features/useAdDemo';
+import { PlaceholderCustomHeader } from './features/PlaceholderCustomHeader';
+import { useDeveloperToolsSafe } from './features/useDeveloperTools';
 
 interface LayoutProps {
   children: ReactNode;
   appName?: string;
   appLogo?: string;
-  currentAppId?: string;  // Highlights current app in app-switcher
-  /** Additional footer links */
+  currentAppId?: string;
   extraFooterLinks?: FooterLink[];
-  /** Show app switcher in header (default: true) */
   showAppSwitcher?: boolean;
-  /** Show theme toggle in header (default: true) */
   showThemeToggle?: boolean;
-  /** Show user menu in header (default: true) */
   showUserMenu?: boolean;
-  /** Show GDPR banner in footer (default: true) */
   showGdprBanner?: boolean;
 }
 
 /**
- * Standard layout wrapper using AppShell [FR-NAV-001, FR-NAV-003, FR-NAV-004]
+ * Standard layout wrapper using AppShell
  * 
- * This is the reference implementation - Developer app eats its own dog food
- * by using AppShell from @digistratum/layout. Changes to AppShell are validated
- * here before being pushed to other DS apps.
- * 
- * Layout structure (provided by AppShell):
- * - Header: white bg, bottom corners radiused
- * - Main Content: white bg, all four corners radiused
- * - Footer: white bg, top corners radiused
- * 
- * App-specific additions:
- * - AdSlots between header/content and content/footer
- * - Developer Tools menu section with AdDemoToggle
- * - Custom DeveloperFooter
+ * Layout structure:
+ * - Custom Header (app-specific, above nav) - toggled via Developer Tools
+ * - Header: navigation bar
+ * - Header Ad Slot: between header and main content
+ * - Main Content: app content area
+ * - Footer Ad Slot: between main content and footer
+ * - Footer: copyright, legal links
  */
 export function Layout({ 
   children, 
   appName = 'DS Developer', 
   appLogo,
-  currentAppId = 'developer',
+  currentAppId = 'dsdeveloper',
   extraFooterLinks = [],
   showAppSwitcher = true,
   showThemeToggle = false,
@@ -56,7 +46,7 @@ export function Layout({
 }: LayoutProps) {
   const { user, isAuthenticated, login, logout, currentTenant, switchTenant } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { showAdDemo } = useAdDemoSafe();
+  const { showAdDemo, showCustomHeader } = useDeveloperToolsSafe();
   const location = useLocation();
 
   // Build auth context for AppShell
@@ -83,14 +73,10 @@ export function Layout({
 
   /**
    * Get Developer app menu items based on user context
-   * 
-   * This callback defines navigation for the Developer app.
-   * Items can be conditionally included based on auth state.
    */
   const getMenuItems = (authUser: User | null, _tenant: Tenant | null): MenuItem[] => {
     const items: MenuItem[] = [];
 
-    // Authenticated user navigation
     if (authUser) {
       items.push({
         id: 'dashboard',
@@ -112,7 +98,7 @@ export function Layout({
     return items;
   };
 
-  // Custom footer with Developer-specific options
+  // Custom footer
   const customFooter = (
     <DeveloperFooter 
       appName={appName}
@@ -122,14 +108,14 @@ export function Layout({
     />
   );
 
-  // Developer Tools menu content (AdDemoToggle)
+  // Developer Tools menu content - NO separator, just the toggles
   const menuContent = (
-    <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+    <div className="space-y-1">
       <p className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400">
         Developer Tools
       </p>
       <div className="px-3 py-2">
-        <AdDemoToggle />
+        <DeveloperToolsToggle />
       </div>
     </div>
   );
@@ -149,7 +135,9 @@ export function Layout({
       showPreferences={true}
       showGdprBanner={false}
       menuContent={menuContent}
-      customHeader={showAdDemo ? <PlaceholderAd position="header" /> : undefined}
+      customHeader={showCustomHeader ? <PlaceholderCustomHeader /> : undefined}
+      headerAdSlot={showAdDemo ? <PlaceholderAd position="header" /> : undefined}
+      footerAdSlot={showAdDemo ? <PlaceholderAd position="footer" /> : undefined}
     >
       {children}
     </AppShell>
