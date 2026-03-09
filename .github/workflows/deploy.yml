@@ -122,7 +122,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Build Lambda binary (ARM64)
-        working-directory: boilerplate/backend
+        working-directory: backend
         run: |
           mkdir -p dist
           GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/bootstrap ./cmd/api
@@ -132,17 +132,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: boilerplate/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm install
-        working-directory: boilerplate
+        working-directory: .
         env:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Build frontend
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: npm run build
         env:
           VITE_API_URL: ''
@@ -151,14 +151,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-binary
-          path: boilerplate/backend/dist/bootstrap
+          path: backend/dist/bootstrap
           retention-days: 1
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: boilerplate/frontend/dist
+          path: frontend/dist
           retention-days: 1
 
   # ============================================================
@@ -184,13 +184,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-binary
-          path: boilerplate/backend/dist
+          path: backend/dist
 
       - name: Download frontend artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: boilerplate/frontend/dist
+          path: frontend/dist
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -199,20 +199,20 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install CDK dependencies
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: npm install
 
       - name: Build CDK
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: npm run build
 
       - name: CDK Diff
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: npx cdk diff --context env=${{ needs.build.outputs.environment }} || true
 
       - name: CDK Deploy
         id: cdk-deploy
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: |
           npx cdk deploy --all \
             --context env=${{ needs.build.outputs.environment }} \
@@ -221,7 +221,7 @@ jobs:
 
       - name: Extract CDK outputs
         id: outputs
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: |
           STACK_NAME="${{ needs.build.outputs.stack_name }}"
           echo "Reading outputs from stack: ${STACK_NAME}"

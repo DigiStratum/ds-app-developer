@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: boilerplate/backend
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -36,7 +36,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          working-directory: boilerplate/backend
+          working-directory: backend
           version: latest
 
   backend-test:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: boilerplate/backend
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -84,10 +84,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: boilerplate/backend/coverage.out
+          path: backend/coverage.out
 
   # ============================================================
-  # Frontend Lint & Test (boilerplate template)
+  # Frontend Lint & Test (app template)
   # ============================================================
   frontend-lint:
     name: Frontend Lint
@@ -109,7 +109,7 @@ jobs:
           cd packages/layout && npm install && npm run build && cd ../..
 
       - name: Install frontend with local packages
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: |
           # Update package.json to use local packages
           npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
@@ -118,11 +118,11 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-        working-directory: boilerplate/frontend
+        working-directory: frontend
 
       - name: Run TypeScript type check
         run: npm run type-check || npx tsc --noEmit
-        working-directory: boilerplate/frontend
+        working-directory: frontend
 
   frontend-test:
     name: Frontend Test
@@ -142,7 +142,7 @@ jobs:
           cd packages/layout && npm install && npm run build && cd ../..
 
       - name: Install frontend with local packages
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: |
           npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
           npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
@@ -150,13 +150,13 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage || npm test -- --coverage
-        working-directory: boilerplate/frontend
+        working-directory: frontend
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
-          path: boilerplate/frontend/coverage/
+          path: frontend/coverage/
 
   # ============================================================
   # Developer Frontend Lint & Test (main frontend/)
@@ -231,7 +231,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run govulncheck
-        working-directory: boilerplate/backend
+        working-directory: backend
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           # Note: govulncheck may report stdlib vulns that require Go version bump
@@ -245,7 +245,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: NPM Audit (Frontend)
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: npm audit --audit-level=high || true
 
       - name: NPM Audit (Developer Frontend)
@@ -253,7 +253,7 @@ jobs:
         run: npm audit --audit-level=high || true
 
       - name: NPM Audit (CDK)
-        working-directory: boilerplate/cdk
+        working-directory: cdk
         run: npm audit --audit-level=high || true
 
       # CodeQL Analysis
@@ -280,7 +280,7 @@ jobs:
     needs: [build-backend]  # CDK synth needs backend binary
     defaults:
       run:
-        working-directory: boilerplate/cdk
+        working-directory: cdk
     steps:
       - uses: actions/checkout@v4
 
@@ -289,13 +289,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: boilerplate/cdk/package-lock.json
+          cache-dependency-path: cdk/package-lock.json
 
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-binary
-          path: boilerplate/backend/dist
+          path: backend/dist
 
       - name: Install dependencies
         run: |
@@ -327,7 +327,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Build Lambda binary (ARM64)
-        working-directory: boilerplate/backend
+        working-directory: backend
         run: |
           mkdir -p dist
           GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/bootstrap ./cmd/api
@@ -336,7 +336,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-binary
-          path: boilerplate/backend/dist/bootstrap
+          path: backend/dist/bootstrap
           retention-days: 1
 
   build-frontend:
@@ -358,14 +358,14 @@ jobs:
           cd packages/layout && npm install && npm run build && cd ../..
 
       - name: Install frontend with local packages
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: |
           npm pkg set dependencies.@digistratum/ds-core=file:../../packages/ds-core
           npm pkg set dependencies.@digistratum/layout=file:../../packages/layout
           npm install
 
       - name: Build frontend
-        working-directory: boilerplate/frontend
+        working-directory: frontend
         run: npm run build
         env:
           VITE_API_URL: ''
@@ -374,7 +374,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: boilerplate/frontend/dist/
+          path: frontend/dist/
           retention-days: 1
 
   build-developer-frontend:
