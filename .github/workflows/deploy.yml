@@ -242,6 +242,25 @@ jobs:
           echo "API URL: ${API_URL}"
           echo "Frontend Bucket: ${BUCKET}"
 
+
+      - name: Sync frontend to S3
+        run: |
+          BUCKET="${{ steps.outputs.outputs.frontend_bucket }}"
+          echo "Syncing frontend to s3://${BUCKET}"
+          aws s3 sync frontend/dist "s3://${BUCKET}" --delete
+          echo "✓ Frontend synced to S3"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          # Get the distribution ID from the stack outputs
+          DIST_ID=$(jq -r ".DSAppDeveloperStack.DistributionId // empty" cdk/cdk-outputs.json)
+          if [ -n "$DIST_ID" ]; then
+            echo "Invalidating CloudFront distribution: ${DIST_ID}"
+            aws cloudfront create-invalidation --distribution-id "${DIST_ID}" --paths "/*"
+            echo "✓ CloudFront invalidation created"
+          else
+            echo "⚠ No distribution ID found in outputs, skipping invalidation"
+          fi
   # ============================================================
   # Post-Deploy Verification
   # ============================================================

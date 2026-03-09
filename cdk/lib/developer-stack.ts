@@ -179,6 +179,10 @@ export class DeveloperStack extends cdk.Stack {
       value: distribution.distributionDomainName,
     });
 
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+    });
+
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: httpApi.apiEndpoint,
     });
