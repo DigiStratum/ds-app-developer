@@ -12,15 +12,15 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "@digistratum/ds-core": "^0.1.0",
-    "@digistratum/ds-ui": "^0.1.0",
+    "@digistratum/ds-core": "https://packages.digistratum.com/@digistratum/ds-core/ds-core-0.2.0.tgz",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^13.5.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^6.20.0",
+    "@digistratum/layout": "https://packages.digistratum.com/@digistratum/layout/layout-0.2.18.tgz"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.0",
