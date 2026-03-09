@@ -4,7 +4,6 @@
   "private": true,
   "description": "DigiStratum application boilerplate with shared packages",
   "workspaces": [
-    "packages/layout",
     "packages/components",
     "packages/cdk-constructs",
     "boilerplate/frontend",

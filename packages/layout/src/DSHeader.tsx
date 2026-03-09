@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DS_URLS } from '@digistratum/ds-core';
 import type { DSAppShellProps, DSApp, NavLink } from './types';
-import { CookiePreferencesModal } from './CookiePreferencesModal';
+import { PreferencesModal } from './PreferencesModal';
 
 // Default DS apps for app-switcher (used when no apps prop or appsApiUrl provided)
 const DEFAULT_DS_APPS: DSApp[] = [
@@ -671,7 +671,7 @@ export function DSHeader({
     </div>
 
       {/* Preferences Modal */}
-      <CookiePreferencesModal
+      <PreferencesModal
         isOpen={showPreferencesModal}
         onClose={() => setShowPreferencesModal(false)}
       />
