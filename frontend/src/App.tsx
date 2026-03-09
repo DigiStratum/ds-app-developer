@@ -11,7 +11,7 @@ import { AuthProvider, useAuth } from './boilerplate';
 // App-specific - direct imports to avoid circular references
 import { HomePage } from './app/pages/Home';
 import { DashboardPage } from './app/pages/Dashboard';
-import { DeveloperToolsProvider } from './app/features/useDeveloperTools';
+import { DeveloperToolsProvider, useDeveloperToolsSafe, ViewportDimensions } from './app/features';
 
 import { useTranslation } from 'react-i18next';
 
@@ -57,6 +57,13 @@ function SessionLoader({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Viewport dimensions overlay (rendered conditionally)
+function DimensionsOverlay() {
+  const { showDimensions } = useDeveloperToolsSafe();
+  if (!showDimensions) return null;
+  return <ViewportDimensions />;
+}
+
 function AppRoutes() {
   const location = useLocation();
   
@@ -99,6 +106,7 @@ export default function App() {
         <DeveloperToolsProvider>
           <RemoteShellWrapper>
             <AppRoutes />
+            <DimensionsOverlay />
           </RemoteShellWrapper>
         </DeveloperToolsProvider>
       </AuthProvider>
