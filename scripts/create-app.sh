@@ -190,6 +190,7 @@ rsync -a --exclude='node_modules' --exclude='.vite' --exclude='dist' "$FRONTEND_
 rsync -a "$BACKEND_DIR"/ "$DEST_PATH/backend/"
 rsync -a --exclude='node_modules' --exclude='cdk.out' "$CDK_DIR"/ "$DEST_PATH/cdk/"
 rsync -a "$REPO_ROOT/templates/.github"/ "$DEST_PATH/.github/"
+cp "$REPO_ROOT/templates/README.md" "$DEST_PATH/README.md"
 
 # Step 2: Replace "developer" with new app name throughout
 echo -e "${BLUE}[2/8] Replacing developer → $APP_SLUG...${NC}"
@@ -211,6 +212,11 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|name: \047My App\047|name: \047$DISPLAY_NAME\047|g" "$file"
         sed -i '' "s|baseUrl: \047https://myapp.example.com\047|baseUrl: \047https://$DOMAIN\047|g" "$file"
         sed -i '' "s|ssoUrl: \047https://account.example.com\047|ssoUrl: \047https://account.$BASE_DOMAIN\047|g" "$file"
+        # README template placeholders
+        sed -i '' "s|{{APP_NAME}}|$APP_NAME|g" "$file"
+        sed -i '' "s|{{DOMAIN}}|$DOMAIN|g" "$file"
+        sed -i '' "s|{{ACCOUNT_ID}}|171949636152|g" "$file"
+        sed -i '' "s|{{CLOUDFRONT_ID}}|<your-dist-id>|g" "$file"
     else
         sed -i "s|ds-app-developer|$APP_NAME|g" "$file"
         sed -i "s|developer\.digistratum\.com|$DOMAIN|g" "$file"
@@ -222,6 +228,11 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i "s|name: \047My App\047|name: \047$DISPLAY_NAME\047|g" "$file"
         sed -i "s|baseUrl: \047https://myapp.example.com\047|baseUrl: \047https://$DOMAIN\047|g" "$file"
         sed -i "s|ssoUrl: \047https://account.example.com\047|ssoUrl: \047https://account.$BASE_DOMAIN\047|g" "$file"
+        # README template placeholders
+        sed -i '' "s|{{APP_NAME}}|$APP_NAME|g" "$file"
+        sed -i '' "s|{{DOMAIN}}|$DOMAIN|g" "$file"
+        sed -i '' "s|{{ACCOUNT_ID}}|171949636152|g" "$file"
+        sed -i '' "s|{{CLOUDFRONT_ID}}|<your-dist-id>|g" "$file"
     fi
 done
 

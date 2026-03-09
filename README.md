@@ -132,6 +132,25 @@ cd frontend && npm run dev
 npm run build:packages
 ```
 
+### Local Build & Test (Pre-Push Check)
+
+Run these before pushing to catch CI failures locally:
+
+```bash
+# Backend: lint + unit tests
+cd backend && golangci-lint run ./... && go test $(go list ./... | grep -v /test/integration)
+
+# Frontend: lint + build
+cd frontend && npm run lint && npm run build
+```
+
+Or as a one-liner from repo root:
+
+```bash
+(cd backend && golangci-lint run ./... && go test $(go list ./... | grep -v /test/integration)) && \
+(cd frontend && npm run lint && npm run build)
+```
+
 ## Deployment
 
 ### Frontend
