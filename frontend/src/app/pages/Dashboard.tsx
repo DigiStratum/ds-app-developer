@@ -1,4 +1,4 @@
-import { useAuth } from '../../boilerplate/useAuth';
+import { useAuth } from '@digistratum/ds-core';
 
 export function DashboardPage() {
   const { user, currentTenant } = useAuth();

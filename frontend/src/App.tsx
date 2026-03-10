@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { ThemeProvider, ErrorBoundary } from '@digistratum/ds-core';
+import { ThemeProvider, ErrorBoundary, AuthProvider, useAuth } from '@digistratum/ds-core';
 
 // Shell - wholesale replaceable
 import { RemoteShellWrapper, ShellLayout } from './shell';
 
-// Boilerplate - wholesale replaceable
-import { AuthProvider, useAuth } from './boilerplate';
 
 // App-specific - direct imports to avoid circular references
 import { HomePage } from './app/pages/Home';

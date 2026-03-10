@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../boilerplate/useAuth';
+import { useAuth } from '@digistratum/ds-core';
 import { Layout } from '../Layout';
 
 // Landing page - accessible without authentication

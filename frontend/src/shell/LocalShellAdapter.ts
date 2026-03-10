@@ -5,19 +5,16 @@
  * Used as fallback when the remote shell is unavailable or in development mode.
  */
 import { Layout } from '../app/Layout';
-import { DeveloperHeader } from '../boilerplate/DeveloperHeader';
-import { DeveloperFooter } from '../boilerplate/DeveloperFooter';
+import { DSHeader, DSFooter, DSAppShell } from '@digistratum/layout';
 import type { ShellModule } from './useRemoteShell';
-
-const DSAppShell = Layout;
 
 export const localShellModule: ShellModule = {
   DSAppShell,
-  DSHeader: DeveloperHeader as unknown as ShellModule['DSHeader'],
-  DSFooter: DeveloperFooter as unknown as ShellModule['DSFooter'],
+  DSHeader,
+  DSFooter,
   Layout,
-  DeveloperHeader,
-  DeveloperFooter,
+  DeveloperHeader: DSHeader as unknown as ShellModule['DeveloperHeader'],
+  DeveloperFooter: DSFooter as unknown as ShellModule['DeveloperFooter'],
 };
 
-export { DSAppShell, Layout, DeveloperHeader, DeveloperFooter };
+export { DSAppShell, Layout, DSHeader as DeveloperHeader, DSFooter as DeveloperFooter };

@@ -1,10 +1,8 @@
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AppShell, type MenuItem, type Tenant, type User } from '@digistratum/layout';
+import { AppShell, DSFooter, type MenuItem, type Tenant, type User, type FooterLink } from '@digistratum/layout';
 import type { AuthContext, ThemeContext } from '@digistratum/layout';
-import { useAuth } from '../boilerplate/useAuth';
-import { useTheme } from '@digistratum/ds-core';
-import { DeveloperFooter, FooterLink } from '../boilerplate/DeveloperFooter';
+import { useAuth, useTheme } from '@digistratum/ds-core';
 import { DeveloperToolsToggle } from './features/DeveloperToolsToggle';
 import { PlaceholderAd } from './features/PlaceholderAd';
 import { PlaceholderCustomHeader } from './features/PlaceholderCustomHeader';
@@ -98,13 +96,12 @@ export function Layout({
     return items;
   };
 
-  // Custom footer
+  // Custom footer using DSFooter from layout package
   const customFooter = (
-    <DeveloperFooter 
+    <DSFooter 
       appName={appName}
+      links={extraFooterLinks}
       showGdprBanner={showGdprBanner}
-      extraLinks={extraFooterLinks}
-      showAdToggle={false}
     />
   );
 
