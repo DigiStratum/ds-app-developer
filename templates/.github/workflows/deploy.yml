@@ -299,7 +299,8 @@ jobs:
           echo "::warning::DNS propagation timeout - this may be an initial deployment"
           echo "dns_ready=false" >> $GITHUB_OUTPUT
 
-      - name: Canary health checks        id: validation
+      - name: Canary health checks
+        id: validation
         run: |
           echo "Starting canary validation for ${{ env.HEALTH_CHECK_DURATION_MINUTES }} minutes..."
           
