@@ -35,8 +35,20 @@
   },
   
   "palette": {
-    "primary": "#2563eb",
-    "secondary": "#64748b",
-    "accent": "#0ea5e9"
+    "primary": {
+      "dark": "#003366",
+      "medium": "#336699",
+      "light": "#6699CC"
+    },
+    "accent": {
+      "dark": "#CC6600",
+      "medium": "#FF9900",
+      "light": "#FFCC66"
+    },
+    "neutral": {
+      "dark": "#333333",
+      "medium": "#999999",
+      "light": "#EEEEEE"
+    }
   }
 }
