@@ -1,168 +1,66 @@
 # AGENTS.md — {{APP_NAME}}
 
-## Ecosystem Context
+## What This Is
 
-This app is part of the **{{ECOSYSTEM_NAME}}** ecosystem — a suite of integrated applications sharing common infrastructure, authentication, and user experience.
+A **{{ECOSYSTEM_NAME}}** ecosystem application — one of several integrated apps sharing authentication, preferences, and user experience.
 
-### What the Ecosystem Provides (DO NOT REBUILD)
-
-| Concern | Solution | How to Use |
-|---------|----------|------------|
-| **Authentication** | DSAccount SSO | `useAuth()` hook — user is already authenticated via cross-domain cookie |
-| **Session** | `ds-session` cookie | Parsed by AppShell, available via `useAuth().user` |
-| **Preferences** | `ds-prefs` cookie | Theme, language, timezone via `usePrefs()` |
-| **Multi-tenancy** | Tenant switcher in header | `useAuth().currentTenant`, `useAuth().switchTenant()` |
-| **Roles/Permissions** | Per-tenant roles | `user.tenants[].roles[]` — check before showing features |
-| **Subscriptions** | Tenant subscription data | `currentTenant.subscription` — feature gating |
-| **App Navigation** | App switcher in header | Automatic — apps register with ecosystem registry |
-| **Theming** | Light/dark mode | Automatic via AppShell + Tailwind `dark:` classes |
-| **Legal/Compliance** | GDPR banner, privacy/terms | Automatic via AppShell |
-| **Branding** | Logo, colors, footer | Automatic via ecosystem config |
-
-### Key Principle: This App is NOT Standalone
+## Where This Fits
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    {{ECOSYSTEM_NAME}} Ecosystem             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │ Account  │  │ Registry │  │ THIS APP │  │ Other    │    │
-│  │ (SSO)    │  │ (apps)   │  │          │  │ Apps...  │    │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    │
-│       │             │             │             │           │
-│       └─────────────┴─────────────┴─────────────┘           │
-│                    Shared Cookies                            │
-│              (ds-session, ds-prefs)                         │
-└─────────────────────────────────────────────────────────────┘
+{{ECOSYSTEM_NAME}} Ecosystem
+├── Account App     → SSO, user/tenant management, subscriptions
+├── Registry        → App discovery, API specs
+├── {{APP_NAME}}    → THIS APP
+└── Other Apps...   → Same shared infrastructure
 ```
 
-**An agent working on this app should NEVER:**
-- ❌ Implement login/logout flows (redirect to Account app)
-- ❌ Store auth tokens in localStorage (cookie-based SSO)
-- ❌ Create user registration (Account app handles it)
-- ❌ Build tenant/org management (Account app handles it)
-- ❌ Implement theme toggles (AppShell provides it)
-- ❌ Add GDPR/cookie consent (AppShell provides it)
-- ❌ Create header/footer/nav chrome (AppShell provides it)
+**Shared infrastructure (DO NOT REBUILD):**
+- Cross-domain SSO via `ds-session` cookie
+- User preferences via `ds-prefs` cookie  
+- Multi-tenancy with roles/permissions
+- AppShell (header, footer, nav, theme, GDPR)
 
-## The Cardinal Rule: AppShell vs App
+## The Cardinal Rule
 
-**AppShell (`@digistratum/layout`)** = Everything shared across ALL ecosystem apps
-**This App** = ONLY app-specific business logic
+> **If every ecosystem app needs it → AppShell. If only this app needs it → here.**
 
-If you're adding something, ask: *"Does every ecosystem app need this?"*
-- **Yes** → It belongs in AppShell (update ds-app-developer packages)
-- **No** → It belongs here
+Never implement: login/logout, user registration, tenant management, theme toggles, GDPR banners, header/footer chrome. These are solved.
 
-## Using Ecosystem Services
+## Quick Reference
 
-### Authentication
-```tsx
-import { useAuth } from '@digistratum/ds-core';
+| Need | Solution |
+|------|----------|
+| Current user | `useAuth().user` |
+| Current tenant | `useAuth().currentTenant` |
+| Check role | `currentTenant.roles.includes('editor')` |
+| Theme | `useTheme().resolvedTheme` |
+| Preferences | `usePrefs()` |
 
-function MyComponent() {
-  const { user, isAuthenticated, currentTenant } = useAuth();
-  
-  if (!isAuthenticated) {
-    // AppShell shows login prompt — you don't need to handle this
-    return null;
-  }
-  
-  // User is authenticated, currentTenant is set
-  const canEdit = currentTenant?.roles?.includes('editor');
-}
+## Project Structure
+
+```
+frontend/src/app/    # Your app code (pages, features)
+frontend/src/shell/  # CDN loader — don't modify
+backend/internal/    # Go handlers and services
 ```
 
-### Tenant-Specific Data
-```tsx
-const { currentTenant } = useAuth();
+## Documentation Index
 
-// Tenant context for API calls
-const response = await fetch('/api/projects', {
-  headers: {
-    'X-Tenant-ID': currentTenant.id,
-  },
-});
-```
-
-### Preferences
-```tsx
-import { useTheme, usePrefs } from '@digistratum/ds-core';
-
-const { theme, resolvedTheme } = useTheme();  // 'light' | 'dark' | 'system'
-const { language, timezone } = usePrefs();
-```
-
-### Checking Subscriptions
-```tsx
-const { currentTenant } = useAuth();
-const plan = currentTenant?.subscription?.plan;  // 'free' | 'pro' | 'enterprise'
-
-if (plan === 'free') {
-  return <UpgradePrompt />;
-}
-```
-
-## App-Specific Development
-
-### Structure
-```
-frontend/src/
-├── app/                 # YOUR CODE
-│   ├── Layout.tsx       # Configure AppShell, provide menu items
-│   ├── pages/           # Route components
-│   ├── features/        # Feature modules
-│   └── config.ts        # App configuration
-├── shell/               # DON'T MODIFY (CDN shell loader)
-└── App.tsx              # Routes
-
-backend/
-├── cmd/api/             # Lambda entry point
-├── internal/
-│   ├── api/             # HTTP handlers
-│   ├── models/          # Domain models
-│   └── services/        # Business logic
-└── pkg/                 # Shared packages
-```
-
-### Adding Features
-
-1. **Page**: `frontend/src/app/pages/MyFeature.tsx`
-2. **Route**: Add to `App.tsx`
-3. **Menu**: Add to `Layout.tsx` → `getMenuItems()`
-4. **API**: Add handler in `backend/internal/api/`
-
-### Backend Auth
-The backend receives the `ds-session` cookie automatically. Use the session middleware:
-```go
-// Session is validated and user context is available
-user := session.GetUser(r.Context())
-tenantID := session.GetTenantID(r.Context())
-```
+| Doc | Purpose |
+|-----|---------|
+| `README.md` | Setup, build, deploy |
+| `docs/ARCHITECTURE.md` | System design, data flow |
+| `docs/API.md` | Backend endpoints |
+| `docs/NFR.md` | Non-functional requirements |
+| [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) | Canonical source, shared packages |
+| [AppShell Standard](https://github.com/DigiStratum/ds-app-developer/blob/main/docs/APPSHELL_STANDARD.md) | Auth flows, cookie contracts |
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
-| Backend | Go 1.21, AWS Lambda |
-| Infrastructure | AWS CDK (TypeScript) |
-| Database | DynamoDB (if needed) |
-| Auth | Cookie-based SSO via DSAccount |
+React 18 / TypeScript / Vite / Tailwind (frontend)  
+Go 1.21 / Lambda (backend)  
+CDK / CloudFront / S3 / DynamoDB (infra)
 
 ## Deployment
 
-Push to `main` → GitHub Actions → AWS (Lambda + S3 + CloudFront)
-
-The canary deploy workflow:
-1. Build frontend + backend
-2. Deploy to canary (10% traffic)
-3. Run health checks
-4. Promote to 100% or rollback
-
-## Package Sources
-
-Shared packages load from CDN at runtime:
-- `@digistratum/layout` — AppShell components
-- `@digistratum/ds-core` — Auth, theme, prefs hooks
-
-**DO NOT** vendor or fork these packages. If you need changes, contribute to ds-app-developer.
+Push to `main` → CI → Canary deploy → Promote or rollback
