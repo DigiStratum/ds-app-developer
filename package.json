@@ -4,10 +4,8 @@
   "private": true,
   "description": "DigiStratum application boilerplate with shared packages",
   "workspaces": [
-    "packages/components",
     "packages/cdk-constructs",
     "packages/ds-core",
-    "packages/ds-ui",
     "packages/ds-icons"
   ],
   "scripts": {

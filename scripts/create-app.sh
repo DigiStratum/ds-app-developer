@@ -243,7 +243,8 @@ rsync -a --exclude='node_modules' --exclude='.vite' --exclude='dist' "$FRONTEND_
 rsync -a "$BACKEND_DIR"/ "$DEST_PATH/backend/"
 rsync -a --exclude='node_modules' --exclude='cdk.out' "$CDK_DIR"/ "$DEST_PATH/cdk/"
 rsync -a "$REPO_ROOT/templates/.github"/ "$DEST_PATH/.github/"
-cp "$REPO_ROOT/templates/README.md" "$DEST_PATH/README.md"
+sed -e "s/{{APP_NAME}}/$APP_NAME/g" -e "s/{{APP_SLUG}}/$APP_SLUG/g" -e "s/{{DOMAIN}}/$FULL_DOMAIN/g" -e "s/{{ECOSYSTEM_NAME}}/$ECOSYSTEM_NAME/g" "$REPO_ROOT/templates/README.md" > "$DEST_PATH/README.md"
+sed -e "s/{{APP_NAME}}/$APP_NAME/g" -e "s/{{APP_SLUG}}/$APP_SLUG/g" -e "s/{{DOMAIN}}/$FULL_DOMAIN/g" -e "s/{{ECOSYSTEM_NAME}}/$ECOSYSTEM_NAME/g" "$REPO_ROOT/templates/AGENTS.md" > "$DEST_PATH/AGENTS.md"
 
 # Copy ecosystem-specific logo
 if [ -f "$REPO_ROOT/frontend/public/$LOGO_FILE" ]; then

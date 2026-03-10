@@ -1,90 +1,88 @@
-# DS App: {{APP_NAME}}
+# {{APP_NAME}}
 
-A DigiStratum application deployed at {{DOMAIN}}.
+A {{ECOSYSTEM_NAME}} application built on the DS AppShell platform.
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Run frontend dev server
+cd frontend && npm run dev
+
+# Run backend locally  
+cd backend && go run cmd/api/main.go
+```
+
+## Architecture
+
+This app uses the **AppShell architecture**: the shell (header, footer, navigation, auth UI) loads from CDN at runtime, while app-specific pages and features are bundled locally.
+
+```
+┌─────────────────────────────────────┐
+│        AppShell (from CDN)          │
+│  ┌───────────────────────────────┐  │
+│  │ Header: nav, user menu, theme │  │
+│  ├───────────────────────────────┤  │
+│  │                               │  │
+│  │     Your App Content Here     │  │
+│  │                               │  │
+│  ├───────────────────────────────┤  │
+│  │ Footer: copyright, legal      │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+**Benefit:** When the platform team updates the AppShell, your app automatically gets the update — no rebuild needed.
 
 ## Structure
 
 ```
-├── backend/           # Go Lambda backend
-│   ├── cmd/api/       # Lambda entry point
-│   ├── internal/      # Business logic
-│   └── pkg/dsauth/    # SSO validation
-├── frontend/          # React frontend
+{{APP_SLUG}}/
+├── frontend/
 │   └── src/
-└── cdk/               # AWS CDK infrastructure
+│       ├── app/              # YOUR APP CODE
+│       │   ├── Layout.tsx    # Configures AppShell, provides menu items
+│       │   ├── pages/        # Your routes
+│       │   └── features/     # Your features
+│       └── shell/            # CDN shell loader (don't modify)
+├── backend/
+│   └── cmd/api/              # Go Lambda API
+└── cdk/                      # AWS infrastructure
 ```
 
-## Prerequisites
+## Development Guide
 
-- **Go** 1.21+
-- **Node.js** 20+
-- **golangci-lint** (`brew install golangci-lint`)
-- **AWS CLI** configured with credentials
+### Adding Pages
 
-## Development
+1. Create component in `frontend/src/app/pages/`
+2. Add route in `frontend/src/App.tsx`
+3. Add menu item in `frontend/src/app/Layout.tsx` → `getMenuItems()`
 
-```bash
-# Backend
-cd backend && go run ./cmd/api
+### Using Auth
 
-# Frontend
-cd frontend && npm install && npm run dev
+```tsx
+import { useAuth } from '@digistratum/ds-core';
+
+function MyPage() {
+  const { user, isAuthenticated, login, logout } = useAuth();
+  // ...
+}
 ```
 
-### Local Build & Test (Pre-Push Check)
+### Styling
 
-Run these before pushing to catch CI failures locally:
-
-```bash
-# Backend: lint + unit tests
-cd backend && golangci-lint run ./... && go test $(go list ./... | grep -v /test/integration)
-
-# Frontend: lint + build
-cd frontend && npm run lint && npm run build
-```
-
-Or as a one-liner from repo root:
-
-```bash
-(cd backend && golangci-lint run ./... && go test $(go list ./... | grep -v /test/integration)) && \
-(cd frontend && npm run lint && npm run build)
-```
+Use Tailwind CSS classes. The app supports light/dark themes via the AppShell preferences.
 
 ## Deployment
 
-Deployment is automatic via GitHub Actions on push to `main`.
+Push to `main` branch triggers CI/CD pipeline:
+1. Build frontend & backend
+2. Deploy to AWS (S3 + CloudFront + Lambda)
+3. Invalidate CDN cache
 
-### Manual Deployment
+## Links
 
-**Frontend:**
-```bash
-cd frontend && npm run build
-aws s3 sync dist s3://{{APP_NAME}}-frontend-{{ACCOUNT_ID}} --delete
-aws cloudfront create-invalidation --distribution-id {{CLOUDFRONT_ID}} --paths "/*"
-```
-
-**Backend:**
-```bash
-cd backend
-GOOS=linux GOARCH=arm64 go build -o bootstrap ./cmd/api
-zip -j /tmp/lambda.zip bootstrap
-aws lambda update-function-code --function-name {{APP_NAME}}-api --zip-file fileb:///tmp/lambda.zip
-```
-
-## SSO Integration
-
-This app uses DigiStratum SSO via DSAccount. The `ds_session` cookie (shared across *.digistratum.com) handles authentication.
-
-**Key endpoints:**
-- `GET /api/auth/login` — Initiates SSO login
-- `GET /api/auth/callback` — OAuth callback
-- `GET /api/session` — Returns current session state
-
-## Environment Variables
-
-| Variable | Purpose |
-|----------|---------|
-| `DSACCOUNT_SSO_URL` | SSO provider URL |
-| `DSACCOUNT_APP_ID` | App ID registered in DSAccount |
-| `DSACCOUNT_APP_SECRET` | For token exchange (stored in AWS Secrets Manager) |
-| `DYNAMODB_TABLE` | Main DynamoDB table name |
+- **Live:** https://{{DOMAIN}}
+- **API:** https://{{DOMAIN}}/api
