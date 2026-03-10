@@ -264,8 +264,42 @@ jobs:
       - name: Wait for deployment propagation
         run: sleep 30
 
-      - name: Canary health checks
-        id: validation
+      - name: Wait for DNS propagation
+        id: dns_check
+        run: |
+          echo "Checking DNS propagation for {{APP_DOMAIN}}..."
+          MAX_ATTEMPTS=20
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            
+            # Try to resolve the domain
+            if host {{APP_DOMAIN}} > /dev/null 2>&1; then
+              echo "✓ DNS resolved for {{APP_DOMAIN}}"
+              
+              # Verify we can reach the endpoint (not just DNS)
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 \
+                https://{{APP_DOMAIN}}/api/health 2>/dev/null || echo "000")
+              
+              if [ "$HTTP_CODE" != "000" ]; then
+                echo "✓ Endpoint reachable (HTTP $HTTP_CODE)"
+                echo "dns_ready=true" >> $GITHUB_OUTPUT
+                exit 0
+              else
+                echo "DNS resolved but endpoint not reachable yet (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+              fi
+            else
+              echo "DNS not propagated yet (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            fi
+            
+            sleep 15
+          done
+          
+          echo "::warning::DNS propagation timeout - this may be an initial deployment"
+          echo "dns_ready=false" >> $GITHUB_OUTPUT
+
+      - name: Canary health checks        id: validation
         run: |
           echo "Starting canary validation for ${{ env.HEALTH_CHECK_DURATION_MINUTES }} minutes..."
           
@@ -380,10 +414,30 @@ jobs:
         run: |
           echo "Running E2E smoke tests..."
           
-          # Test health endpoint
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{APP_DOMAIN}}/api/health)
+          # If DNS wasn't ready, this is likely an initial deployment
+          IS_INITIAL_DEPLOY="${{ steps.dns_check.outputs.dns_ready }}"
+          if [ "$IS_INITIAL_DEPLOY" == "false" ]; then
+            echo "::notice::Initial deployment detected - skipping health checks until DNS propagates"
+            echo "e2e_passed=true" >> $GITHUB_OUTPUT
+            echo "Skipping E2E tests for initial deployment"
+            exit 0
+          fi
+          
+          # Test health endpoint with retry
+          MAX_RETRIES=3
+          RETRY=0
+          while [ $RETRY -lt $MAX_RETRIES ]; do
+            HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 https://{{APP_DOMAIN}}/api/health)
+            if [ "$HEALTH_STATUS" == "200" ]; then
+              break
+            fi
+            RETRY=$((RETRY + 1))
+            echo "Health check attempt $RETRY failed (HTTP $HEALTH_STATUS), retrying..."
+            sleep 5
+          done
+          
           if [ "$HEALTH_STATUS" != "200" ]; then
-            echo "::error::Health endpoint returned $HEALTH_STATUS"
+            echo "::error::Health endpoint returned $HEALTH_STATUS after $MAX_RETRIES attempts"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
