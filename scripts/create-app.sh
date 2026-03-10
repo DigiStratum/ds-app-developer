@@ -255,6 +255,7 @@ fi
 echo -e "${BLUE}[2/8] Applying ecosystem config and app values...${NC}"
 
 CDK_STACK_NAME="DSApp$(echo "$APP_SLUG" | sed -r 's/(^|-)([a-z])/\U\2/g')Stack"
+LAMBDA_NAME="${APP_NAME}-api"
 
 find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.html" -o -name "*.css" \) | while read -r file; do
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -292,6 +293,9 @@ find "$DEST_PATH" -type f \( -name "*.go" -o -name "*.ts" -o -name "*.tsx" -o -n
         sed -i '' "s|{{ACCOUNT_ID}}|171949636152|g" "$file"
         sed -i '' "s|{{CLOUDFRONT_ID}}|<your-dist-id>|g" "$file"
         sed -i '' "s|{{ECOSYSTEM}}|$ECOSYSTEM_ID|g" "$file"
+        sed -i '' "s|{{APP_DOMAIN}}|$FULL_DOMAIN|g" "$file"
+        sed -i '' "s|{{CDK_STACK_NAME}}|$CDK_STACK_NAME|g" "$file"
+        sed -i '' "s|{{LAMBDA_NAME}}|$LAMBDA_NAME|g" "$file"
     else
         # Linux sed
         # Preserve packages.digistratum.com (shared package CDN for all ecosystems)
