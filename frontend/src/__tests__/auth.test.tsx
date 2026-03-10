@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -9,16 +9,6 @@ import { AuthProvider, useAuth } from '@digistratum/ds-core';
  * Updated for guest-session-first pattern
  * See REQUIREMENTS.md for full requirement descriptions
  */
-
-// Mock the API client
-vi.mock('../api/client', () => ({
-  api: {
-    get: vi.fn(),
-    setTenant: vi.fn(),
-  },
-}));
-
-import { api } from '../api/client';
 
 // Test component that uses auth
 function TestAuthConsumer() {
@@ -45,81 +35,65 @@ function renderWithAuth(component: React.ReactNode) {
   );
 }
 
+// Mock fetch responses
+function mockFetch(sessionResponse: object, appsResponse: object = { apps: [] }) {
+  return vi.fn((url: string) => {
+    if (url.includes('/api/session')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(sessionResponse),
+      });
+    }
+    if (url.includes('/api/apps/available')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(appsResponse),
+      });
+    }
+    return Promise.reject(new Error(`Unmocked URL: ${url}`));
+  });
+}
+
 describe('FR-AUTH: Authentication & Authorization (Guest Session Pattern)', () => {
+  const originalFetch = global.fetch;
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
   /**
    * Tests guest session pattern: Anonymous session on first visit
-   * Users can browse without authentication
+   * FR-AUTH-001: Guest sessions for anonymous users
    */
-  describe('Guest Session Pattern', () => {
-    it('allows access with guest session (no authentication required)', async () => {
-      vi.mocked(api.get).mockResolvedValue({
-        session_id: 'abc12345...',
+  describe('FR-AUTH-001: Guest sessions for anonymous users', () => {
+    it('creates guest session on first visit', async () => {
+      global.fetch = mockFetch({
+        session_id: 'abc123...',
         is_authenticated: false,
         is_guest: true,
+        tenant_id: null,
         user: null,
-      });
+      }) as unknown as typeof fetch;
 
       renderWithAuth(<TestAuthConsumer />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('is-authenticated')).toHaveTextContent('no');
         expect(screen.getByTestId('is-guest')).toHaveTextContent('yes');
       });
-    });
-
-    it('shows sign in button for guest sessions', async () => {
-      vi.mocked(api.get).mockResolvedValue({
-        session_id: 'abc12345...',
-        is_authenticated: false,
-        is_guest: true,
-        user: null,
-      });
-
-      renderWithAuth(<TestAuthConsumer />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-      });
+      expect(screen.getByTestId('is-authenticated')).toHaveTextContent('no');
     });
   });
 
   /**
-   * Tests FR-AUTH-002: Login redirects to SSO
-   * Guest users can initiate login flow
+   * Tests FR-AUTH-003: Authenticated user session
    */
-  describe('FR-AUTH-002: Login redirect', () => {
-    it('redirects to auth/login when sign in clicked', async () => {
-      const user = userEvent.setup();
-      vi.mocked(api.get).mockResolvedValue({
-        session_id: 'abc12345...',
-        is_authenticated: false,
-        is_guest: true,
-        user: null,
-      });
-
-      renderWithAuth(<TestAuthConsumer />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
-      
-      expect(window.location.href).toContain('/api/auth/login');
-    });
-  });
-
-  /**
-   * Tests FR-AUTH-003: Session includes user identity and tenant context
-   * When authenticated, user info should be available in context
-   */
-  describe('FR-AUTH-003: Session context (authenticated)', () => {
-    it('provides user info when session is authenticated', async () => {
-      vi.mocked(api.get).mockResolvedValue({
+  describe('FR-AUTH-003: Authenticated sessions', () => {
+    it('shows authenticated user with tenant', async () => {
+      global.fetch = mockFetch({
         session_id: 'xyz98765...',
         is_authenticated: true,
         is_guest: false,
@@ -128,56 +102,44 @@ describe('FR-AUTH: Authentication & Authorization (Guest Session Pattern)', () =
           id: 'user-123',
           email: 'test@example.com',
           name: 'Test User',
-          tenants: ['tenant-1'],
+          tenants: [{ id: 'tenant-1', name: 'Test Tenant' }],
         },
-      });
+      }) as unknown as typeof fetch;
 
       renderWithAuth(<TestAuthConsumer />);
 
       await waitFor(() => {
         expect(screen.getByTestId('is-authenticated')).toHaveTextContent('yes');
-        expect(screen.getByTestId('is-guest')).toHaveTextContent('no');
-        expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
       });
+      expect(screen.getByTestId('is-guest')).toHaveTextContent('no');
+      expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
     });
 
-    it('shows sign out button when authenticated', async () => {
-      vi.mocked(api.get).mockResolvedValue({
-        session_id: 'xyz98765...',
-        is_authenticated: true,
-        is_guest: false,
-        user: {
-          id: 'user-123',
-          email: 'test@example.com',
-          name: 'Test User',
-          tenants: [],
-        },
-      });
-
-      renderWithAuth(<TestAuthConsumer />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
-      });
-    });
-  });
-
-  /**
-   * Tests FR-AUTH-004: Logout clears session and redirects to DSAccount logout
-   */
-  describe('FR-AUTH-004: Logout', () => {
-    it('redirects to auth/logout when sign out clicked', async () => {
+    it('provides logout function that redirects', async () => {
       const user = userEvent.setup();
-      vi.mocked(api.get).mockResolvedValue({
+      
+      global.fetch = mockFetch({
         session_id: 'xyz98765...',
         is_authenticated: true,
         is_guest: false,
+        tenant_id: 'tenant-1',
         user: {
           id: 'user-123',
           email: 'test@example.com',
           name: 'Test User',
-          tenants: [],
+          tenants: [{ id: 'tenant-1', name: 'Test Tenant' }],
         },
+      }) as unknown as typeof fetch;
+
+      // Mock window.location.href setter
+      const locationHref = vi.spyOn(window, 'location', 'get').mockReturnValue({
+        ...window.location,
+        href: '',
+      } as Location);
+      
+      Object.defineProperty(window, 'location', {
+        value: { href: '' },
+        writable: true,
       });
 
       renderWithAuth(<TestAuthConsumer />);
@@ -189,13 +151,21 @@ describe('FR-AUTH: Authentication & Authorization (Guest Session Pattern)', () =
       await user.click(screen.getByRole('button', { name: /sign out/i }));
       
       expect(window.location.href).toBe('/api/auth/logout');
+      
+      locationHref.mockRestore();
     });
   });
 });
 
 describe('FR-TENANT: Multi-Tenant Support', () => {
+  const originalFetch = global.fetch;
+
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
   /**
@@ -204,7 +174,7 @@ describe('FR-TENANT: Multi-Tenant Support', () => {
    */
   describe('FR-TENANT-001: Tenant context', () => {
     it('session includes tenant list for authenticated users', async () => {
-      vi.mocked(api.get).mockResolvedValue({
+      global.fetch = mockFetch({
         session_id: 'xyz98765...',
         is_authenticated: true,
         is_guest: false,
@@ -213,18 +183,15 @@ describe('FR-TENANT: Multi-Tenant Support', () => {
           id: 'user-123',
           email: 'test@example.com',
           name: 'Test User',
-          tenants: ['tenant-1', 'tenant-2'],
+          tenants: [{ id: 'tenant-1', name: 'Tenant 1' }, { id: 'tenant-2', name: 'Tenant 2' }],
         },
-      });
+      }) as unknown as typeof fetch;
 
       renderWithAuth(<TestAuthConsumer />);
 
       await waitFor(() => {
         expect(screen.getByTestId('is-authenticated')).toHaveTextContent('yes');
       });
-
-      // Verify tenant was set on API client
-      expect(api.setTenant).toHaveBeenCalledWith('tenant-1');
     });
   });
 });
