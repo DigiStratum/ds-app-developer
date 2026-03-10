@@ -279,10 +279,10 @@ jobs:
           while [ $(date +%s) -lt $END_TIME ]; do
             TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
             
-            # Health check with timing - uses /health endpoint
+            # Health check with timing - uses /api/health endpoint
             RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
-              -o /tmp/health_response.txt \
-              https://{{APP_DOMAIN}}/health 2>/dev/null || echo "")
+              -o /tmp/api/health_response.txt \
+              https://{{APP_DOMAIN}}/api/health 2>/dev/null || echo "")
             
             HTTP_CODE=$(echo "$RESPONSE" | tail -2 | head -1)
             LATENCY_SEC=$(echo "$RESPONSE" | tail -1)
@@ -381,7 +381,7 @@ jobs:
           echo "Running E2E smoke tests..."
           
           # Test health endpoint
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{APP_DOMAIN}}/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{APP_DOMAIN}}/api/health)
           if [ "$HEALTH_STATUS" != "200" ]; then
             echo "::error::Health endpoint returned $HEALTH_STATUS"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
@@ -503,7 +503,7 @@ jobs:
           DSACCOUNT_URL: https://account.digistratum.com
           DSACCOUNT_APP_ID: ${{ secrets.DSACCOUNT_APP_ID || 'developer' }}
           DSACCOUNT_APP_SECRET_ARN: ds-app-developer/dsaccount-app-secret
-          HEALTH_CHECK_URL: https://{{APP_DOMAIN}}/health
+          HEALTH_CHECK_URL: https://{{APP_DOMAIN}}/api/health
           CDK_STACK_NAME: {{CDK_STACK_NAME}}
 
   rollback:
