@@ -444,10 +444,22 @@ jobs:
           fi
           echo "✓ Health endpoint OK"
           
-          # Test API endpoint (unauthenticated should return 401)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://{{APP_DOMAIN}}/api/session)
+          # Test API endpoint with retry (unauthenticated should return 200 or 401)
+          # 503 can occur during Lambda cold start
+          API_RETRIES=3
+          API_ATTEMPT=0
+          while [ $API_ATTEMPT -lt $API_RETRIES ]; do
+            API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 https://{{APP_DOMAIN}}/api/session)
+            if [ "$API_STATUS" == "200" ] || [ "$API_STATUS" == "401" ]; then
+              break
+            fi
+            API_ATTEMPT=$((API_ATTEMPT + 1))
+            echo "API check attempt $API_ATTEMPT returned $API_STATUS, retrying..."
+            sleep 5
+          done
+          
           if [ "$API_STATUS" != "200" ] && [ "$API_STATUS" != "401" ]; then
-            echo "::error::API endpoint returned unexpected status $API_STATUS"
+            echo "::error::API endpoint returned unexpected status $API_STATUS after $API_RETRIES attempts"
             echo "e2e_passed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
