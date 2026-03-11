@@ -102,7 +102,7 @@ export function CookiePreferencesModal({ isOpen, onClose }: CookiePreferencesMod
               id="cookie-preferences-title"
               className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"
             >
-              <span aria-hidden="true">🍪</span>
+              
               {t('cookies.preferencesTitle', 'Cookie Preferences')}
             </h2>
             <button
