@@ -77,10 +77,25 @@ Use Tailwind CSS classes. The app supports light/dark themes via the AppShell pr
 
 ## Deployment
 
+### CI/CD (Automatic)
+
 Push to `main` branch triggers CI/CD pipeline:
 1. Build frontend & backend
 2. Deploy to AWS (S3 + CloudFront + Lambda)
 3. Invalidate CDN cache
+4. Register infrastructure manifest
+
+### Manual Deploy
+
+```bash
+# Deploy CDK stack
+cd cdk && npx cdk deploy
+
+# REQUIRED: Update infrastructure manifest
+./scripts/register-manifest.sh
+```
+
+> ⚠️ **Always run `register-manifest.sh` after `cdk deploy`**. This updates the central registry with current ARNs and resource names. Other apps and agents depend on this being accurate.
 
 ## Links
 

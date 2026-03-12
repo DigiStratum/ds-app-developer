@@ -34,3 +34,6 @@ export {
   getShellLoadError,
   getShellRetryCount,
 } from './shell-loader';
+
+// API Error class
+export { ApiHttpError } from './ApiHttpError';

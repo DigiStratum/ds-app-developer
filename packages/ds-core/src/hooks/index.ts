@@ -60,3 +60,7 @@ export type {
   AuthContext, 
   AuthProviderProps,
 } from './useAuth';
+
+// API Error handling
+export { ApiErrorProvider, useApiError, useApiErrorSafe } from './useApiError';
+export type { ApiErrorProviderProps } from './useApiError';

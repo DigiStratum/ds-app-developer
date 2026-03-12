@@ -4,12 +4,54 @@
 
 A **{{ECOSYSTEM_NAME}}** ecosystem application — one of several integrated apps sharing authentication, preferences, and user experience.
 
-## Where This Fits
+## The Cardinal Rule
+
+> **If every ecosystem app needs it → AppShell. If only this app needs it → here.**
+
+Never implement: login/logout, user registration, tenant management, theme toggles, GDPR banners, header/footer chrome. These are solved by the AppShell.
+
+---
+
+## Documentation Structure
+
+This project uses hierarchical AGENTS.md files to keep context focused:
+
+| Path | Scope |
+|------|-------|
+| `AGENTS.md` (this file) | Project-wide rules, ecosystem integration |
+| `frontend/AGENTS.md` | React/TypeScript, AppShell integration, protected paths |
+| `backend/AGENTS.md` | Go patterns, API handlers, DynamoDB access |
+| `cdk/AGENTS.md` | Infrastructure, CDK conventions, resource naming |
+
+**When working in a subdirectory, read its AGENTS.md first.**
+
+---
+
+## Project Structure
+
+```
+{{APP_SLUG}}/
+├── AGENTS.md           # This file (project-wide)
+├── README.md           # Setup, build, deploy
+├── frontend/           # React app
+│   ├── AGENTS.md       # Frontend-specific guidance
+│   └── src/
+├── backend/            # Go Lambda API
+│   ├── AGENTS.md       # Backend-specific guidance
+│   └── internal/
+├── cdk/                # AWS infrastructure
+│   ├── AGENTS.md       # CDK-specific guidance
+│   └── lib/
+└── scripts/            # Automation scripts
+```
+
+---
+
+## Ecosystem Context
 
 ```
 {{ECOSYSTEM_NAME}} Ecosystem
 ├── Account App     → SSO, user/tenant management, subscriptions
-├── Registry        → App discovery, API specs
 ├── {{APP_NAME}}    → THIS APP
 └── Other Apps...   → Same shared infrastructure
 ```
@@ -20,11 +62,7 @@ A **{{ECOSYSTEM_NAME}}** ecosystem application — one of several integrated app
 - Multi-tenancy with roles/permissions
 - AppShell (header, footer, nav, theme, GDPR)
 
-## The Cardinal Rule
-
-> **If every ecosystem app needs it → AppShell. If only this app needs it → here.**
-
-Never implement: login/logout, user registration, tenant management, theme toggles, GDPR banners, header/footer chrome. These are solved.
+---
 
 ## Quick Reference
 
@@ -36,31 +74,35 @@ Never implement: login/logout, user registration, tenant management, theme toggl
 | Theme | `useTheme().resolvedTheme` |
 | Preferences | `usePrefs()` |
 
-## Project Structure
-
-```
-frontend/src/app/    # Your app code (pages, features)
-frontend/src/shell/  # CDN loader — don't modify
-backend/internal/    # Go handlers and services
-```
-
-## Documentation Index
-
-| Doc | Purpose |
-|-----|---------|
-| `README.md` | Setup, build, deploy |
-| `docs/ARCHITECTURE.md` | System design, data flow |
-| `docs/API.md` | Backend endpoints |
-| `docs/NFR.md` | Non-functional requirements |
-| [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) | Canonical source, shared packages |
-| [AppShell Standard](https://github.com/DigiStratum/ds-app-developer/blob/main/docs/APPSHELL_STANDARD.md) | Auth flows, cookie contracts |
+---
 
 ## Tech Stack
 
-React 18 / TypeScript / Vite / Tailwind (frontend)  
-Go 1.21 / Lambda (backend)  
-CDK / CloudFront / S3 / DynamoDB (infra)
+| Layer | Tech |
+|-------|------|
+| Frontend | React 18 / TypeScript / Vite / Tailwind |
+| Backend | Go 1.21 / Lambda |
+| Infra | CDK / CloudFront / S3 / DynamoDB |
+
+---
 
 ## Deployment
 
 Push to `main` → CI → Canary deploy → Promote or rollback
+
+**After any infrastructure changes:**
+```bash
+./scripts/register-manifest.sh
+```
+
+See `cdk/AGENTS.md` for infrastructure manifest details.
+
+---
+
+## External References
+
+| Resource | Purpose |
+|----------|---------|
+| [ds-app-developer](https://github.com/DigiStratum/ds-app-developer) | Canonical source, shared packages |
+| [AppShell Standard](https://github.com/DigiStratum/ds-app-developer/blob/main/docs/APPSHELL_STANDARD.md) | Auth flows, cookie contracts |
+| [NFR Checklist](https://github.com/DigiStratum/ds-app-developer/blob/main/docs/NFR-CHECKLIST.md) | Non-functional requirements |

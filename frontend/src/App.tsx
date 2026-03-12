@@ -1,10 +1,17 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { ThemeProvider, ErrorBoundary, AuthProvider, useAuth } from '@digistratum/ds-core';
+import { 
+  ThemeProvider, 
+  ErrorBoundary, 
+  AuthProvider, 
+  useAuth,
+  ApiErrorProvider,
+  useApiError,
+  ApiHttpError,
+} from '@digistratum/ds-core';
 
 // Shell - wholesale replaceable
 import { RemoteShellWrapper, ShellLayout } from './shell';
-
 
 // App-specific - direct imports to avoid circular references
 import { HomePage } from './app/pages/Home';
@@ -12,6 +19,7 @@ import { DashboardPage } from './app/pages/Dashboard';
 import { DeveloperToolsProvider, useDeveloperToolsSafe, ViewportDimensions } from './app/features';
 
 import { useTranslation } from 'react-i18next';
+import { api } from './api/client';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -62,6 +70,19 @@ function DimensionsOverlay() {
   return <ViewportDimensions />;
 }
 
+// Wire up global API error handling
+function ApiErrorWiring({ children }: { children: React.ReactNode }) {
+  const { setApiError } = useApiError();
+
+  useEffect(() => {
+    api.setGlobalErrorHandler((error: ApiHttpError) => {
+      setApiError(error.toErrorDetails());
+    });
+  }, [setApiError]);
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const location = useLocation();
   
@@ -85,7 +106,11 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <ShellLayout appName="DS App Developer">
-                  <DashboardPage />
+                  <ApiErrorProvider countdownSeconds={5} redirectUrl="/">
+                    <ApiErrorWiring>
+                      <DashboardPage />
+                    </ApiErrorWiring>
+                  </ApiErrorProvider>
                 </ShellLayout>
               </ProtectedRoute>
             }

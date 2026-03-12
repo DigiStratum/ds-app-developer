@@ -182,3 +182,12 @@ export type {
   UseSessionDataOptions, 
   UseSessionDataReturn,
 } from './hooks/useSessionData';
+
+// API Error View and handling
+export { ApiErrorView } from './components/ApiErrorView';
+export type { ApiErrorDetails, ApiErrorViewProps } from './components/ApiErrorView';
+
+export { ApiErrorProvider, useApiError, useApiErrorSafe } from './hooks/useApiError';
+export type { ApiErrorProviderProps } from './hooks/useApiError';
+
+export { ApiHttpError } from './utils/ApiHttpError';

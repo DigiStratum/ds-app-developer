@@ -31,3 +31,7 @@ export type {
   ShellErrorFallbackProps,
   ShellErrorBoundaryProps,
 } from './ShellFallback';
+
+// API Error View
+export { ApiErrorView } from './ApiErrorView';
+export type { ApiErrorDetails, ApiErrorViewProps } from './ApiErrorView';
