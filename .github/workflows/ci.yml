@@ -1,5 +1,14 @@
 name: CI
 
+# Path-based conditional workflow triggers to optimize GitHub Actions compute costs
+# Skip unnecessary jobs when changes only affect docs, config, or non-code files
+# Path sets:
+# - docs: *.md, docs/**
+# - frontend: frontend/**, packages/layout/**, packages/ds-core/** (shared UI packages)  
+# - backend: backend/**, packages/backend-utils/**
+# - infra: cdk/**, packages/ds-cdk/**
+# - config: *.json, *.yml, *.yaml, Makefile, scripts/**
+
 on:
   push:
     branches: [main]
@@ -18,22 +27,71 @@ permissions:
 jobs:
   # ============================================================
   # Backend Lint & Test
+  # Only run when backend code or shared backend packages change
   # ============================================================
   backend-lint:
     name: Backend Lint
     runs-on: ubuntu-latest
+    # Skip if only docs, frontend-only, or config-only changes
+    if: |
+      contains(github.event.head_commit.message, '[skip-path-filter]') ||
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'push' && (
+          contains(github.event.commits[0].added, 'backend/') ||
+          contains(github.event.commits[0].modified, 'backend/') ||
+          contains(github.event.commits[0].added, 'packages/backend-utils/') ||
+          contains(github.event.commits[0].modified, 'packages/backend-utils/') ||
+          contains(github.event.commits[0].added, 'go.mod') ||
+          contains(github.event.commits[0].modified, 'go.mod') ||
+          contains(github.event.commits[0].added, 'go.sum') ||
+          contains(github.event.commits[0].modified, 'go.sum')
+        )
+      ) ||
+      github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Fetch more history for better path filtering
+          fetch-depth: 2
+
+      - name: Check if backend code changed
+        id: backend_changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For PRs, check changed files between base and head
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            # For pushes, check files changed in the last commit
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Check if any backend-related files changed
+          if echo "$CHANGED_FILES" | grep -qE "^(backend/|packages/backend-utils/|go\.(mod|sum)$)"; then
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+            echo "Backend code changed - proceeding with backend jobs"
+          else
+            echo "backend_changed=false" >> $GITHUB_OUTPUT  
+            echo "No backend code changes detected - skipping backend jobs"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Go
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run golangci-lint
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         uses: golangci/golangci-lint-action@v4
         with:
           working-directory: backend
@@ -42,18 +100,57 @@ jobs:
   backend-test:
     name: Backend Test
     runs-on: ubuntu-latest
+    # Skip if only docs, frontend-only, or config-only changes
+    if: |
+      contains(github.event.head_commit.message, '[skip-path-filter]') ||
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'push' && (
+          contains(github.event.commits[0].added, 'backend/') ||
+          contains(github.event.commits[0].modified, 'backend/') ||
+          contains(github.event.commits[0].added, 'packages/backend-utils/') ||
+          contains(github.event.commits[0].modified, 'packages/backend-utils/') ||
+          contains(github.event.commits[0].added, 'go.mod') ||
+          contains(github.event.commits[0].modified, 'go.mod') ||
+          contains(github.event.commits[0].added, 'go.sum') ||
+          contains(github.event.commits[0].modified, 'go.sum')
+        )
+      ) ||
+      github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if backend code changed
+        id: backend_changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -qE "^(backend/|packages/backend-utils/|go\.(mod|sum)$)"; then
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend_changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Go
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Cache Go modules
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
@@ -62,12 +159,15 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Download dependencies
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         run: go mod download
 
       - name: Run tests with coverage
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         run: go test -v -race -coverprofile=coverage.out $(go list ./... | grep -v /test/integration)
 
       - name: Check coverage threshold (NFR-TEST-001 - target 80 percent)
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${COVERAGE}%"
@@ -81,54 +181,115 @@ jobs:
           echo "::notice::Coverage ${COVERAGE}% meets minimum threshold (target: 80%)"
 
       - name: Upload coverage artifact
+        if: steps.backend_changes.outputs.backend_changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage.out
 
   # ============================================================
-  # Frontend Lint & Test (app template)
-  # Frontend Lint & Test (main frontend/)
+  # Frontend Lint & Test
+  # Only run when frontend code or shared frontend packages change
   # ============================================================
   frontend-lint:
     name: Frontend Lint
     runs-on: ubuntu-latest
+    # Skip if only docs, backend-only, or config-only changes
+    if: |
+      contains(github.event.head_commit.message, '[skip-path-filter]') ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend code changed
+        id: frontend_changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Check if any frontend-related files changed
+          if echo "$CHANGED_FILES" | grep -qE "^(frontend/|packages/(layout|ds-core|ds-auth-ts)/|.*\.(json|js|ts|tsx|jsx|css|scss|sass)$)"; then
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+            echo "Frontend code changed - proceeding with frontend jobs"
+          else
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+            echo "No frontend code changes detected - skipping frontend jobs"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Node.js
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-
       - name: Install dependencies
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         working-directory: frontend
         run: npm install
 
       - name: Run ESLint
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         run: npm run lint
         working-directory: frontend
 
   frontend-test:
     name: Frontend Test
     runs-on: ubuntu-latest
+    # Skip if only docs, backend-only, or config-only changes  
+    if: |
+      contains(github.event.head_commit.message, '[skip-path-filter]') ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend code changed
+        id: frontend_changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -qE "^(frontend/|packages/(layout|ds-core|ds-auth-ts)/|.*\.(json|js|ts|tsx|jsx|css|scss|sass)$)"; then
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Node.js
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-
       - name: Install dependencies
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         working-directory: frontend
         run: npm install
 
       - name: Run tests with coverage
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         working-directory: frontend
         run: npm run test:coverage -- --run
 
@@ -136,6 +297,7 @@ jobs:
       # Baseline (2026-03-05): statements 8.52%, branches 55.4%, functions 26.47%, lines 8.52%
       # Target: 70% lines/statements, 60% branches/functions
       - name: Upload coverage artifact
+        if: steps.frontend_changes.outputs.frontend_changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
@@ -143,6 +305,7 @@ jobs:
 
   # ============================================================
   # Security Scan
+  # Always run but skip some components based on changes
   # ============================================================
   security-scan:
     name: Security Scan
@@ -152,14 +315,51 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      # Go vulnerability check
+      - name: Check what changed for conditional security scans
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          # Check what types of files changed
+          if echo "$CHANGED_FILES" | grep -qE "^(backend/|packages/backend-utils/|go\.(mod|sum)$)"; then
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -qE "^(frontend/|packages/(layout|ds-core|ds-auth-ts)/|cdk/)"; then
+            echo "frontend_or_cdk_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_or_cdk_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Skip security scan if only docs changed
+          if echo "$CHANGED_FILES" | grep -qvE "^(.*\.md$|docs/)"; then
+            echo "security_scan_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "security_scan_needed=false" >> $GITHUB_OUTPUT
+            echo "Only docs changed - skipping security scan"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # Go vulnerability check - only if backend changed
       - name: Set up Go
+        if: steps.changes.outputs.backend_changed == 'true' && steps.changes.outputs.security_scan_needed == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run govulncheck
+        if: steps.changes.outputs.backend_changed == 'true' && steps.changes.outputs.security_scan_needed == 'true'
         working-directory: backend
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
@@ -167,53 +367,85 @@ jobs:
           # Making non-blocking for now; track vulns separately
           govulncheck ./... || echo "::warning::govulncheck found vulnerabilities - review required"
 
-      # Node dependency audit
+      # Node dependency audit - only if frontend/cdk changed
       - name: Set up Node.js
+        if: steps.changes.outputs.frontend_or_cdk_changed == 'true' && steps.changes.outputs.security_scan_needed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: NPM Audit (Frontend)
-        working-directory: frontend
-        run: npm audit --audit-level=high || true
-
-      - name: NPM Audit (Developer Frontend)
+        if: steps.changes.outputs.frontend_or_cdk_changed == 'true' && steps.changes.outputs.security_scan_needed == 'true'
         working-directory: frontend
         run: npm audit --audit-level=high || true
 
       - name: NPM Audit (CDK)
+        if: steps.changes.outputs.frontend_or_cdk_changed == 'true' && steps.changes.outputs.security_scan_needed == 'true'
         working-directory: cdk
         run: npm audit --audit-level=high || true
 
-      # CodeQL Analysis
+      # CodeQL Analysis - run if any code changed
       - name: Initialize CodeQL
+        if: steps.changes.outputs.security_scan_needed == 'true'
         uses: github/codeql-action/init@v3
         with:
           languages: go, javascript
           config-file: .github/codeql-config.yml
 
       - name: Autobuild
+        if: steps.changes.outputs.security_scan_needed == 'true'
         uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
+        if: steps.changes.outputs.security_scan_needed == 'true'
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:go,javascript"
 
   # ============================================================
   # Infrastructure Validation
+  # Only run when infrastructure code changes
   # ============================================================
   cdk-synth:
     name: CDK Synth
     runs-on: ubuntu-latest
     needs: [build-backend]  # CDK synth needs backend binary
+    # Only run if infrastructure or backend changed
+    if: |
+      contains(github.event.head_commit.message, '[skip-path-filter]') ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: cdk
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if infrastructure code changed
+        id: infra_changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          # Check if infrastructure or backend code changed (CDK synth needs backend changes too)
+          if echo "$CHANGED_FILES" | grep -qE "^(cdk/|packages/ds-cdk/|backend/)"; then
+            echo "infra_changed=true" >> $GITHUB_OUTPUT
+            echo "Infrastructure or backend code changed - proceeding with CDK synth"
+          else
+            echo "infra_changed=false" >> $GITHUB_OUTPUT
+            echo "No infrastructure code changes detected - skipping CDK synth"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Node.js
+        if: steps.infra_changes.outputs.infra_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -221,20 +453,24 @@ jobs:
           cache-dependency-path: cdk/package-lock.json
 
       - name: Download backend artifact
+        if: steps.infra_changes.outputs.infra_changed == 'true'
         uses: actions/download-artifact@v4
         with:
           name: backend-binary
           path: backend/dist
 
       - name: Install dependencies
+        if: steps.infra_changes.outputs.infra_changed == 'true'
         run: |
           rm -rf node_modules package-lock.json
           npm install
 
       - name: Build CDK
+        if: steps.infra_changes.outputs.infra_changed == 'true'
         run: npm run build
 
       - name: CDK Synth (dry run)
+        if: steps.infra_changes.outputs.infra_changed == 'true'
         run: npx cdk synth --quiet
         env:
           CDK_DEFAULT_ACCOUNT: '000000000000'
@@ -242,20 +478,51 @@ jobs:
 
   # ============================================================
   # Build Artifacts
+  # Only build when corresponding code changes
   # ============================================================
   build-backend:
     name: Build Backend
     needs: [backend-lint, backend-test]
     runs-on: ubuntu-latest
+    # Only run if backend jobs ran (they have their own change detection)
+    if: |
+      (needs.backend-lint.result == 'success' || needs.backend-lint.result == 'skipped') &&
+      (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped') &&
+      !cancelled()
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if backend build needed
+        id: build_check
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -qE "^(backend/|packages/backend-utils/|go\.(mod|sum)$)"; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            # Create empty artifact so downstream jobs don't fail
+            mkdir -p backend/dist
+            echo "# Placeholder - no backend changes" > backend/dist/bootstrap
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Go
+        if: steps.build_check.outputs.build_needed == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Build Lambda binary (ARM64)
+        if: steps.build_check.outputs.build_needed == 'true'
         working-directory: backend
         run: |
           mkdir -p dist
@@ -268,26 +535,55 @@ jobs:
           path: backend/dist/bootstrap
           retention-days: 1
 
-
   build-frontend:
     name: Build Frontend
     needs: [frontend-lint, frontend-test]
     runs-on: ubuntu-latest
+    # Only run if frontend jobs ran (they have their own change detection)
+    if: |
+      (needs.frontend-lint.result == 'success' || needs.frontend-lint.result == 'skipped') &&
+      (needs.frontend-test.result == 'success' || needs.frontend-test.result == 'skipped') &&
+      !cancelled()
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend build needed
+        id: build_check
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -qE "^(frontend/|packages/(layout|ds-core|ds-auth-ts)/)"; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            # Create empty artifact so downstream jobs don't fail
+            mkdir -p frontend/dist
+            echo "# Placeholder - no frontend changes" > frontend/dist/index.html
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Node.js
+        if: steps.build_check.outputs.build_needed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ''
 
-
       - name: Install dependencies
+        if: steps.build_check.outputs.build_needed == 'true'
         working-directory: frontend
         run: npm install
 
       - name: Build frontend
+        if: steps.build_check.outputs.build_needed == 'true'
         working-directory: frontend
         run: npm run build
         env:
@@ -305,24 +601,23 @@ jobs:
   # ============================================================
   ci-pass:
     name: CI Pass
-    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth, build-backend, build-frontend, build-frontend]
+    needs: [backend-lint, backend-test, frontend-lint, frontend-test, security-scan, cdk-synth, build-backend, build-frontend]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.backend-lint.result }}" != "success" ]] || \
-             [[ "${{ needs.backend-test.result }}" != "success" ]] || \
-             [[ "${{ needs.frontend-lint.result }}" != "success" ]] || \
-             [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
-             [[ "${{ needs.frontend-lint.result }}" != "success" ]] || \
-             [[ "${{ needs.frontend-test.result }}" != "success" ]] || \
-             [[ "${{ needs.security-scan.result }}" != "success" ]] || \
-             [[ "${{ needs.cdk-synth.result }}" != "success" ]] || \
-             [[ "${{ needs.build-backend.result }}" != "success" ]] || \
-             [[ "${{ needs.build-frontend.result }}" != "success" ]] || \
-             [[ "${{ needs.build-frontend.result }}" != "success" ]]; then
+          # Check that all jobs either succeeded or were skipped (due to no relevant changes)
+          if [[ "${{ needs.backend-lint.result }}" != "success" && "${{ needs.backend-lint.result }}" != "skipped" ]] || \
+             [[ "${{ needs.backend-test.result }}" != "success" && "${{ needs.backend-test.result }}" != "skipped" ]] || \
+             [[ "${{ needs.frontend-lint.result }}" != "success" && "${{ needs.frontend-lint.result }}" != "skipped" ]] || \
+             [[ "${{ needs.frontend-test.result }}" != "success" && "${{ needs.frontend-test.result }}" != "skipped" ]] || \
+             [[ "${{ needs.security-scan.result }}" != "success" && "${{ needs.security-scan.result }}" != "skipped" ]] || \
+             [[ "${{ needs.cdk-synth.result }}" != "success" && "${{ needs.cdk-synth.result }}" != "skipped" ]] || \
+             [[ "${{ needs.build-backend.result }}" != "success" && "${{ needs.build-backend.result }}" != "skipped" ]] || \
+             [[ "${{ needs.build-frontend.result }}" != "success" && "${{ needs.build-frontend.result }}" != "skipped" ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi
           echo "::notice::All CI checks passed ✓"
+          echo "::notice::Path-based filtering optimized CI runtime - skipped jobs for unchanged code sections"

@@ -1,21 +1,119 @@
 name: E2E Tests
 
+# Path-based conditional workflow triggers to optimize GitHub Actions compute costs  
+# Skip E2E tests when changes only affect docs, config, or non-functional files
+# Path sets for E2E skip conditions:
+# - docs-only: *.md, docs/**
+# - config-only: *.json (package.json excluded), *.yml, *.yaml, Makefile, scripts/** (non-build scripts)
+# E2E tests run when any actual application code changes (frontend, backend, packages, cdk)
+
 on:
   push:
     branches: [main, develop]
+    # Skip E2E tests for docs-only changes
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [main]
-  # Allow manual triggering
+    # Skip E2E tests for docs-only changes
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE'
+      - '.gitignore'
+  # Allow manual triggering (bypass path filters)
   workflow_dispatch:
 
 env:
   NODE_VERSION: '20'
 
 jobs:
-  e2e:
+  # Pre-flight check to determine if E2E tests should run
+  check-changes:
+    name: Check if E2E tests needed
     runs-on: ubuntu-latest
+    outputs:
+      run-e2e: ${{ steps.changes.outputs.run-e2e }}
+      changes-summary: ${{ steps.changes.outputs.summary }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Analyze changes to determine E2E test necessity
+        id: changes
+        run: |
+          # For manual triggers, always run E2E tests
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "run-e2e=true" >> $GITHUB_OUTPUT
+            echo "summary=Manual trigger - running all E2E tests" >> $GITHUB_OUTPUT
+            echo "Manual workflow dispatch - running E2E tests"
+            exit 0
+          fi
+          
+          # Get list of changed files
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.number }}/files --jq '.[].filename' 2>/dev/null || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Check if only docs/config files changed
+          DOCS_ONLY=true
+          while IFS= read -r file; do
+            # Skip empty lines
+            [[ -z "$file" ]] && continue
+            
+            # Check if file is NOT a docs/config file
+            if ! echo "$file" | grep -qE "^(.*\.md$|docs/|README|CHANGELOG|LICENSE|\.gitignore|\.github/.*\.yml$)"; then
+              echo "Non-docs file changed: $file"
+              DOCS_ONLY=false
+              break
+            else
+              echo "Docs/config file: $file"
+            fi
+          done <<< "$CHANGED_FILES"
+          
+          if [[ "$DOCS_ONLY" == "true" && -n "$CHANGED_FILES" ]]; then
+            echo "run-e2e=false" >> $GITHUB_OUTPUT
+            echo "summary=Only docs/config files changed - skipping E2E tests to save compute costs" >> $GITHUB_OUTPUT
+            echo "::notice::Only documentation or configuration files changed"
+            echo "::notice::Skipping E2E tests to optimize GitHub Actions compute costs"
+            echo "::notice::Changed files: $(echo "$CHANGED_FILES" | tr '\n' ' ')"
+          elif [[ -z "$CHANGED_FILES" ]]; then
+            echo "run-e2e=false" >> $GITHUB_OUTPUT  
+            echo "summary=No files changed - skipping E2E tests" >> $GITHUB_OUTPUT
+            echo "No files changed detected"
+          else
+            echo "run-e2e=true" >> $GITHUB_OUTPUT
+            echo "summary=Application code changed - running E2E tests" >> $GITHUB_OUTPUT
+            echo "::notice::Application code changes detected - running E2E tests"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  e2e:
+    name: E2E Tests (Desktop)
+    runs-on: ubuntu-latest
+    needs: [check-changes]
+    # Only run if check-changes determined tests are needed
+    if: needs.check-changes.outputs.run-e2e == 'true'
 
     steps:
+      - name: E2E Test Decision
+        run: |
+          echo "::notice::${{ needs.check-changes.outputs.changes-summary }}"
+
       - uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -78,9 +176,17 @@ jobs:
 
   # Mobile E2E tests (Safari on iPhone)
   e2e-mobile:
+    name: E2E Tests (Mobile)
     runs-on: ubuntu-latest
+    needs: [check-changes]
+    # Only run if check-changes determined tests are needed
+    if: needs.check-changes.outputs.run-e2e == 'true'
 
     steps:
+      - name: E2E Test Decision
+        run: |
+          echo "::notice::${{ needs.check-changes.outputs.changes-summary }}"
+
       - uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -131,3 +237,32 @@ jobs:
           name: playwright-report-mobile
           path: frontend/playwright-report/
           retention-days: 30
+
+  # E2E Summary Gate
+  e2e-summary:
+    name: E2E Summary
+    runs-on: ubuntu-latest  
+    needs: [check-changes, e2e, e2e-mobile]
+    if: always()
+    steps:
+      - name: E2E Results Summary
+        run: |
+          echo "::notice::E2E Test Summary"
+          echo "::notice::Decision: ${{ needs.check-changes.outputs.changes-summary }}"
+          
+          if [[ "${{ needs.check-changes.outputs.run-e2e }}" == "false" ]]; then
+            echo "::notice::E2E tests skipped - no application code changes detected"
+            echo "::notice::This saves ~8 minutes of GitHub Actions compute time"
+            exit 0
+          fi
+          
+          # Check E2E test results if they ran
+          if [[ "${{ needs.e2e.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e-mobile.result }}" != "success" ]]; then
+            echo "::error::E2E tests failed"
+            echo "Desktop E2E: ${{ needs.e2e.result }}"
+            echo "Mobile E2E: ${{ needs.e2e-mobile.result }}"
+            exit 1
+          fi
+          
+          echo "::notice::All E2E tests passed ✓"
