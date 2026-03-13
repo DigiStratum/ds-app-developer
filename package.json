@@ -6,7 +6,8 @@
   "workspaces": [
     "packages/cdk-constructs",
     "packages/ds-core",
-    "packages/ds-icons"
+    "packages/ds-icons",
+    "packages/layout"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
